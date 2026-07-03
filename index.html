@@ -646,6 +646,62 @@ tbody tr:hover{background:var(--paper);}
   </div>
 </div>
 
+<!-- Modal editar ausencia -->
+<div class="modal-bg" id="modal-editar-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Editar ausencia</h3>
+      <button class="modal-close" onclick="cerrarModalEditar()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="readonly-chip" id="edit-emp-chip" style="width:100%;margin-bottom:16px;">—</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Supervisor <span class="req">*</span></label>
+          <input type="text" id="edit-supervisor">
+        </div>
+        <div class="field">
+          <label>Fecha de la falta <span class="req">*</span></label>
+          <input type="date" id="edit-fecha">
+        </div>
+        <div class="field">
+          <label>Motivo de la falta <span class="req">*</span></label>
+          <select id="edit-motivo">
+            <option value="">Selecciona un motivo</option>
+            <option>Enfermedad general</option>
+            <option>Incapacidad IMSS</option>
+            <option>Accidente de trabajo</option>
+            <option>Permiso con goce de sueldo</option>
+            <option>Permiso sin goce de sueldo</option>
+            <option>Situación personal / familiar</option>
+            <option>Injustificada</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Carta compromiso firmada</label>
+          <div class="checkline">
+            <input type="checkbox" id="edit-carta">
+            <label for="edit-carta" style="margin:0;">Sí, cuenta con carta firmada</label>
+          </div>
+        </div>
+        <div class="field" id="edit-wrap-fecha-carta">
+          <label>Fecha de firma de carta compromiso</label>
+          <input type="date" id="edit-fecha-carta">
+        </div>
+        <div class="field full">
+          <label>Notas / observaciones</label>
+          <textarea id="edit-notas"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrarModalEditar()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-guardar-edicion">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
@@ -722,6 +778,9 @@ async function agregarAusenciaRemota(registro){
 }
 async function eliminarAusenciaRemota(id){
   await apiPost({action:'delete', id});
+}
+async function actualizarAusenciaRemota(id, campos){
+  await apiPost({action:'update', id, campos});
 }
 async function guardarSupervisores(){
   try{
@@ -1036,7 +1095,11 @@ function renderHistorial(){
       <td><span class="badge badge-neutral">${a.motivo}</span></td>
       <td>${badgeCarta(a.carta)}</td>
       <td><span class="count-pill ${totalEmp>=4?'warn':''}">${totalEmp}</span></td>
-      <td><button class="icon-btn del" onclick="eliminarAusencia('${a.id}')" title="Eliminar registro">
+      <td style="white-space:nowrap;">
+        <button class="icon-btn" onclick="abrirEditar('${a.id}')" title="Editar registro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn del" onclick="eliminarAusencia('${a.id}')" title="Eliminar registro">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg>
       </button></td>
     </tr>`;
@@ -1062,6 +1125,66 @@ function abrirModal(titulo, hist){
 }
 function cerrarModal(){ document.getElementById('modal-bg').classList.remove('show'); }
 document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-bg') cerrarModal(); });
+
+/* ============================================================
+   EDITAR AUSENCIA
+   ============================================================ */
+let editandoId = null;
+function abrirEditar(id){
+  const a = AUSENCIAS.find(x=>x.id===id);
+  if(!a){ mostrarToast('No se encontró el registro', true); return; }
+  editandoId = id;
+  document.getElementById('edit-emp-chip').textContent = `${a.nombre} — #${a.codigo} — ${a.depto}`;
+  document.getElementById('edit-supervisor').value = a.supervisor || '';
+  document.getElementById('edit-fecha').value = a.fecha || '';
+  document.getElementById('edit-motivo').value = a.motivo || '';
+  document.getElementById('edit-carta').checked = !!a.carta;
+  document.getElementById('edit-fecha-carta').value = a.fechaCarta || '';
+  document.getElementById('edit-wrap-fecha-carta').style.display = a.carta ? 'flex' : 'none';
+  document.getElementById('edit-notas').value = a.notas || '';
+  document.getElementById('edit-fecha').max = new Date().toISOString().slice(0,10);
+  document.getElementById('edit-fecha-carta').max = new Date().toISOString().slice(0,10);
+  document.getElementById('modal-editar-bg').classList.add('show');
+}
+function cerrarModalEditar(){
+  document.getElementById('modal-editar-bg').classList.remove('show');
+  editandoId = null;
+}
+document.getElementById('modal-editar-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-editar-bg') cerrarModalEditar(); });
+document.getElementById('edit-carta').addEventListener('change', function(){
+  document.getElementById('edit-wrap-fecha-carta').style.display = this.checked ? 'flex' : 'none';
+  if(!this.checked) document.getElementById('edit-fecha-carta').value = '';
+});
+document.getElementById('btn-guardar-edicion').addEventListener('click', async ()=>{
+  if(!editandoId) return;
+  const supervisor = document.getElementById('edit-supervisor').value.trim();
+  const fecha = document.getElementById('edit-fecha').value;
+  const motivo = document.getElementById('edit-motivo').value;
+  const carta = document.getElementById('edit-carta').checked;
+  const fechaCarta = document.getElementById('edit-fecha-carta').value;
+  const notas = document.getElementById('edit-notas').value.trim();
+
+  if(!supervisor){ mostrarToast('Indica el supervisor', true); return; }
+  if(!fecha){ mostrarToast('Indica la fecha de la falta', true); return; }
+  if(!motivo){ mostrarToast('Selecciona el motivo de la falta', true); return; }
+
+  const campos = { supervisor, fecha, motivo, carta, fechaCarta, notas };
+  const btn = document.getElementById('btn-guardar-edicion');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  try{
+    await actualizarAusenciaRemota(editandoId, campos);
+    const idx = AUSENCIAS.findIndex(a=>a.id===editandoId);
+    if(idx>-1) AUSENCIAS[idx] = { ...AUSENCIAS[idx], ...campos };
+    mostrarToast('Ausencia actualizada correctamente');
+    cerrarModalEditar();
+    renderHistorial();
+    renderDashboard();
+  }catch(err){
+    mostrarToast('No se pudo guardar el cambio. Revisa tu conexión.', true);
+  }finally{
+    btn.disabled = false; btn.textContent = 'Guardar cambios';
+  }
+});
 
 async function eliminarAusencia(id){
   if(!confirm('¿Eliminar este registro de ausencia? Esta acción no se puede deshacer.')) return;
