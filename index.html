@@ -288,6 +288,11 @@ tbody tr:hover{background:var(--paper);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Supervisores</span>
     </button>
+    <button class="navbtn" data-view="conexion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0116 0M1 9a12 12 0 0122 0M8 16a4 4 0 018 0M12 20h.01"/></svg>
+      <span>Conexión</span>
+      <span id="nav-conn-dot" style="width:7px;height:7px;border-radius:50%;background:#B2432E;margin-left:auto;flex-shrink:0;"></span>
+    </button>
 
     <div class="sidebar-foot">
       488 empleados cargados<br>
@@ -309,6 +314,12 @@ tbody tr:hover{background:var(--paper);}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
           Registrar ausencia
         </button>
+      </div>
+
+      <div id="dash-conn-banner" class="hidden" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:9px;background:var(--warn-bg);border:1px solid #F0DFC4;margin-bottom:18px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--warn);flex-shrink:0;"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <span style="font-size:12.5px;color:var(--ink-900);"><b>Aún no conectas esta app con Google Sheets.</b> Los datos no se están guardando en la nube. Configúralo en "Conexión".</span>
+        <button class="btn btn-gold btn-sm" style="margin-left:auto;" onclick="goTo('conexion')">Configurar ahora</button>
       </div>
 
       <div class="kpi-grid">
@@ -563,6 +574,61 @@ tbody tr:hover{background:var(--paper);}
       </div>
     </section>
 
+    <!-- ============ CONEXIÓN ============ -->
+    <section id="view-conexion" class="view hidden">
+      <div class="topbar">
+        <div>
+          <div class="pagetitle">Conexión con Google Sheets</div>
+          <div class="pagesub">Los datos se guardan en la nube, en una hoja de cálculo de Google que tú controlas</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Estado de la conexión</div>
+        </div>
+        <div class="panel-body">
+          <div id="conn-status-box" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);margin-bottom:18px;">
+            <span id="conn-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--bad);flex-shrink:0;"></span>
+            <span id="conn-status-text" style="font-size:13px;font-weight:600;color:var(--ink-700);">Sin configurar — pega la URL de tu Google Apps Script abajo</span>
+          </div>
+
+          <div class="form-grid">
+            <div class="field full">
+              <label>URL de tu Google Apps Script (Web App)</label>
+              <input type="text" id="inp-script-url" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+              <span class="help">La obtienes al implementar el script como aplicación web. Ver instrucciones abajo.</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:16px;">
+            <button class="btn btn-primary" id="btn-guardar-conexion">Guardar y conectar</button>
+            <button class="btn btn-ghost" id="btn-probar-conexion">Probar conexión</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Cómo configurar tu Google Sheet (una sola vez)</div>
+        </div>
+        <div class="panel-body" style="font-size:13px;color:var(--ink-700);line-height:1.75;">
+          <ol style="padding-left:20px;margin:0;">
+            <li>Entra a <b>Google Drive</b> y crea una hoja de cálculo nueva. Nómbrala, por ejemplo, <b>"Ausentismo Metelmex - Base de datos"</b>.</li>
+            <li>Dentro de la hoja, ve a <b>Extensiones → Apps Script</b>.</li>
+            <li>Borra el contenido de ejemplo y pega el código del archivo <b>codigo_apps_script.gs</b> que te compartí.</li>
+            <li>Guarda el proyecto (ícono de disquete).</li>
+            <li>Haz clic en <b>Implementar → Nueva implementación</b>.</li>
+            <li>En "Tipo", selecciona <b>Aplicación web</b>.</li>
+            <li>En "Quién tiene acceso", selecciona <b>Cualquier usuario</b>.</li>
+            <li>Haz clic en <b>Implementar</b> y autoriza los permisos que pida Google (es tu propia cuenta, es seguro).</li>
+            <li>Copia la <b>URL de la aplicación web</b> que te entrega (termina en <code>/exec</code>) y pégala arriba en "URL de tu Google Apps Script".</li>
+            <li>Presiona <b>Guardar y conectar</b>. La app creará automáticamente las pestañas "Ausencias" y "Supervisores" dentro de tu hoja.</li>
+          </ol>
+          <div class="help" style="margin-top:14px;">Todos los dispositivos que instalen la app y usen esta misma URL verán y guardarán la misma información, en tiempo real.</div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -596,25 +662,74 @@ let SUPERVISORES = {};
 let empSeleccionado = null;
 
 /* ============================================================
+   CONEXIÓN — GOOGLE SHEETS (vía Google Apps Script)
+   ============================================================ */
+function getScriptUrl(){ return localStorage.getItem('mmx_script_url') || ''; }
+function setScriptUrl(url){ localStorage.setItem('mmx_script_url', url); }
+
+async function apiGet(action){
+  const url = getScriptUrl();
+  if(!url) throw new Error('sin-configurar');
+  const r = await fetch(`${url}?action=${action}`, {method:'GET'});
+  if(!r.ok) throw new Error('http-'+r.status);
+  return r.json();
+}
+async function apiPost(payload){
+  const url = getScriptUrl();
+  if(!url) throw new Error('sin-configurar');
+  const r = await fetch(url, {
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok) throw new Error('http-'+r.status);
+  return r.json();
+}
+
+function actualizarEstadoConexion(ok, mensaje){
+  const dotNav = document.getElementById('nav-conn-dot');
+  const dotBig = document.getElementById('conn-status-dot');
+  const txt = document.getElementById('conn-status-text');
+  const banner = document.getElementById('dash-conn-banner');
+  if(dotNav) dotNav.style.background = ok ? 'var(--ok)' : 'var(--bad)';
+  if(dotBig) dotBig.style.background = ok ? 'var(--ok)' : 'var(--bad)';
+  if(txt) txt.textContent = mensaje;
+  if(banner) banner.classList.toggle('hidden', !!ok);
+}
+
+/* ============================================================
    PERSISTENCIA
    ============================================================ */
 async function cargarDatos(){
+  if(!getScriptUrl()){
+    AUSENCIAS = []; SUPERVISORES = {};
+    actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
+    return;
+  }
   try{
-    const r = await window.storage.get('ausencias_v1');
-    AUSENCIAS = r ? JSON.parse(r.value) : [];
-  }catch(e){ AUSENCIAS = []; }
-  try{
-    const r2 = await window.storage.get('supervisores_v1');
-    SUPERVISORES = r2 ? JSON.parse(r2.value) : {};
-  }catch(e){ SUPERVISORES = {}; }
+    const [aus, sup] = await Promise.all([apiGet('list'), apiGet('listSup')]);
+    AUSENCIAS = Array.isArray(aus) ? aus : [];
+    SUPERVISORES = (sup && typeof sup === 'object' && !Array.isArray(sup)) ? sup : {};
+    actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
+  }catch(e){
+    AUSENCIAS = []; SUPERVISORES = {};
+    actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
+    mostrarToast('No se pudo conectar con Google Sheets', true);
+  }
 }
-async function guardarAusencias(){
-  try{ await window.storage.set('ausencias_v1', JSON.stringify(AUSENCIAS)); }
-  catch(e){ mostrarToast('No se pudo guardar. Intenta de nuevo.', true); }
+async function agregarAusenciaRemota(registro){
+  await apiPost({action:'add', registro});
+}
+async function eliminarAusenciaRemota(id){
+  await apiPost({action:'delete', id});
 }
 async function guardarSupervisores(){
-  try{ await window.storage.set('supervisores_v1', JSON.stringify(SUPERVISORES)); mostrarToast('Supervisores guardados correctamente'); }
-  catch(e){ mostrarToast('No se pudo guardar. Intenta de nuevo.', true); }
+  try{
+    await apiPost({action:'saveSup', supervisores: SUPERVISORES});
+    mostrarToast('Supervisores guardados correctamente en la nube');
+  }catch(e){
+    mostrarToast('No se pudo guardar. Verifica tu conexión en el apartado "Conexión".', true);
+  }
 }
 
 /* ============================================================
@@ -661,6 +776,7 @@ function goTo(view){
   if(view==='historial') renderHistorial();
   if(view==='empleados') renderEmpleados();
   if(view==='supervisores') renderSupervisores();
+  if(view==='conexion') renderConexion();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.navbtn').forEach(b=>{
@@ -734,6 +850,7 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
   if(!supervisor){ mostrarToast('Indica el supervisor', true); return; }
   if(!fecha){ mostrarToast('Indica la fecha de la falta', true); return; }
   if(!motivo){ mostrarToast('Selecciona el motivo de la falta', true); return; }
+  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
 
   const registro = {
     id: uid(),
@@ -744,15 +861,24 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
     supervisor, fecha, motivo, carta, fechaCarta, notas,
     creado: new Date().toISOString()
   };
-  AUSENCIAS.push(registro);
-  await guardarAusencias();
-  if(!SUPERVISORES[empSeleccionado.depto]){
-    SUPERVISORES[empSeleccionado.depto] = supervisor;
-    await guardarSupervisores();
+  const btnGuardar = document.querySelector('#form-ausencia button[type=submit]');
+  btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...';
+  try{
+    await agregarAusenciaRemota(registro);
+    AUSENCIAS.push(registro);
+    if(!SUPERVISORES[empSeleccionado.depto]){
+      SUPERVISORES[empSeleccionado.depto] = supervisor;
+      await guardarSupervisores();
+    }
+    mostrarToast(`Ausencia registrada para ${empSeleccionado.nombre.split(' ')[0]} ${empSeleccionado.nombre.split(' ')[1]||''}`);
+    resetForm();
+    goTo('historial');
+  }catch(err){
+    mostrarToast('No se pudo guardar en Google Sheets. Revisa tu conexión.', true);
+  }finally{
+    btnGuardar.disabled = false;
+    btnGuardar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Guardar ausencia';
   }
-  mostrarToast(`Ausencia registrada para ${empSeleccionado.nombre.split(' ')[0]} ${empSeleccionado.nombre.split(' ')[1]||''}`);
-  resetForm();
-  goTo('historial');
 });
 
 function resetForm(){
@@ -939,11 +1065,15 @@ document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target
 
 async function eliminarAusencia(id){
   if(!confirm('¿Eliminar este registro de ausencia? Esta acción no se puede deshacer.')) return;
-  AUSENCIAS = AUSENCIAS.filter(a=>a.id!==id);
-  await guardarAusencias();
-  mostrarToast('Registro eliminado');
-  renderHistorial();
-  renderDashboard();
+  try{
+    await eliminarAusenciaRemota(id);
+    AUSENCIAS = AUSENCIAS.filter(a=>a.id!==id);
+    mostrarToast('Registro eliminado de Google Sheets');
+    renderHistorial();
+    renderDashboard();
+  }catch(err){
+    mostrarToast('No se pudo eliminar. Revisa tu conexión.', true);
+  }
 }
 
 ['f-buscar','f-depto','f-supervisor','f-motivo','f-carta'].forEach(id=>{
@@ -1051,6 +1181,37 @@ document.getElementById('btn-guardar-supervisores').addEventListener('click', as
     else delete SUPERVISORES[d];
   });
   await guardarSupervisores();
+});
+
+/* ============================================================
+   CONEXIÓN — vista de configuración
+   ============================================================ */
+function renderConexion(){
+  document.getElementById('inp-script-url').value = getScriptUrl();
+}
+document.getElementById('btn-guardar-conexion').addEventListener('click', async ()=>{
+  const url = document.getElementById('inp-script-url').value.trim();
+  if(!url || !url.startsWith('http')){ mostrarToast('Pega una URL válida de Google Apps Script', true); return; }
+  setScriptUrl(url);
+  mostrarToast('Conectando con tu Google Sheet...');
+  await cargarDatos();
+  renderDashboard();
+  const ok = document.getElementById('conn-status-dot').style.background === 'var(--ok)' || getScriptUrl();
+  mostrarToast(AUSENCIAS !== null ? 'Conexión guardada correctamente' : 'No se pudo conectar, revisa la URL');
+});
+document.getElementById('btn-probar-conexion').addEventListener('click', async ()=>{
+  const url = document.getElementById('inp-script-url').value.trim();
+  if(!url){ mostrarToast('Escribe una URL primero', true); return; }
+  setScriptUrl(url);
+  mostrarToast('Probando conexión...');
+  try{
+    await apiGet('list');
+    actualizarEstadoConexion(true, 'Conexión exitosa — tu Google Sheet responde correctamente');
+    mostrarToast('¡Conexión exitosa!');
+  }catch(e){
+    actualizarEstadoConexion(false, 'No se pudo conectar. Verifica la URL y que el script esté implementado como "Cualquier usuario".');
+    mostrarToast('No se pudo conectar', true);
+  }
 });
 
 /* ============================================================
