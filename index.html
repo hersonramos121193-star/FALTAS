@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ausentismo MMX">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/SheetJS/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --navy-950:#0B1F33;
@@ -1216,6 +1216,10 @@ function limpiarFiltros(){
    EXPORTAR A EXCEL
    ============================================================ */
 function exportarExcel(){
+  if(typeof XLSX === 'undefined'){
+    mostrarToast('No se pudo cargar el componente de Excel. Revisa tu conexión a internet e intenta de nuevo.', true);
+    return;
+  }
   if(AUSENCIAS.length===0){ mostrarToast('No hay registros para exportar', true); return; }
   const rows = AUSENCIAS.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(a=>({
     'No. Empleado': a.codigo,
