@@ -429,7 +429,6 @@ tbody tr:hover{background:var(--paper);}
                   <option>Justificada</option>
                   <option>Injustificada</option>
                   <option>Disciplina</option>
-                  <option>Otro</option>
                 </select>
               </div>
               <div class="field">
@@ -489,7 +488,6 @@ tbody tr:hover{background:var(--paper);}
             <option>Justificada</option>
             <option>Injustificada</option>
             <option>Disciplina</option>
-            <option>Otro</option>
           </select>
           <select id="f-carta">
             <option value="">Carta: todas</option>
@@ -671,7 +669,6 @@ tbody tr:hover{background:var(--paper);}
             <option>Justificada</option>
             <option>Injustificada</option>
             <option>Disciplina</option>
-            <option>Otro</option>
           </select>
         </div>
         <div class="field">
@@ -1063,10 +1060,15 @@ function badgeCarta(carta){
 const NOMBRES_MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function poblarFiltrosHistorial(){
   const dSel = document.getElementById('f-depto');
+  const deptoSeleccionado = dSel.value;
   dSel.innerHTML = '<option value="">Todos los departamentos</option>' + DEPARTAMENTOS.map(d=>`<option>${d}</option>`).join('');
+  dSel.value = deptoSeleccionado;
+
   const supSet = [...new Set(AUSENCIAS.map(a=>a.supervisor))].filter(Boolean).sort();
   const sSel = document.getElementById('f-supervisor');
+  const supSeleccionado = sSel.value;
   sSel.innerHTML = '<option value="">Todos los supervisores</option>' + supSet.map(s=>`<option>${s}</option>`).join('');
+  sSel.value = supSeleccionado;
 
   const mesesSet = [...new Set(AUSENCIAS.map(a=> (a.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
   const mSel = document.getElementById('f-mes');
