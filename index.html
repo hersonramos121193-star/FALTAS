@@ -426,13 +426,9 @@ tbody tr:hover{background:var(--paper);}
                 <label>Motivo de la falta <span class="req">*</span></label>
                 <select id="inp-motivo">
                   <option value="">Selecciona un motivo</option>
-                  <option>Enfermedad general</option>
-                  <option>Incapacidad IMSS</option>
-                  <option>Accidente de trabajo</option>
-                  <option>Permiso con goce de sueldo</option>
-                  <option>Permiso sin goce de sueldo</option>
-                  <option>Situación personal / familiar</option>
+                  <option>Justificada</option>
                   <option>Injustificada</option>
+                  <option>Disciplina</option>
                   <option>Otro</option>
                 </select>
               </div>
@@ -490,19 +486,23 @@ tbody tr:hover{background:var(--paper);}
           <select id="f-supervisor"><option value="">Todos los supervisores</option></select>
           <select id="f-motivo">
             <option value="">Todos los motivos</option>
-            <option>Enfermedad general</option>
-            <option>Incapacidad IMSS</option>
-            <option>Accidente de trabajo</option>
-            <option>Permiso con goce de sueldo</option>
-            <option>Permiso sin goce de sueldo</option>
-            <option>Situación personal / familiar</option>
+            <option>Justificada</option>
             <option>Injustificada</option>
+            <option>Disciplina</option>
             <option>Otro</option>
           </select>
           <select id="f-carta">
             <option value="">Carta: todas</option>
             <option value="si">Con carta firmada</option>
             <option value="no">Sin carta firmada</option>
+          </select>
+          <select id="f-mes"><option value="">Todos los meses</option></select>
+          <select id="f-acumuladas">
+            <option value="">Faltas acumuladas: todas</option>
+            <option value="1">1 falta</option>
+            <option value="2">2 faltas</option>
+            <option value="3">3 faltas</option>
+            <option value="4+">4 o más faltas</option>
           </select>
           <button class="chip-clear" onclick="limpiarFiltros()">Limpiar filtros</button>
         </div>
@@ -668,13 +668,9 @@ tbody tr:hover{background:var(--paper);}
           <label>Motivo de la falta <span class="req">*</span></label>
           <select id="edit-motivo">
             <option value="">Selecciona un motivo</option>
-            <option>Enfermedad general</option>
-            <option>Incapacidad IMSS</option>
-            <option>Accidente de trabajo</option>
-            <option>Permiso con goce de sueldo</option>
-            <option>Permiso sin goce de sueldo</option>
-            <option>Situación personal / familiar</option>
+            <option>Justificada</option>
             <option>Injustificada</option>
+            <option>Disciplina</option>
             <option>Otro</option>
           </select>
         </div>
@@ -1041,12 +1037,23 @@ function badgeCarta(carta){
 /* ============================================================
    HISTORIAL
    ============================================================ */
+const NOMBRES_MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 function poblarFiltrosHistorial(){
   const dSel = document.getElementById('f-depto');
   dSel.innerHTML = '<option value="">Todos los departamentos</option>' + DEPARTAMENTOS.map(d=>`<option>${d}</option>`).join('');
   const supSet = [...new Set(AUSENCIAS.map(a=>a.supervisor))].filter(Boolean).sort();
   const sSel = document.getElementById('f-supervisor');
   sSel.innerHTML = '<option value="">Todos los supervisores</option>' + supSet.map(s=>`<option>${s}</option>`).join('');
+
+  const mesesSet = [...new Set(AUSENCIAS.map(a=> (a.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const mSel = document.getElementById('f-mes');
+  const mesSeleccionado = mSel.value;
+  mSel.innerHTML = '<option value="">Todos los meses</option>' + mesesSet.map(m=>{
+    const [y,mm] = m.split('-');
+    const label = `${NOMBRES_MES[parseInt(mm)-1]} ${y}`;
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  mSel.value = mesSeleccionado;
 }
 let expandido = null;
 function renderHistorial(){
@@ -1056,6 +1063,8 @@ function renderHistorial(){
   const sup = document.getElementById('f-supervisor').value;
   const motivo = document.getElementById('f-motivo').value;
   const carta = document.getElementById('f-carta').value;
+  const mes = document.getElementById('f-mes').value;
+  const acumuladas = document.getElementById('f-acumuladas').value;
 
   let filtradas = AUSENCIAS.filter(a=>{
     if(q && !(a.nombre.toLowerCase().includes(q) || a.codigo.includes(q))) return false;
@@ -1064,6 +1073,11 @@ function renderHistorial(){
     if(motivo && a.motivo !== motivo) return false;
     if(carta === 'si' && !a.carta) return false;
     if(carta === 'no' && a.carta) return false;
+    if(mes && (a.fecha||'').slice(0,7) !== mes) return false;
+    if(acumuladas){
+      const total = ausenciasDe(a.codigo).length;
+      if(acumuladas === '4+' ? total < 4 : total !== parseInt(acumuladas)) return false;
+    }
     return true;
   }).sort((a,b)=> b.fecha.localeCompare(a.fecha));
 
@@ -1199,7 +1213,7 @@ async function eliminarAusencia(id){
   }
 }
 
-['f-buscar','f-depto','f-supervisor','f-motivo','f-carta'].forEach(id=>{
+['f-buscar','f-depto','f-supervisor','f-motivo','f-carta','f-mes','f-acumuladas'].forEach(id=>{
   document.getElementById(id).addEventListener('input', renderHistorial);
   document.getElementById(id).addEventListener('change', renderHistorial);
 });
@@ -1209,6 +1223,8 @@ function limpiarFiltros(){
   document.getElementById('f-supervisor').value='';
   document.getElementById('f-motivo').value='';
   document.getElementById('f-carta').value='';
+  document.getElementById('f-mes').value='';
+  document.getElementById('f-acumuladas').value='';
   renderHistorial();
 }
 
