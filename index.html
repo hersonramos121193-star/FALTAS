@@ -1082,8 +1082,7 @@ function poblarFiltrosHistorial(){
   mSel.value = mesSeleccionado;
 }
 let expandido = null;
-function renderHistorial(){
-  poblarFiltrosHistorial();
+function obtenerAusenciasFiltradas(){
   const q = document.getElementById('f-buscar').value.trim().toLowerCase();
   const depto = document.getElementById('f-depto').value;
   const sup = document.getElementById('f-supervisor').value;
@@ -1092,7 +1091,7 @@ function renderHistorial(){
   const mes = document.getElementById('f-mes').value;
   const acumuladas = document.getElementById('f-acumuladas').value;
 
-  let filtradas = AUSENCIAS.filter(a=>{
+  return AUSENCIAS.filter(a=>{
     if(q && !(a.nombre.toLowerCase().includes(q) || a.codigo.includes(q))) return false;
     if(depto && normTxt(a.depto) !== depto) return false;
     if(sup && normTxt(a.supervisor) !== sup) return false;
@@ -1106,6 +1105,10 @@ function renderHistorial(){
     }
     return true;
   }).sort((a,b)=> b.fecha.localeCompare(a.fecha));
+}
+function renderHistorial(){
+  poblarFiltrosHistorial();
+  let filtradas = obtenerAusenciasFiltradas();
 
   document.getElementById('hist-count').textContent = filtradas.length;
   const tbody = document.getElementById('tbody-historial');
@@ -1262,8 +1265,13 @@ function exportarExcel(){
     mostrarToast('No se pudo cargar el componente de Excel. Revisa tu conexión a internet e intenta de nuevo.', true);
     return;
   }
-  if(AUSENCIAS.length===0){ mostrarToast('No hay registros para exportar', true); return; }
-  const rows = AUSENCIAS.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha)).map(a=>({
+  const datos = obtenerAusenciasFiltradas();
+  if(datos.length===0){ mostrarToast('No hay registros para exportar con los filtros actuales', true); return; }
+  const hayFiltros = document.getElementById('f-buscar').value.trim() ||
+    document.getElementById('f-depto').value || document.getElementById('f-supervisor').value ||
+    document.getElementById('f-motivo').value || document.getElementById('f-carta').value ||
+    document.getElementById('f-mes').value || document.getElementById('f-acumuladas').value;
+  const rows = datos.map(a=>({
     'No. Empleado': a.codigo,
     'Nombre': a.nombre,
     'Puesto': a.puesto,
@@ -1280,8 +1288,9 @@ function exportarExcel(){
   ws['!cols'] = [{wch:12},{wch:30},{wch:26},{wch:14},{wch:24},{wch:13},{wch:24},{wch:14},{wch:14},{wch:10},{wch:30}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Ausentismo');
-  XLSX.writeFile(wb, `Control_Ausentismo_Metelmex_${new Date().toISOString().slice(0,10)}.xlsx`);
-  mostrarToast('Archivo Excel exportado');
+  const sufijo = hayFiltros ? '_filtrado' : '';
+  XLSX.writeFile(wb, `Control_Ausentismo_Metelmex${sufijo}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  mostrarToast(hayFiltros ? `Excel exportado con ${datos.length} registro(s) filtrado(s)` : 'Archivo Excel exportado');
 }
 
 /* ============================================================
