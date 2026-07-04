@@ -1058,16 +1058,17 @@ function badgeCarta(carta){
    HISTORIAL
    ============================================================ */
 const NOMBRES_MES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function normTxt(s){ return (s===undefined||s===null) ? '' : String(s).trim().replace(/\s+/g,' '); }
 function poblarFiltrosHistorial(){
   const dSel = document.getElementById('f-depto');
   const deptoSeleccionado = dSel.value;
-  dSel.innerHTML = '<option value="">Todos los departamentos</option>' + DEPARTAMENTOS.map(d=>`<option>${d}</option>`).join('');
+  dSel.innerHTML = '<option value="">Todos los departamentos</option>' + DEPARTAMENTOS.map(d=>`<option value="${normTxt(d)}">${d}</option>`).join('');
   dSel.value = deptoSeleccionado;
 
-  const supSet = [...new Set(AUSENCIAS.map(a=>a.supervisor))].filter(Boolean).sort();
+  const supSet = [...new Set(AUSENCIAS.map(a=>normTxt(a.supervisor)))].filter(Boolean).sort();
   const sSel = document.getElementById('f-supervisor');
   const supSeleccionado = sSel.value;
-  sSel.innerHTML = '<option value="">Todos los supervisores</option>' + supSet.map(s=>`<option>${s}</option>`).join('');
+  sSel.innerHTML = '<option value="">Todos los supervisores</option>' + supSet.map(s=>`<option value="${s}">${s}</option>`).join('');
   sSel.value = supSeleccionado;
 
   const mesesSet = [...new Set(AUSENCIAS.map(a=> (a.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
@@ -1093,8 +1094,8 @@ function renderHistorial(){
 
   let filtradas = AUSENCIAS.filter(a=>{
     if(q && !(a.nombre.toLowerCase().includes(q) || a.codigo.includes(q))) return false;
-    if(depto && a.depto !== depto) return false;
-    if(sup && a.supervisor !== sup) return false;
+    if(depto && normTxt(a.depto) !== depto) return false;
+    if(sup && normTxt(a.supervisor) !== sup) return false;
     if(motivo && a.motivo !== motivo) return false;
     if(carta === 'si' && !a.carta) return false;
     if(carta === 'no' && a.carta) return false;
