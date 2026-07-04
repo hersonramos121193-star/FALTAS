@@ -1407,7 +1407,22 @@ document.getElementById('btn-probar-conexion').addEventListener('click', async (
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      // Revisa si hay una versión nueva del service worker cada vez que se abre la app
+      reg.update();
+      reg.addEventListener("updatefound", () => {
+        const nuevo = reg.installing;
+        nuevo && nuevo.addEventListener("statechange", () => {
+          if (nuevo.state === "activated") {
+            // Ya se activó una versión nueva: recarga una sola vez para mostrarla
+            if (!sessionStorage.getItem("mmx_sw_reloaded")) {
+              sessionStorage.setItem("mmx_sw_reloaded", "1");
+              window.location.reload();
+            }
+          }
+        });
+      });
+    }).catch(()=>{});
   });
 }
 </script>

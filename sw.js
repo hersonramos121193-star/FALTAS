@@ -1,4 +1,4 @@
-const CACHE_NAME = "ausentismo-mmx-v10";
+const CACHE_NAME = "ausentismo-mmx-v11";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
@@ -24,20 +24,24 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+/*
+  Estrategia: NETWORK-FIRST.
+  Siempre se intenta traer la versión más reciente de internet primero.
+  Solo se usa la copia guardada en caché si no hay conexión a internet.
+  Esto evita que la app se quede "atorada" mostrando una versión vieja
+  después de subir cambios nuevos a GitHub.
+*/
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    })
+    fetch(event.request, { cache: "no-store" })
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
