@@ -1,9 +1,10 @@
-const CACHE_NAME = "ausentismo-mmx-v21";
+const CACHE_NAME = "ausentismo-mmx-v22";
 const ASSETS = [
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./plantilla_ausentismo_metelmex.xlsx"
 ];
 
 self.addEventListener("install", (event) => {

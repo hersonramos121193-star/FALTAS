@@ -251,6 +251,7 @@ tbody tr:hover{background:var(--paper);}
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#C6D0DA;border-radius:99px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -428,6 +429,17 @@ tbody tr:hover{background:var(--paper);}
         <div>
           <div class="pagetitle">Registrar ausencia</div>
           <div class="pagesub">Captura los datos de la falta del colaborador</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-ghost" href="plantilla_ausentismo_metelmex.xlsx" download title="Descarga la plantilla de Excel para captura masiva" style="text-decoration:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Descargar plantilla
+          </a>
+          <button class="btn btn-primary" id="btn-plantilla-subir" title="Sube una plantilla de Excel para registrar varias faltas a la vez">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
+            Subir plantilla
+          </button>
+          <input type="file" id="inp-plantilla-file" accept=".xlsx,.xls" style="display:none;">
         </div>
       </div>
 
@@ -852,13 +864,30 @@ tbody tr:hover{background:var(--paper);}
   </div>
 </div>
 
+<!-- Modal resultado carga masiva -->
+<div class="modal-bg" id="modal-resultado-plantilla-bg">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <h3>Resultado de la carga masiva</h3>
+      <button class="modal-close" onclick="cerrarModalResultadoPlantilla()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="resultado-plantilla-resumen" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;"></div>
+      <div id="resultado-plantilla-detalle" style="max-height:340px;overflow:auto;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="cerrarModalResultadoPlantilla()">Entendido</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toast-wrap"></div>
 
 <script>
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.09-v21";
+const APP_VERSION = "2026.07.09-v22";
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -887,6 +916,7 @@ function aplicarModoLectura(){
   ocultar('btn-goto-registro');
   ocultar('btn-abrir-nuevo-empleado');
   ocultar('btn-guardar-supervisores');
+  ocultar('btn-plantilla-subir');
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#122E4A;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;letter-spacing:.2px;';
   banner.textContent = 'Modo de solo lectura — puedes consultar el Dashboard, el Historial y el Directorio, pero no registrar ni modificar información.';
@@ -1244,6 +1274,174 @@ function resetForm(){
   document.getElementById('inp-supervisor-otro').style.display = 'none';
   document.getElementById('inp-supervisor-otro').value = '';
   suggestBox.style.display='none';
+}
+
+/* ============================================================
+   CARGA MASIVA DE AUSENTISMO DESDE PLANTILLA DE EXCEL
+   ============================================================ */
+const MOTIVOS_VALIDOS = ['Justificada', 'Injustificada', 'Disciplina'];
+
+function excelFechaATexto(valor){
+  if(valor === null || valor === undefined || valor === '') return '';
+  if(valor instanceof Date){
+    return valor.toISOString().slice(0,10);
+  }
+  if(typeof valor === 'number'){
+    // Fecha serial de Excel (días desde 1899-12-30)
+    const ms = Math.round((valor - 25569) * 86400 * 1000);
+    return new Date(ms).toISOString().slice(0,10);
+  }
+  const s = String(valor).trim();
+  const m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  const m2 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m2) return `${m2[3]}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`;
+  return s;
+}
+
+function validarFilaPlantilla(fila, indiceFila, duplicadosEnLote){
+  const codigo = String(fila['Numero_Empleado'] ?? '').trim();
+  const fecha = excelFechaATexto(fila['Fecha_Falta (AAAA-MM-DD)']);
+  const motivo = String(fila['Motivo'] ?? '').trim();
+  const supervisor = String(fila['Supervisor'] ?? '').trim();
+  const cartaTxt = String(fila['Carta_Compromiso (SI/NO)'] ?? '').trim().toUpperCase();
+  const fechaCarta = excelFechaATexto(fila['Fecha_Firma_Carta (AAAA-MM-DD)']);
+  const notas = String(fila['Notas'] ?? '').trim();
+  const carta = cartaTxt === 'SI' || cartaTxt === 'SÍ' || cartaTxt === 'TRUE';
+
+  if(!codigo) return { error: `Fila ${indiceFila}: falta el número de empleado.` };
+  const emp = EMP_BY_CODIGO[codigo];
+  if(!emp) return { error: `Fila ${indiceFila}: el empleado #${codigo} no existe en el directorio.` };
+  if((emp.estatus||'ALTA') === 'BAJA') return { error: `Fila ${indiceFila}: ${emp.nombre} (#${codigo}) está en estatus BAJA y no se le pueden registrar faltas.` };
+  if(!fecha) return { error: `Fila ${indiceFila}: falta la fecha de la falta.` };
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: `Fila ${indiceFila}: la fecha "${fila['Fecha_Falta (AAAA-MM-DD)']}" no tiene un formato reconocible (usa AAAA-MM-DD).` };
+  if(!MOTIVOS_VALIDOS.includes(motivo)) return { error: `Fila ${indiceFila}: el motivo "${motivo}" no es válido (debe ser Justificada, Injustificada o Disciplina).` };
+  if(!supervisor) return { error: `Fila ${indiceFila}: falta el supervisor.` };
+  if(carta && fechaCarta){
+    const hoy = new Date().toISOString().slice(0,10);
+    if(fechaCarta > hoy) return { error: `Fila ${indiceFila}: la fecha de firma de carta no puede ser futura.` };
+  }
+  const claveDup = `${codigo}__${fecha}`;
+  if(AUSENCIAS.some(a => a.codigo === codigo && a.fecha === fecha)){
+    return { error: `Fila ${indiceFila}: ${emp.nombre} (#${codigo}) ya tiene una falta registrada el ${fmtFecha(fecha)}.` };
+  }
+  if(duplicadosEnLote.has(claveDup)){
+    return { error: `Fila ${indiceFila}: duplicado dentro de la misma plantilla (#${codigo}, ${fmtFecha(fecha)}).` };
+  }
+  duplicadosEnLote.add(claveDup);
+
+  return { ok: true, registro: {
+    id: uid(), codigo, nombre: emp.nombre, depto: emp.depto, puesto: emp.puesto,
+    supervisor, fecha, motivo, carta, fechaCarta: carta ? fechaCarta : '', notas,
+    creado: new Date().toISOString()
+  }};
+}
+
+document.getElementById('btn-plantilla-subir').addEventListener('click', ()=>{
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
+  document.getElementById('inp-plantilla-file').click();
+});
+
+document.getElementById('inp-plantilla-file').addEventListener('change', async function(){
+  const file = this.files[0];
+  this.value = ''; // permite volver a subir el mismo archivo después
+  if(!file) return;
+  if(MODO_LECTURA) return;
+
+  const btn = document.getElementById('btn-plantilla-subir');
+  btn.disabled = true; btn.textContent = 'Leyendo archivo...';
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const nombreHoja = wb.SheetNames.includes('Plantilla') ? 'Plantilla' : wb.SheetNames[0];
+    const hoja = wb.Sheets[nombreHoja];
+    const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+
+    if(filas.length === 0){
+      mostrarToast('El archivo no tiene registros para subir.', true);
+      return;
+    }
+
+    const duplicadosEnLote = new Set();
+    const validas = [];
+    const errores = [];
+    filas.forEach((fila, i)=>{
+      // Salta filas totalmente vacías o la fila de ejemplo (columna Notas la delata)
+      const vacia = Object.values(fila).every(v => String(v).trim()==='');
+      if(vacia) return;
+      const esEjemplo = String(fila['Numero_Empleado']||'').trim()==='10007' && String(fila['Notas']||'').includes('Ejemplo');
+      if(esEjemplo) return;
+      const resultado = validarFilaPlantilla(fila, i+2, duplicadosEnLote); // +2: fila 1 es encabezado
+      if(resultado.ok) validas.push(resultado.registro);
+      else errores.push(resultado.error);
+    });
+
+    if(validas.length === 0){
+      mostrarResultadoPlantilla(0, errores.length, errores);
+      return;
+    }
+
+    btn.textContent = `Subiendo 0 de ${validas.length}...`;
+    let subidas = 0;
+    const fallasAlSubir = [];
+    for(const registro of validas){
+      try{
+        await agregarAusenciaRemota(registro);
+        AUSENCIAS.push(registro);
+        const lista = SUPERVISORES[registro.depto] || Array(10).fill('');
+        const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === registro.supervisor.toLowerCase());
+        if(!yaCapturado){
+          const idxLibre = lista.findIndex(n => !n || !n.trim());
+          if(idxLibre > -1){
+            lista[idxLibre] = registro.supervisor;
+            SUPERVISORES[registro.depto] = lista;
+          }
+        }
+        subidas++;
+        btn.textContent = `Subiendo ${subidas} de ${validas.length}...`;
+      }catch(err){
+        fallasAlSubir.push(`${registro.nombre} (#${registro.codigo}, ${fmtFecha(registro.fecha)}): no se pudo guardar en Google Sheets.`);
+      }
+    }
+    if(subidas > 0){
+      await guardarSupervisores();
+    }
+
+    mostrarResultadoPlantilla(subidas, errores.length + fallasAlSubir.length, [...errores, ...fallasAlSubir]);
+    renderDashboard();
+    if(!document.getElementById('view-historial').classList.contains('hidden')) renderHistorial();
+  }catch(err){
+    mostrarToast('No se pudo leer el archivo. Verifica que sea el formato de la plantilla (.xlsx).', true);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir plantilla';
+  }
+});
+
+function mostrarResultadoPlantilla(exitosas, conError, listaErrores){
+  const resumen = document.getElementById('resultado-plantilla-resumen');
+  resumen.innerHTML = `
+    <div class="kpi good" style="flex:1;min-width:160px;">
+      <div class="kpi-label">Registradas con éxito</div>
+      <div class="kpi-value">${exitosas}</div>
+    </div>
+    <div class="kpi ${conError>0?'bad':''}" style="flex:1;min-width:160px;">
+      <div class="kpi-label">Con error (no subidas)</div>
+      <div class="kpi-value">${conError}</div>
+    </div>`;
+  const detalle = document.getElementById('resultado-plantilla-detalle');
+  if(listaErrores.length === 0){
+    detalle.innerHTML = '<div class="small-muted">Todos los registros se subieron sin ningún error. 👍</div>';
+  } else {
+    detalle.innerHTML = `<div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:8px;">Detalle de filas no subidas</div>` +
+      listaErrores.map(e=>`<div class="alert-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><span>${e}</span></div>`).join('');
+  }
+  document.getElementById('modal-resultado-plantilla-bg').classList.add('show');
+}
+function cerrarModalResultadoPlantilla(){
+  document.getElementById('modal-resultado-plantilla-bg').classList.remove('show');
 }
 
 /* ============================================================
