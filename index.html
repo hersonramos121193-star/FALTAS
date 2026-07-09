@@ -367,6 +367,16 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel">
         <div class="panel-head">
+          <div class="panel-title">Ausencias por supervisor</div>
+          <span class="small-muted">Total de faltas acumuladas de la gente a cargo de cada supervisor</span>
+        </div>
+        <div class="panel-body">
+          <div id="supervisor-bars"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
           <div class="panel-title">Faltas por mes</div>
           <span class="small-muted">General, por planta/departamento y por motivo</span>
         </div>
@@ -848,7 +858,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.08-v20";
+const APP_VERSION = "2026.07.09-v21";
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -1273,6 +1283,34 @@ function renderDashboard(){
           <div style="width:${(c/maxM)*100}%;background:var(--navy-800);height:100%;border-radius:99px;"></div>
         </div>
       </div>`).join('');
+  }
+
+  // ausencias por supervisor
+  const porSupervisor = {};
+  AUSENCIAS.forEach(a=>{
+    const sup = (a.supervisor || '').trim() || 'Sin supervisor asignado';
+    porSupervisor[sup] = (porSupervisor[sup]||0)+1;
+  });
+  const supervisorOrder = Object.entries(porSupervisor).sort((a,b)=>b[1]-a[1]);
+  const maxSup = Math.max(1, ...supervisorOrder.map(([,c])=>c));
+  const supBarsEl = document.getElementById('supervisor-bars');
+  if(supervisorOrder.length===0){
+    supBarsEl.innerHTML = '<div class="small-muted">Aún no hay ausencias registradas.</div>';
+  } else {
+    const visibles = supervisorOrder.slice(0,15);
+    supBarsEl.innerHTML = visibles.map(([s,c])=>`
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="font-weight:600;color:var(--ink-700);">${s}</span>
+          <span style="color:var(--ink-500);">${c}</span>
+        </div>
+        <div style="background:var(--paper);border-radius:99px;height:8px;overflow:hidden;">
+          <div style="width:${(c/maxSup)*100}%;background:var(--navy-800);height:100%;border-radius:99px;"></div>
+        </div>
+      </div>`).join('');
+    if(supervisorOrder.length>15){
+      supBarsEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${supervisorOrder.length-15} supervisores más con faltas registradas</div>`;
+    }
   }
 
   // alertas: 2 o más faltas INJUSTIFICADAS en la MISMA semana
