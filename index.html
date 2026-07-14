@@ -312,10 +312,16 @@ tbody tr:hover{background:var(--paper);}
           <div class="pagetitle">Dashboard de ausentismo</div>
           <div class="pagesub">Resumen general de faltas registradas</div>
         </div>
-        <button class="btn btn-primary" id="btn-goto-registro" onclick="goTo('registro')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-          Registrar ausencia
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="btn-exportar-metricas" title="Descarga las métricas del Dashboard en un Excel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Exportar métricas a Excel
+          </button>
+          <button class="btn btn-primary" id="btn-goto-registro" onclick="goTo('registro')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Registrar ausencia
+          </button>
+        </div>
       </div>
 
       <div id="dash-conn-banner" class="hidden" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:9px;background:var(--warn-bg);border:1px solid #F0DFC4;margin-bottom:18px;">
@@ -887,7 +893,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.09-v22";
+const APP_VERSION = "2026.07.09-v23";
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -1447,6 +1453,90 @@ function cerrarModalResultadoPlantilla(){
 /* ============================================================
    DASHBOARD
    ============================================================ */
+/* ============================================================
+   EXPORTAR MÉTRICAS A EXCEL
+   ============================================================ */
+document.getElementById('btn-exportar-metricas').addEventListener('click', ()=>{
+  if(AUSENCIAS.length === 0){ mostrarToast('Aún no hay ausencias registradas para exportar.', true); return; }
+
+  const wb = XLSX.utils.book_new();
+  const hoy = new Date().toISOString().slice(0,10);
+
+  // ---- Resumen ----
+  const totalGeneral = AUSENCIAS.length;
+  const codigosUnicos = [...new Set(AUSENCIAS.map(a=>a.codigo))];
+  const conCarta = AUSENCIAS.filter(a=>a.carta).length;
+  const pctCarta = totalGeneral ? Math.round((conCarta/totalGeneral)*100) : 0;
+  const totalActivos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
+  const wsResumen = XLSX.utils.aoa_to_sheet([
+    ['Métricas de ausentismo — Grupo Metelmex'],
+    [`Exportado el ${fmtFecha(hoy)}`],
+    [],
+    ['Indicador', 'Valor'],
+    ['Total de faltas registradas', totalGeneral],
+    ['Empleados con al menos una falta', codigosUnicos.length],
+    ['Empleados activos en el directorio', totalActivos],
+    ['Faltas con carta compromiso firmada', conCarta],
+    ['% con carta compromiso', pctCarta + '%'],
+    ['Faltas sin carta compromiso', totalGeneral - conCarta],
+  ]);
+  wsResumen['!cols'] = [{wch:36},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+  // ---- Por mes ----
+  const clavesMes = [...new Set(AUSENCIAS.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort();
+  const labelMes = (m)=>{ const [y,mm]=m.split('-'); return `${NOMBRES_MES[parseInt(mm)-1]} ${y}`; };
+  const filasMes = [['Mes', 'Total de faltas']];
+  clavesMes.forEach(m=>{
+    filasMes.push([labelMes(m), AUSENCIAS.filter(a=>(a.fecha||'').slice(0,7)===m).length]);
+  });
+  const wsMes = XLSX.utils.aoa_to_sheet(filasMes);
+  wsMes['!cols'] = [{wch:18},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsMes, 'Por mes');
+
+  // ---- Por planta/departamento ----
+  const porDepto = {};
+  AUSENCIAS.forEach(a=>{ porDepto[a.depto||'Sin planta'] = (porDepto[a.depto||'Sin planta']||0)+1; });
+  const filasDepto = [['Planta / Departamento', 'Total de faltas']];
+  Object.entries(porDepto).sort((a,b)=>b[1]-a[1]).forEach(([d,c])=> filasDepto.push([d,c]));
+  const wsDepto = XLSX.utils.aoa_to_sheet(filasDepto);
+  wsDepto['!cols'] = [{wch:26},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsDepto, 'Por planta');
+
+  // ---- Por motivo ----
+  const porMotivo = {};
+  AUSENCIAS.forEach(a=>{ porMotivo[a.motivo||'Sin motivo'] = (porMotivo[a.motivo||'Sin motivo']||0)+1; });
+  const filasMotivo = [['Motivo', 'Total de faltas']];
+  Object.entries(porMotivo).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=> filasMotivo.push([m,c]));
+  const wsMotivo = XLSX.utils.aoa_to_sheet(filasMotivo);
+  wsMotivo['!cols'] = [{wch:20},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, wsMotivo, 'Por motivo');
+
+  // ---- Por supervisor ----
+  const porSupervisor = {};
+  AUSENCIAS.forEach(a=>{
+    const sup = (a.supervisor || '').trim() || 'Sin supervisor asignado';
+    porSupervisor[sup] = (porSupervisor[sup]||0)+1;
+  });
+  const filasSup = [['Supervisor', 'Total de faltas de su gente']];
+  Object.entries(porSupervisor).sort((a,b)=>b[1]-a[1]).forEach(([s,c])=> filasSup.push([s,c]));
+  const wsSup = XLSX.utils.aoa_to_sheet(filasSup);
+  wsSup['!cols'] = [{wch:32},{wch:22}];
+  XLSX.utils.book_append_sheet(wb, wsSup, 'Por supervisor');
+
+  // ---- Detalle (todas las faltas) ----
+  const filasDetalle = [['Numero_Empleado','Nombre','Planta','Puesto','Supervisor','Fecha_Falta','Motivo','Carta_Compromiso','Fecha_Firma_Carta','Notas']];
+  AUSENCIAS.slice().sort((a,b)=> b.fecha.localeCompare(a.fecha)).forEach(a=>{
+    filasDetalle.push([a.codigo, a.nombre, a.depto, a.puesto, a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||'']);
+  });
+  const wsDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
+  wsDetalle['!cols'] = [{wch:14},{wch:32},{wch:16},{wch:26},{wch:26},{wch:14},{wch:16},{wch:14},{wch:16},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
+
+  XLSX.writeFile(wb, `metricas_ausentismo_${hoy}.xlsx`);
+  mostrarToast('Excel de métricas descargado.');
+});
+
 function renderDashboard(){
   const total = AUSENCIAS.length;
   document.getElementById('kpi-total').textContent = total;
