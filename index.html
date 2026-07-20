@@ -284,6 +284,16 @@ tbody tr:hover{background:var(--paper);}
       <span>Empleados</span>
     </button>
 
+    <div class="navlabel">Reportes</div>
+    <button class="navbtn" data-view="rotacion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
+      <span>Rotación de personal</span>
+    </button>
+    <button class="navbtn" data-view="horas-extra">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+      <span>Horas extra</span>
+    </button>
+
     <div class="navlabel">Configuración</div>
     <button class="navbtn" data-view="supervisores">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -316,6 +326,10 @@ tbody tr:hover{background:var(--paper);}
           <button class="btn btn-ghost" id="btn-exportar-metricas" title="Descarga las métricas del Dashboard en un Excel">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
             Exportar métricas a Excel
+          </button>
+          <button class="btn btn-ghost" id="btn-exportar-kpis-semanales" title="Descarga % de ausentismo por supervisor, planta y semana">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            KPI's semanales
           </button>
           <button class="btn btn-primary" id="btn-goto-registro" onclick="goTo('registro')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
@@ -645,6 +659,142 @@ tbody tr:hover{background:var(--paper);}
       </div>
     </section>
 
+    <!-- ============ ROTACIÓN DE PERSONAL ============ -->
+    <section id="view-rotacion" class="view hidden">
+      <div class="topbar">
+        <div>
+          <div class="pagetitle">Rotación de personal</div>
+          <div class="pagesub" id="rotacion-pagesub">Altas, bajas y % de rotación del año en curso</div>
+        </div>
+        <button class="btn btn-ghost" id="btn-exportar-rotacion">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+          Exportar a Excel
+        </button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi ok">
+          <div class="kpi-label">Altas en <span id="rot-anio-1">el año</span></div>
+          <div class="kpi-value" id="rot-altas">0</div>
+          <div class="kpi-sub">empleados nuevos</div>
+        </div>
+        <div class="kpi bad">
+          <div class="kpi-label">Bajas en <span id="rot-anio-2">el año</span></div>
+          <div class="kpi-value" id="rot-bajas">0</div>
+          <div class="kpi-sub">empleados que salieron</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Plantilla activa actual</div>
+          <div class="kpi-value" id="rot-activos">0</div>
+          <div class="kpi-sub">estatus ALTA</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">% Rotación anualizada</div>
+          <div class="kpi-value" id="rot-pct">0%</div>
+          <div class="kpi-sub">bajas del año / plantilla activa</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Altas y bajas por mes <span>— año en curso</span></div>
+        </div>
+        <div class="panel-body">
+          <div id="rotacion-mes-bars"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Bajas recientes</div>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Empleado</th><th>#</th><th>Planta</th><th>Puesto</th><th>Fecha de baja</th></tr></thead>
+            <tbody id="rotacion-bajas-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Altas recientes</div>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Empleado</th><th>#</th><th>Planta</th><th>Puesto</th><th>Fecha de ingreso</th></tr></thead>
+            <tbody id="rotacion-altas-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HORAS EXTRA ============ -->
+    <section id="view-horas-extra" class="view hidden">
+      <div class="topbar">
+        <div>
+          <div class="pagetitle">Horas extra</div>
+          <div class="pagesub">Sube el Excel de nómina semanal y calcula las horas extra por colaborador</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="btn-exportar-horas-extra">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Exportar a Excel
+          </button>
+          <button class="btn btn-primary" id="btn-horas-extra-subir">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
+            Subir Excel de nómina
+          </button>
+          <input type="file" id="inp-horas-extra-file" accept=".xlsx,.xls,.csv" style="display:none;">
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-body">
+          <div class="field" style="max-width:340px;">
+            <label>Periodo</label>
+            <select id="f-horas-extra-periodo"><option value="">Todos los periodos subidos</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Total horas extra (simples)</div>
+          <div class="kpi-value" id="he-total-simples">0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+        <div class="kpi ok">
+          <div class="kpi-label">Horas dobles / triples</div>
+          <div class="kpi-value" id="he-total-dt">0 / 0</div>
+          <div class="kpi-sub">dobles / triples</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">Importe estimado</div>
+          <div class="kpi-value" id="he-importe">$0</div>
+          <div class="kpi-sub">simples ×1.5, dobles ×2, triples ×3</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Colaborador con más horas</div>
+          <div class="kpi-value" id="he-top" style="font-size:15px;">—</div>
+          <div class="kpi-sub" id="he-top-sub"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Detalle por colaborador</div>
+          <span class="small-muted" id="he-count"></span>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>#</th><th>Nombre</th><th>Planta</th><th>Periodo</th><th>H. simples</th><th>H. dobles</th><th>H. triples</th><th>Importe estimado</th></tr></thead>
+            <tbody id="horas-extra-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CONEXIÓN ============ -->
     <section id="view-conexion" class="view hidden">
       <div class="topbar">
@@ -814,6 +964,11 @@ tbody tr:hover{background:var(--paper);}
           </select>
           <span class="help">Pon "BAJA" si el empleado ya no labora en la empresa. Puedes volver a poner "ALTA" para reactivarlo en cualquier momento.</span>
         </div>
+        <div class="field full" id="wrap-edit-emp-fecha-baja" style="display:none;">
+          <label>Fecha de baja</label>
+          <input type="date" id="edit-emp-fecha-baja">
+          <span class="help">Se usa para calcular la rotación de personal.</span>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -870,6 +1025,27 @@ tbody tr:hover{background:var(--paper);}
   </div>
 </div>
 
+<!-- Modal periodo horas extra -->
+<div class="modal-bg" id="modal-periodo-he-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>¿De qué periodo es esta nómina?</h3>
+      <button class="modal-close" onclick="cerrarModalPeriodoHE()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Periodo <span class="req">*</span></label>
+        <input type="text" id="inp-periodo-he" placeholder='Ej. "Semana 29 — 13 al 19 de julio 2026"'>
+        <span class="help">Este texto identifica la carga. Si vuelves a subir un Excel con el mismo periodo, reemplaza los datos anteriores de ese periodo.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrarModalPeriodoHE()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-continuar-periodo-he">Continuar y elegir archivo</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal resultado carga masiva -->
 <div class="modal-bg" id="modal-resultado-plantilla-bg">
   <div class="modal" style="max-width:640px;">
@@ -893,7 +1069,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.14-v24";
+const APP_VERSION = "2026.07.20-v25";
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -913,6 +1089,7 @@ function recalcularDepartamentos(){
 }
 
 let AUSENCIAS = [];
+let HORAS_EXTRA = [];
 function aplicarModoLectura(){
   if(!MODO_LECTURA) return;
   document.body.classList.add('solo-lectura');
@@ -923,6 +1100,7 @@ function aplicarModoLectura(){
   ocultar('btn-abrir-nuevo-empleado');
   ocultar('btn-guardar-supervisores');
   ocultar('btn-plantilla-subir');
+  ocultar('btn-horas-extra-subir');
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#122E4A;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;letter-spacing:.2px;';
   banner.textContent = 'Modo de solo lectura — puedes consultar el Dashboard, el Historial y el Directorio, pero no registrar ni modificar información.';
@@ -1013,26 +1191,28 @@ function aplicarCambiosEmpleados(lista){
     if(c.depto) e.depto = c.depto;
     if(c.puesto) e.puesto = c.puesto;
     if(c.estatus) e.estatus = c.estatus;
+    e.fechaBaja = (c.estatus === 'BAJA') ? (c.fechaBaja || '') : '';
   });
   recalcularDepartamentos();
 }
 async function cargarDatos(){
   if(!getScriptUrl()){
-    AUSENCIAS = []; SUPERVISORES = {};
+    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = [];
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
     return;
   }
   try{
-    const [aus, sup, empNuevos, empCambios] = await Promise.all([
-      apiGet('list'), apiGet('listSup'), apiGet('listEmpleados'), apiGet('listCambiosEmpleados')
+    const [aus, sup, empNuevos, empCambios, horasExtra] = await Promise.all([
+      apiGet('list'), apiGet('listSup'), apiGet('listEmpleados'), apiGet('listCambiosEmpleados'), apiGet('listHorasExtra')
     ]);
     AUSENCIAS = Array.isArray(aus) ? aus : [];
     SUPERVISORES = normalizarSupervisores(sup);
     fusionarEmpleadosNuevos(empNuevos);
     aplicarCambiosEmpleados(empCambios);
+    HORAS_EXTRA = Array.isArray(horasExtra) ? horasExtra : [];
     actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
   }catch(e){
-    AUSENCIAS = []; SUPERVISORES = {};
+    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = [];
     actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
     mostrarToast('No se pudo conectar con Google Sheets', true);
   }
@@ -1111,6 +1291,8 @@ function goTo(view){
   if(view==='empleados') renderEmpleados();
   if(view==='supervisores') renderSupervisores();
   if(view==='conexion') renderConexion();
+  if(view==='rotacion') renderRotacion();
+  if(view==='horas-extra') renderHorasExtra();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.navbtn').forEach(b=>{
@@ -1535,6 +1717,103 @@ document.getElementById('btn-exportar-metricas').addEventListener('click', ()=>{
 
   XLSX.writeFile(wb, `metricas_ausentismo_${hoy}.xlsx`);
   mostrarToast('Excel de métricas descargado.');
+});
+
+function lunesDeLaSemana(fechaStr){
+  const [y,m,d] = fechaStr.split('-').map(Number);
+  const fecha = new Date(Date.UTC(y,m-1,d));
+  const diaSemana = (fecha.getUTCDay()+6)%7; // lunes=0 ... domingo=6
+  fecha.setUTCDate(fecha.getUTCDate()-diaSemana);
+  return fecha.toISOString().slice(0,10);
+}
+const DIAS_LABORABLES_SEMANA = 6; // lunes a sábado — ajustable si tu operación trabaja distinto
+
+document.getElementById('btn-exportar-kpis-semanales').addEventListener('click', ()=>{
+  if(AUSENCIAS.length === 0){ mostrarToast('Aún no hay ausencias registradas para calcular KPIs.', true); return; }
+  const hoy = new Date().toISOString().slice(0,10);
+  const totalActivos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
+
+  const labelSemana = (lunes)=>{
+    const d1 = new Date(lunes+'T00:00:00Z'); d1.setUTCDate(d1.getUTCDate()+6);
+    return `${fmtFecha(lunes)} al ${fmtFecha(d1.toISOString().slice(0,10))}`;
+  };
+
+  // ---- Semanal general ----
+  const porSemana = {};
+  AUSENCIAS.forEach(a=>{ if(!a.fecha) return; const l=lunesDeLaSemana(a.fecha); porSemana[l]=(porSemana[l]||0)+1; });
+  const semanasOrdenadas = Object.keys(porSemana).sort();
+  const filasGeneral = [['Semana', 'Total de faltas', 'Empleados activos', '% Ausentismo']];
+  semanasOrdenadas.forEach(l=>{
+    const total = porSemana[l];
+    const pct = totalActivos>0 ? Math.round((total/(totalActivos*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
+    filasGeneral.push([labelSemana(l), total, totalActivos, pct + '%']);
+  });
+  const wsGeneral = XLSX.utils.aoa_to_sheet(filasGeneral);
+  wsGeneral['!cols'] = [{wch:26},{wch:16},{wch:16},{wch:14}];
+
+  // ---- Semanal por planta ----
+  const porSemanaPlanta = {};
+  AUSENCIAS.forEach(a=>{
+    if(!a.fecha) return;
+    const l = lunesDeLaSemana(a.fecha);
+    const k = l+'||'+(a.depto||'Sin planta');
+    porSemanaPlanta[k] = (porSemanaPlanta[k]||0)+1;
+  });
+  const filasPlanta = [['Semana', 'Planta', 'Total de faltas', 'Empleados activos en la planta', '% Ausentismo']];
+  Object.keys(porSemanaPlanta).sort().forEach(k=>{
+    const [l, planta] = k.split('||');
+    const total = porSemanaPlanta[k];
+    const activosPlanta = EMPLEADOS.filter(e=>e.depto===planta && (e.estatus||'ALTA')==='ALTA').length;
+    const pct = activosPlanta>0 ? Math.round((total/(activosPlanta*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
+    filasPlanta.push([labelSemana(l), planta, total, activosPlanta, pct + '%']);
+  });
+  const wsPlanta = XLSX.utils.aoa_to_sheet(filasPlanta);
+  wsPlanta['!cols'] = [{wch:26},{wch:20},{wch:16},{wch:24},{wch:14}];
+
+  // ---- Semanal por supervisor ----
+  const porSemanaSup = {};
+  const empleadosPorSupervisor = {};
+  AUSENCIAS.forEach(a=>{
+    const sup = (a.supervisor||'').trim() || 'Sin supervisor asignado';
+    if(!empleadosPorSupervisor[sup]) empleadosPorSupervisor[sup] = new Set();
+    empleadosPorSupervisor[sup].add(a.codigo);
+    if(!a.fecha) return;
+    const l = lunesDeLaSemana(a.fecha);
+    const k = l+'||'+sup;
+    porSemanaSup[k] = (porSemanaSup[k]||0)+1;
+  });
+  const filasSup = [['Semana', 'Supervisor', 'Total de faltas', 'Empleados a su cargo (aprox.)', '% Ausentismo (aprox.)']];
+  Object.keys(porSemanaSup).sort().forEach(k=>{
+    const [l, sup] = k.split('||');
+    const total = porSemanaSup[k];
+    const aCargo = empleadosPorSupervisor[sup] ? empleadosPorSupervisor[sup].size : 0;
+    const pct = aCargo>0 ? Math.round((total/(aCargo*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
+    filasSup.push([labelSemana(l), sup, total, aCargo, pct + '%']);
+  });
+  const wsSupSemanal = XLSX.utils.aoa_to_sheet(filasSup);
+  wsSupSemanal['!cols'] = [{wch:26},{wch:32},{wch:16},{wch:26},{wch:20}];
+
+  // ---- Metodología ----
+  const wsMeta = XLSX.utils.aoa_to_sheet([
+    ['Metodología de los KPIs semanales'],
+    [],
+    ['% Ausentismo = (Total de faltas de la semana / (Empleados activos × ' + DIAS_LABORABLES_SEMANA + ' días laborables)) × 100'],
+    [],
+    ['Semanal_General: usa la plantilla activa total de la empresa (hoy).'],
+    ['Semanal_por_Planta: usa la plantilla activa de cada planta (hoy).'],
+    ['Semanal_por_Supervisor: como la app no asigna empleados a un supervisor de forma fija (el supervisor se captura por cada falta), "empleados a su cargo" es una APROXIMACIÓN: se cuentan los empleados distintos que alguna vez tuvieron una falta registrada con ese supervisor. Si un supervisor tiene gente que nunca ha faltado, esa gente no se refleja en este cálculo.'],
+    [],
+    ['La plantilla activa usada es la de HOY (fecha de exportación), no la de cada semana histórica — es una simplificación razonable para uso operativo, no un cálculo retroactivo exacto.'],
+  ]);
+  wsMeta['!cols'] = [{wch:100}];
+
+  const wb2 = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb2, wsGeneral, 'Semanal_General');
+  XLSX.utils.book_append_sheet(wb2, wsPlanta, 'Semanal_por_Planta');
+  XLSX.utils.book_append_sheet(wb2, wsSupSemanal, 'Semanal_por_Supervisor');
+  XLSX.utils.book_append_sheet(wb2, wsMeta, 'Metodología');
+  XLSX.writeFile(wb2, `kpis_semanales_${hoy}.xlsx`);
+  mostrarToast('Excel de KPIs semanales descargado.');
 });
 
 function renderDashboard(){
@@ -2049,8 +2328,20 @@ function abrirEditarEmpleado(codigo){
   document.getElementById('edit-emp-depto').value = e.depto || '';
   document.getElementById('edit-emp-puesto').value = e.puesto || '';
   document.getElementById('edit-emp-estatus').value = (e.estatus || 'ALTA');
+  document.getElementById('edit-emp-fecha-baja').value = e.fechaBaja || '';
+  document.getElementById('wrap-edit-emp-fecha-baja').style.display = (e.estatus==='BAJA') ? 'block' : 'none';
   document.getElementById('modal-editar-emp-bg').classList.add('show');
 }
+document.getElementById('edit-emp-estatus').addEventListener('change', function(){
+  const wrap = document.getElementById('wrap-edit-emp-fecha-baja');
+  if(this.value === 'BAJA'){
+    wrap.style.display = 'block';
+    const inp = document.getElementById('edit-emp-fecha-baja');
+    if(!inp.value) inp.value = new Date().toISOString().slice(0,10);
+  }else{
+    wrap.style.display = 'none';
+  }
+});
 function cerrarModalEditarEmpleado(){
   document.getElementById('modal-editar-emp-bg').classList.remove('show');
   editandoEmpleadoCodigo = null;
@@ -2065,6 +2356,7 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const depto = document.getElementById('edit-emp-depto').value.trim().toUpperCase();
   const puesto = document.getElementById('edit-emp-puesto').value.trim().toUpperCase();
   const estatus = document.getElementById('edit-emp-estatus').value;
+  const fechaBaja = estatus === 'BAJA' ? document.getElementById('edit-emp-fecha-baja').value : '';
 
   if(!nombre){ mostrarToast('Indica el nombre completo', true); return; }
   if(!depto){ mostrarToast('Indica el departamento / planta', true); return; }
@@ -2074,10 +2366,10 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const btn = document.getElementById('btn-guardar-edicion-empleado');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, estatus}});
+    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, estatus, fechaBaja}});
     const e = EMP_BY_CODIGO[codigo];
     if(e){
-      e.nombre = nombre; e.depto = depto; e.puesto = puesto; e.estatus = estatus;
+      e.nombre = nombre; e.depto = depto; e.puesto = puesto; e.estatus = estatus; e.fechaBaja = fechaBaja;
     }
     recalcularDepartamentos();
     mostrarToast(`Empleado #${codigo} actualizado correctamente`);
@@ -2200,6 +2492,284 @@ document.getElementById('btn-guardar-supervisores').addEventListener('click', as
     else delete SUPERVISORES[d];
   });
   await guardarSupervisores();
+});
+
+/* ============================================================
+   ROTACIÓN DE PERSONAL
+   ============================================================ */
+function renderRotacion(){
+  const anioActual = new Date().getFullYear();
+  document.getElementById('rot-anio-1').textContent = anioActual;
+  document.getElementById('rot-anio-2').textContent = anioActual;
+  document.getElementById('rotacion-pagesub').textContent = `Altas, bajas y % de rotación de ${anioActual}`;
+
+  const empConFechas = EMPLEADOS.map(e=>({
+    ...e,
+    _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso),
+    _fechaBajaNorm: excelFechaATexto(e.fechaBaja)
+  }));
+
+  const altasAnio = empConFechas.filter(e=> e._fechaIngresoNorm && e._fechaIngresoNorm.startsWith(String(anioActual)));
+  const bajasAnio = empConFechas.filter(e=> (e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm && e._fechaBajaNorm.startsWith(String(anioActual)));
+  const activos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
+
+  document.getElementById('rot-altas').textContent = altasAnio.length;
+  document.getElementById('rot-bajas').textContent = bajasAnio.length;
+  document.getElementById('rot-activos').textContent = activos;
+  const pctRotacion = activos>0 ? Math.round((bajasAnio.length/activos)*1000)/10 : 0;
+  document.getElementById('rot-pct').textContent = pctRotacion + '%';
+
+  const porMes = {};
+  for(let m=1;m<=12;m++) porMes[String(m).padStart(2,'0')] = {altas:0, bajas:0};
+  altasAnio.forEach(e=>{ const mm=e._fechaIngresoNorm.slice(5,7); if(porMes[mm]) porMes[mm].altas++; });
+  bajasAnio.forEach(e=>{ const mm=e._fechaBajaNorm.slice(5,7); if(porMes[mm]) porMes[mm].bajas++; });
+  const maxMes = Math.max(1, ...Object.values(porMes).map(x=>Math.max(x.altas,x.bajas)));
+  const mesActualNum = new Date().getMonth()+1;
+  const mesesEl = document.getElementById('rotacion-mes-bars');
+  mesesEl.innerHTML = Object.keys(porMes).filter(mm=>parseInt(mm)<=mesActualNum).map(mm=>{
+    const {altas,bajas} = porMes[mm];
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--ink-700);margin-bottom:4px;">${NOMBRES_MES[parseInt(mm)-1]}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+        <span style="width:46px;font-size:11px;color:var(--ink-500);">Altas</span>
+        <div style="flex:1;background:var(--paper);border-radius:99px;height:8px;overflow:hidden;"><div style="width:${(altas/maxMes)*100}%;background:#2E7D32;height:100%;border-radius:99px;"></div></div>
+        <span style="width:22px;font-size:11px;text-align:right;">${altas}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:46px;font-size:11px;color:var(--ink-500);">Bajas</span>
+        <div style="flex:1;background:var(--paper);border-radius:99px;height:8px;overflow:hidden;"><div style="width:${(bajas/maxMes)*100}%;background:#B2432E;height:100%;border-radius:99px;"></div></div>
+        <span style="width:22px;font-size:11px;text-align:right;">${bajas}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const bajasBody = document.getElementById('rotacion-bajas-body');
+  const bajasOrdenadas = empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm).sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm)).slice(0,30);
+  bajasBody.innerHTML = bajasOrdenadas.length ? bajasOrdenadas.map(e=>`
+    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaBajaNorm)}</td></tr>
+  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">Sin bajas con fecha registrada.</td></tr>`;
+
+  const altasBody = document.getElementById('rotacion-altas-body');
+  const altasOrdenadas = empConFechas.filter(e=>e._fechaIngresoNorm).sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm)).slice(0,30);
+  altasBody.innerHTML = altasOrdenadas.length ? altasOrdenadas.map(e=>`
+    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaIngresoNorm)}</td></tr>
+  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">Sin datos de ingreso.</td></tr>`;
+
+  window._rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas };
+}
+
+document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
+  const cache = window._rotacionCache;
+  if(!cache){ mostrarToast('Espera a que cargue la vista de Rotación.', true); return; }
+  const hoy = new Date().toISOString().slice(0,10);
+  const wb = XLSX.utils.book_new();
+
+  const wsResumen = XLSX.utils.aoa_to_sheet([
+    ['Rotación de personal — Grupo Metelmex'],
+    [`Año ${cache.anioActual} — exportado el ${fmtFecha(hoy)}`],
+    [],
+    ['Indicador', 'Valor'],
+    ['Altas en el año', cache.altasAnio.length],
+    ['Bajas en el año', cache.bajasAnio.length],
+    ['Plantilla activa actual', cache.activos],
+    ['% Rotación anualizada', cache.pctRotacion + '%'],
+    [],
+    ['Fórmula: % Rotación = (Bajas del año / Plantilla activa actual) × 100'],
+  ]);
+  wsResumen['!cols'] = [{wch:30},{wch:18}];
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+  const filasBajas = [['Numero_Empleado','Nombre','Planta','Puesto','Fecha_Baja']];
+  cache.empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm)
+    .sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm))
+    .forEach(e=> filasBajas.push([e.codigo, e.nombre, e.depto, e.puesto, e._fechaBajaNorm]));
+  const wsBajas = XLSX.utils.aoa_to_sheet(filasBajas);
+  wsBajas['!cols'] = [{wch:14},{wch:32},{wch:18},{wch:26},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsBajas, 'Bajas');
+
+  const filasAltas = [['Numero_Empleado','Nombre','Planta','Puesto','Fecha_Ingreso']];
+  cache.empConFechas.filter(e=>e._fechaIngresoNorm)
+    .sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm))
+    .forEach(e=> filasAltas.push([e.codigo, e.nombre, e.depto, e.puesto, e._fechaIngresoNorm]));
+  const wsAltas = XLSX.utils.aoa_to_sheet(filasAltas);
+  wsAltas['!cols'] = [{wch:14},{wch:32},{wch:18},{wch:26},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsAltas, 'Altas');
+
+  XLSX.writeFile(wb, `rotacion_personal_${hoy}.xlsx`);
+  mostrarToast('Excel de rotación descargado.');
+});
+
+/* ============================================================
+   HORAS EXTRA — carga masiva desde Excel de nómina, por periodo
+   ============================================================ */
+let periodoPendienteHE = null;
+
+document.getElementById('btn-horas-extra-subir').addEventListener('click', ()=>{
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
+  document.getElementById('inp-periodo-he').value = '';
+  document.getElementById('modal-periodo-he-bg').classList.add('show');
+  setTimeout(()=>document.getElementById('inp-periodo-he').focus(), 50);
+});
+function cerrarModalPeriodoHE(){
+  document.getElementById('modal-periodo-he-bg').classList.remove('show');
+}
+document.getElementById('modal-periodo-he-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-periodo-he-bg') cerrarModalPeriodoHE(); });
+document.getElementById('btn-continuar-periodo-he').addEventListener('click', ()=>{
+  const periodo = document.getElementById('inp-periodo-he').value.trim();
+  if(!periodo){ mostrarToast('Indica el periodo de esta nómina', true); return; }
+  periodoPendienteHE = periodo;
+  cerrarModalPeriodoHE();
+  document.getElementById('inp-horas-extra-file').click();
+});
+
+function numeroDe(valor){
+  if(valor === null || valor === undefined || valor === '') return 0;
+  if(typeof valor === 'number') return valor;
+  const n = parseFloat(String(valor).replace(/,/g,'').trim());
+  return isNaN(n) ? 0 : n;
+}
+function normalizarHeaderHE(h){ return String(h).replace(/\s+/g,' ').trim().toLowerCase(); }
+
+document.getElementById('inp-horas-extra-file').addEventListener('change', async function(){
+  const file = this.files[0];
+  this.value = '';
+  if(!file) return;
+  if(MODO_LECTURA || !periodoPendienteHE) return;
+  const periodo = periodoPendienteHE;
+  periodoPendienteHE = null;
+
+  const btn = document.getElementById('btn-horas-extra-subir');
+  btn.disabled = true; btn.textContent = 'Leyendo archivo...';
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const hoja = wb.Sheets[wb.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+    if(filas.length === 0){ mostrarToast('El archivo no tiene registros.', true); return; }
+
+    const headersReales = Object.keys(filas[0]);
+    const buscarCampo = (normalizado)=> headersReales.find(h => normalizarHeaderHE(h) === normalizado);
+    const colNoEmp = buscarCampo('noempleado');
+    const colNombre = buscarCampo('nombre');
+    const colSalario = buscarCampo('salario diario');
+    const colSimples = buscarCampo('total horas extras semanal');
+    const colDobles = buscarCampo('dobles');
+    const colTriples = buscarCampo('triples');
+
+    if(!colNoEmp){
+      mostrarToast('No encontré la columna "NoEmpleado" en el archivo. Verifica que sea el mismo formato de nómina.', true);
+      return;
+    }
+
+    const registros = [];
+    filas.forEach(fila=>{
+      const codigo = String(fila[colNoEmp]||'').trim();
+      if(!codigo) return;
+      const emp = EMP_BY_CODIGO[codigo];
+      const salarioDiario = numeroDe(fila[colSalario]);
+      const horasSimples = numeroDe(fila[colSimples]);
+      const horasDobles = numeroDe(fila[colDobles]);
+      const horasTriples = numeroDe(fila[colTriples]);
+      if(salarioDiario===0 && horasSimples===0 && horasDobles===0 && horasTriples===0) return; // fila vacía / sin movimientos
+      const tarifaHora = salarioDiario / 8;
+      const importeEstimado = Math.round((horasSimples*tarifaHora*1.5 + horasDobles*tarifaHora*2 + horasTriples*tarifaHora*3)*100)/100;
+      registros.push({
+        codigo,
+        nombre: emp ? emp.nombre : (colNombre ? String(fila[colNombre]||'').trim() : ''),
+        planta: emp ? emp.depto : '',
+        salarioDiario, horasSimples, horasDobles, horasTriples, importeEstimado
+      });
+    });
+
+    if(registros.length === 0){
+      mostrarToast('No se encontraron registros con horas extra en el archivo.', true);
+      return;
+    }
+
+    btn.textContent = 'Guardando en Google Sheets...';
+    await apiPost({action:'addHorasExtraLote', periodo, registros});
+
+    // reemplaza localmente cualquier carga previa del mismo periodo
+    HORAS_EXTRA = HORAS_EXTRA.filter(r=>r.periodo !== periodo);
+    const subidoEn = new Date().toISOString();
+    registros.forEach(r=> HORAS_EXTRA.push({ periodo, subidoEn, ...r }));
+
+    mostrarToast(`${registros.length} colaboradores con horas extra guardados para "${periodo}".`);
+    renderHorasExtra();
+  }catch(err){
+    mostrarToast('No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir Excel de nómina';
+  }
+});
+
+function renderHorasExtra(){
+  const sel = document.getElementById('f-horas-extra-periodo');
+  const periodos = [...new Set(HORAS_EXTRA.map(r=>r.periodo))];
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los periodos subidos</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
+  if(periodos.includes(actual)) sel.value = actual;
+
+  const filtro = sel.value;
+  const datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
+
+  const totalSimples = datos.reduce((s,r)=>s+numeroDe(r.horasSimples),0);
+  const totalDobles = datos.reduce((s,r)=>s+numeroDe(r.horasDobles),0);
+  const totalTriples = datos.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
+  const totalImporte = datos.reduce((s,r)=>s+numeroDe(r.importeEstimado),0);
+
+  document.getElementById('he-total-simples').textContent = totalSimples.toFixed(1);
+  document.getElementById('he-total-dt').textContent = `${totalDobles.toFixed(1)} / ${totalTriples.toFixed(1)}`;
+  document.getElementById('he-importe').textContent = '$' + totalImporte.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  if(datos.length===0){
+    document.getElementById('he-top').textContent = '—';
+    document.getElementById('he-top-sub').textContent = '';
+  } else {
+    const top = datos.slice().sort((a,b)=> (numeroDe(b.horasSimples)+numeroDe(b.horasDobles)+numeroDe(b.horasTriples)) - (numeroDe(a.horasSimples)+numeroDe(a.horasDobles)+numeroDe(a.horasTriples)))[0];
+    const totalTop = numeroDe(top.horasSimples)+numeroDe(top.horasDobles)+numeroDe(top.horasTriples);
+    document.getElementById('he-top').textContent = top.nombre || `#${top.codigo}`;
+    document.getElementById('he-top-sub').textContent = `${totalTop.toFixed(1)} hrs — ${top.periodo}`;
+  }
+
+  document.getElementById('he-count').textContent = `${datos.length} registro(s)`;
+  const body = document.getElementById('horas-extra-body');
+  if(datos.length===0){
+    body.innerHTML = `<tr><td colspan="8" class="small-muted" style="text-align:center;padding:20px;">Aún no has subido ningún Excel de horas extra.</td></tr>`;
+  } else {
+    body.innerHTML = datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo) || (a.nombre||'').localeCompare(b.nombre||'')).map(r=>`
+      <tr>
+        <td>#${r.codigo}</td>
+        <td>${r.nombre||''}</td>
+        <td>${r.planta||'N/D'}</td>
+        <td>${r.periodo}</td>
+        <td>${numeroDe(r.horasSimples).toFixed(1)}</td>
+        <td>${numeroDe(r.horasDobles).toFixed(1)}</td>
+        <td>${numeroDe(r.horasTriples).toFixed(1)}</td>
+        <td>$${numeroDe(r.importeEstimado).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      </tr>`).join('');
+  }
+}
+document.getElementById('f-horas-extra-periodo').addEventListener('change', renderHorasExtra);
+
+document.getElementById('btn-exportar-horas-extra').addEventListener('click', ()=>{
+  if(HORAS_EXTRA.length===0){ mostrarToast('Aún no hay horas extra para exportar.', true); return; }
+  const filtro = document.getElementById('f-horas-extra-periodo').value;
+  const datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
+  const filas = [['Periodo','Numero_Empleado','Nombre','Planta','Salario_Diario','Horas_Simples','Horas_Dobles','Horas_Triples','Importe_Estimado']];
+  datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo)).forEach(r=>{
+    filas.push([r.periodo, r.codigo, r.nombre, r.planta, numeroDe(r.salarioDiario), numeroDe(r.horasSimples), numeroDe(r.horasDobles), numeroDe(r.horasTriples), numeroDe(r.importeEstimado)]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(filas);
+  ws['!cols'] = [{wch:26},{wch:14},{wch:32},{wch:18},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16}];
+  const wbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbook, ws, 'Horas Extra');
+  const hoy = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wbook, `horas_extra_${filtro?filtro.replace(/[^a-z0-9]+/gi,'_'):'todos'}_${hoy}.xlsx`);
+  mostrarToast('Excel de horas extra descargado.');
 });
 
 /* ============================================================
