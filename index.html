@@ -762,28 +762,34 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel" style="margin-bottom:18px;">
         <div class="panel-body">
-          <div class="field" style="max-width:340px;">
-            <label>Periodo</label>
-            <select id="f-horas-extra-periodo"><option value="">Todos los periodos subidos</option></select>
+          <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="field" style="max-width:340px;flex:1;min-width:260px;">
+              <label>Periodo</label>
+              <select id="f-horas-extra-periodo"><option value="">Todos los periodos subidos</option></select>
+            </div>
+            <button class="btn btn-ghost" id="btn-eliminar-periodo-he" style="border-color:#E3B7AC;color:#B2432E;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg>
+              Eliminar periodo seleccionado
+            </button>
           </div>
         </div>
       </div>
 
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="kpi-label">Total horas extra (simples)</div>
-          <div class="kpi-value" id="he-total-simples">0</div>
+          <div class="kpi-label">Total horas dobles</div>
+          <div class="kpi-value" id="he-total-dobles">0</div>
           <div class="kpi-sub">del periodo seleccionado</div>
         </div>
         <div class="kpi ok">
-          <div class="kpi-label">Horas dobles / triples</div>
-          <div class="kpi-value" id="he-total-dt">0 / 0</div>
-          <div class="kpi-sub">dobles / triples</div>
+          <div class="kpi-label">Total horas triples</div>
+          <div class="kpi-value" id="he-total-triples">0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
         </div>
         <div class="kpi gold">
           <div class="kpi-label">Importe estimado</div>
           <div class="kpi-value" id="he-importe">$0</div>
-          <div class="kpi-sub">simples ×1.5, dobles ×2, triples ×3</div>
+          <div class="kpi-sub">dobles ×2, triples ×3 sobre el salario por hora</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Colaborador con más horas</div>
@@ -799,7 +805,7 @@ tbody tr:hover{background:var(--paper);}
         </div>
         <div class="panel-body" style="overflow-x:auto;">
           <table>
-            <thead><tr><th>#</th><th>Nombre</th><th>Planta</th><th>Periodo</th><th>H. simples</th><th>H. dobles</th><th>H. triples</th><th>Importe estimado</th></tr></thead>
+            <thead><tr><th>#</th><th>Nombre</th><th>Planta</th><th>Periodo</th><th>H. dobles</th><th>H. triples</th><th>Total horas</th><th>Importe estimado</th></tr></thead>
             <tbody id="horas-extra-body"></tbody>
           </table>
         </div>
@@ -1083,7 +1089,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v26";
+const APP_VERSION = "2026.07.20-v27";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1120,6 +1126,7 @@ function aplicarModoLectura(){
   ocultar('btn-guardar-supervisores');
   ocultar('btn-plantilla-subir');
   ocultar('btn-horas-extra-subir');
+  ocultar('btn-eliminar-periodo-he');
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#122E4A;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;letter-spacing:.2px;';
   banner.textContent = 'Modo de solo lectura — puedes consultar el Dashboard, el Historial y el Directorio, pero no registrar ni modificar información.';
@@ -2771,6 +2778,24 @@ function numeroDe(valor){
 }
 function normalizarHeaderHE(h){ return String(h).replace(/\s+/g,' ').trim().toLowerCase(); }
 
+// Regla de la empresa para convertir horas extra DIARIAS en dobles/triples:
+// Lunes, Martes y Miércoles: hasta 3 horas de ese día son dobles, lo que exceda de 3 esos días es triple.
+// Jueves, Viernes, Sábado y Domingo: TODAS las horas de esos días son triples (ya se agotó el tope de dobles de la semana).
+const DIAS_CON_TOPE_DOBLES = ['lunes','martes','miercoles'];
+const DIAS_TODO_TRIPLE = ['jueves','viernes','sabado','domingo'];
+function calcularDoblesTriples(horasPorDia){
+  let dobles = 0, triples = 0;
+  DIAS_CON_TOPE_DOBLES.forEach(d=>{
+    const h = horasPorDia[d] || 0;
+    dobles += Math.min(3, h);
+    triples += Math.max(0, h - 3);
+  });
+  DIAS_TODO_TRIPLE.forEach(d=>{
+    triples += horasPorDia[d] || 0;
+  });
+  return { dobles, triples };
+}
+
 document.getElementById('inp-horas-extra-file').addEventListener('change', async function(){
   const file = this.files[0];
   this.value = '';
@@ -2794,12 +2819,23 @@ document.getElementById('inp-horas-extra-file').addEventListener('change', async
     const colNoEmp = buscarCampo('noempleado');
     const colNombre = buscarCampo('nombre');
     const colSalario = buscarCampo('salario diario');
-    const colSimples = buscarCampo('total horas extras semanal');
-    const colDobles = buscarCampo('dobles');
-    const colTriples = buscarCampo('triples');
+    // Columnas E a Q del Excel: horas extra capturadas día por día.
+    const colesDia = {
+      lunes: buscarCampo('lunes hora extra'),
+      martes: buscarCampo('martes hora extra'),
+      miercoles: buscarCampo('miercoles hora extra'),
+      jueves: buscarCampo('jueves hora extra'),
+      viernes: buscarCampo('viernes hora extra'),
+      sabado: buscarCampo('sabado hora extra'),
+      domingo: buscarCampo('domingo hora extra'),
+    };
 
     if(!colNoEmp){
       mostrarToast('No encontré la columna "NoEmpleado" en el archivo. Verifica que sea el mismo formato de nómina.', true);
+      return;
+    }
+    if(Object.values(colesDia).every(c=>!c)){
+      mostrarToast('No encontré las columnas de "Hora Extra" por día (Lunes...Domingo). Verifica que sea el mismo formato de nómina.', true);
       return;
     }
 
@@ -2809,17 +2845,19 @@ document.getElementById('inp-horas-extra-file').addEventListener('change', async
       if(!codigo) return;
       const emp = EMP_BY_CODIGO[codigo];
       const salarioDiario = numeroDe(fila[colSalario]);
-      const horasSimples = numeroDe(fila[colSimples]);
-      const horasDobles = numeroDe(fila[colDobles]);
-      const horasTriples = numeroDe(fila[colTriples]);
-      if(salarioDiario===0 && horasSimples===0 && horasDobles===0 && horasTriples===0) return; // fila vacía / sin movimientos
+      const horasPorDia = {};
+      Object.keys(colesDia).forEach(d=>{ horasPorDia[d] = colesDia[d] ? numeroDe(fila[colesDia[d]]) : 0; });
+      const totalHorasDia = Object.values(horasPorDia).reduce((s,h)=>s+h,0);
+      if(salarioDiario===0 && totalHorasDia===0) return; // fila vacía / sin movimientos
+
+      const { dobles: horasDobles, triples: horasTriples } = calcularDoblesTriples(horasPorDia);
       const tarifaHora = salarioDiario / 8;
-      const importeEstimado = Math.round((horasSimples*tarifaHora*1.5 + horasDobles*tarifaHora*2 + horasTriples*tarifaHora*3)*100)/100;
+      const importeEstimado = Math.round((horasDobles*tarifaHora*2 + horasTriples*tarifaHora*3)*100)/100;
       registros.push({
         codigo,
         nombre: emp ? emp.nombre : (colNombre ? String(fila[colNombre]||'').trim() : ''),
         planta: emp ? emp.depto : '',
-        salarioDiario, horasSimples, horasDobles, horasTriples, importeEstimado
+        salarioDiario, horasDobles, horasTriples, importeEstimado
       });
     });
 
@@ -2856,21 +2894,20 @@ function renderHorasExtra(){
   const filtro = sel.value;
   const datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
 
-  const totalSimples = datos.reduce((s,r)=>s+numeroDe(r.horasSimples),0);
   const totalDobles = datos.reduce((s,r)=>s+numeroDe(r.horasDobles),0);
   const totalTriples = datos.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
   const totalImporte = datos.reduce((s,r)=>s+numeroDe(r.importeEstimado),0);
 
-  document.getElementById('he-total-simples').textContent = totalSimples.toFixed(1);
-  document.getElementById('he-total-dt').textContent = `${totalDobles.toFixed(1)} / ${totalTriples.toFixed(1)}`;
+  document.getElementById('he-total-dobles').textContent = totalDobles.toFixed(1);
+  document.getElementById('he-total-triples').textContent = totalTriples.toFixed(1);
   document.getElementById('he-importe').textContent = '$' + totalImporte.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2});
 
   if(datos.length===0){
     document.getElementById('he-top').textContent = '—';
     document.getElementById('he-top-sub').textContent = '';
   } else {
-    const top = datos.slice().sort((a,b)=> (numeroDe(b.horasSimples)+numeroDe(b.horasDobles)+numeroDe(b.horasTriples)) - (numeroDe(a.horasSimples)+numeroDe(a.horasDobles)+numeroDe(a.horasTriples)))[0];
-    const totalTop = numeroDe(top.horasSimples)+numeroDe(top.horasDobles)+numeroDe(top.horasTriples);
+    const top = datos.slice().sort((a,b)=> (numeroDe(b.horasDobles)+numeroDe(b.horasTriples)) - (numeroDe(a.horasDobles)+numeroDe(a.horasTriples)))[0];
+    const totalTop = numeroDe(top.horasDobles)+numeroDe(top.horasTriples);
     document.getElementById('he-top').textContent = top.nombre || `#${top.codigo}`;
     document.getElementById('he-top-sub').textContent = `${totalTop.toFixed(1)} hrs — ${top.periodo}`;
   }
@@ -2880,28 +2917,52 @@ function renderHorasExtra(){
   if(datos.length===0){
     body.innerHTML = `<tr><td colspan="8" class="small-muted" style="text-align:center;padding:20px;">Aún no has subido ningún Excel de horas extra.</td></tr>`;
   } else {
-    body.innerHTML = datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo) || (a.nombre||'').localeCompare(b.nombre||'')).map(r=>`
-      <tr>
+    body.innerHTML = datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo) || (a.nombre||'').localeCompare(b.nombre||'')).map(r=>{
+      const total = numeroDe(r.horasDobles)+numeroDe(r.horasTriples);
+      return `<tr>
         <td>#${r.codigo}</td>
         <td>${r.nombre||''}</td>
         <td>${r.planta||'N/D'}</td>
         <td>${r.periodo}</td>
-        <td>${numeroDe(r.horasSimples).toFixed(1)}</td>
         <td>${numeroDe(r.horasDobles).toFixed(1)}</td>
         <td>${numeroDe(r.horasTriples).toFixed(1)}</td>
+        <td>${total.toFixed(1)}</td>
         <td>$${numeroDe(r.importeEstimado).toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   }
 }
 document.getElementById('f-horas-extra-periodo').addEventListener('change', renderHorasExtra);
+
+document.getElementById('btn-eliminar-periodo-he').addEventListener('click', async ()=>{
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  const periodo = document.getElementById('f-horas-extra-periodo').value;
+  if(!periodo){ mostrarToast('Selecciona primero el periodo que quieres eliminar.', true); return; }
+  if(!confirm(`¿Eliminar TODOS los registros de horas extra del periodo "${periodo}"? Esta acción no se puede deshacer.`)) return;
+
+  const btn = document.getElementById('btn-eliminar-periodo-he');
+  btn.disabled = true; btn.textContent = 'Eliminando...';
+  try{
+    await apiPost({action:'deleteHorasExtraPeriodo', periodo});
+    HORAS_EXTRA = HORAS_EXTRA.filter(r=>r.periodo !== periodo);
+    document.getElementById('f-horas-extra-periodo').value = '';
+    mostrarToast(`Periodo "${periodo}" eliminado.`);
+    renderHorasExtra();
+  }catch(err){
+    mostrarToast('No se pudo eliminar. Revisa tu conexión.', true);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg> Eliminar periodo seleccionado';
+  }
+});
 
 document.getElementById('btn-exportar-horas-extra').addEventListener('click', ()=>{
   if(HORAS_EXTRA.length===0){ mostrarToast('Aún no hay horas extra para exportar.', true); return; }
   const filtro = document.getElementById('f-horas-extra-periodo').value;
   const datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
-  const filas = [['Periodo','Numero_Empleado','Nombre','Planta','Salario_Diario','Horas_Simples','Horas_Dobles','Horas_Triples','Importe_Estimado']];
+  const filas = [['Periodo','Numero_Empleado','Nombre','Planta','Salario_Diario','Horas_Dobles','Horas_Triples','Total_Horas','Importe_Estimado']];
   datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo)).forEach(r=>{
-    filas.push([r.periodo, r.codigo, r.nombre, r.planta, numeroDe(r.salarioDiario), numeroDe(r.horasSimples), numeroDe(r.horasDobles), numeroDe(r.horasTriples), numeroDe(r.importeEstimado)]);
+    filas.push([r.periodo, r.codigo, r.nombre, r.planta, numeroDe(r.salarioDiario), numeroDe(r.horasDobles), numeroDe(r.horasTriples), numeroDe(r.horasDobles)+numeroDe(r.horasTriples), numeroDe(r.importeEstimado)]);
   });
   const ws = XLSX.utils.aoa_to_sheet(filas);
   ws['!cols'] = [{wch:26},{wch:14},{wch:32},{wch:18},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16}];
