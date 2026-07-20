@@ -616,10 +616,21 @@ tbody tr:hover{background:var(--paper);}
           <div class="pagetitle">Directorio de empleados</div>
           <div class="pagesub" id="emp-pagesub">Búsqueda por nombre o número de empleado — 488 registros</div>
         </div>
-        <button class="btn btn-primary" id="btn-abrir-nuevo-empleado">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
-          Añadir empleado
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-ghost" href="plantilla_catalogo_empleados.xlsx" download style="text-decoration:none;" title="Descarga el catálogo actual precargado para corregirlo y volver a subirlo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Descargar catálogo actual
+          </a>
+          <button class="btn btn-ghost" id="btn-actualizar-catalogo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
+            Actualizar catálogo (Excel)
+          </button>
+          <button class="btn btn-primary" id="btn-abrir-nuevo-empleado">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+            Añadir empleado
+          </button>
+          <input type="file" id="inp-catalogo-file" accept=".xlsx,.xls,.csv" style="display:none;">
+        </div>
       </div>
       <div class="panel">
         <div class="filterbar">
@@ -1035,8 +1046,11 @@ tbody tr:hover{background:var(--paper);}
     <div class="modal-body">
       <div class="field">
         <label>Periodo <span class="req">*</span></label>
-        <input type="text" id="inp-periodo-he" placeholder='Ej. "Semana 29 — 13 al 19 de julio 2026"'>
-        <span class="help">Este texto identifica la carga. Si vuelves a subir un Excel con el mismo periodo, reemplaza los datos anteriores de ese periodo.</span>
+        <select id="sel-periodo-he">
+          <option value="">Selecciona un periodo...</option>
+        </select>
+        <input type="text" id="inp-periodo-he" placeholder='Ej. "Semana especial diciembre 2026"' style="display:none;margin-top:8px;">
+        <span class="help">Los periodos vienen del catálogo oficial de nómina (PERIODOS_2026.xlsx). Si vuelves a subir un Excel del mismo periodo, reemplaza los datos anteriores de ese periodo.</span>
       </div>
     </div>
     <div class="modal-foot">
@@ -1069,7 +1083,11 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v25";
+const APP_VERSION = "2026.07.20-v26";
+
+// Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
+const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
+;
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -1098,6 +1116,7 @@ function aplicarModoLectura(){
   ocultar('nav-conexion');
   ocultar('btn-goto-registro');
   ocultar('btn-abrir-nuevo-empleado');
+  ocultar('btn-actualizar-catalogo');
   ocultar('btn-guardar-supervisores');
   ocultar('btn-plantilla-subir');
   ocultar('btn-horas-extra-subir');
@@ -1192,6 +1211,7 @@ function aplicarCambiosEmpleados(lista){
     if(c.puesto) e.puesto = c.puesto;
     if(c.estatus) e.estatus = c.estatus;
     e.fechaBaja = (c.estatus === 'BAJA') ? (c.fechaBaja || '') : '';
+    if(c.fechaIngreso) e.fechaIngreso = c.fechaIngreso;
   });
   recalcularDepartamentos();
 }
@@ -2316,6 +2336,101 @@ function renderEmpleados(){
 });
 
 /* ============================================================
+   ACTUALIZAR CATÁLOGO DE EMPLEADOS DESDE EXCEL
+   (fecha de ingreso, fecha de baja, estatus — carga masiva)
+   ============================================================ */
+function buscarColGenerico(headersReales, candidatos){
+  const normalizados = headersReales.map(h=>({h, n: normalizarHeaderHE(h)}));
+  for(const c of candidatos){
+    const match = normalizados.find(x=>x.n===c);
+    if(match) return match.h;
+  }
+  return null;
+}
+
+document.getElementById('btn-actualizar-catalogo').addEventListener('click', ()=>{
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
+  document.getElementById('inp-catalogo-file').click();
+});
+
+document.getElementById('inp-catalogo-file').addEventListener('change', async function(){
+  const file = this.files[0];
+  this.value = '';
+  if(!file) return;
+  if(MODO_LECTURA) return;
+
+  const btn = document.getElementById('btn-actualizar-catalogo');
+  btn.disabled = true; btn.textContent = 'Leyendo archivo...';
+
+  try{
+    const buffer = await file.arrayBuffer();
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const hoja = wb.Sheets[wb.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
+    if(filas.length === 0){ mostrarToast('El archivo no tiene registros.', true); return; }
+
+    const headersReales = Object.keys(filas[0]);
+    const colCodigo = buscarColGenerico(headersReales, ['numero_empleado','numeroempleado','no empleado','noempleado','no. empleado','numero de empleado','número de empleado','codigo','código']);
+    const colFechaIngreso = buscarColGenerico(headersReales, ['fecha_ingreso','fecha de ingreso','fecha ingreso','fecha alta','fecha_alta','fecha de alta']);
+    const colFechaBaja = buscarColGenerico(headersReales, ['fecha_baja','fecha de baja','fecha baja']);
+    const colEstatus = buscarColGenerico(headersReales, ['estatus','status']);
+
+    if(!colCodigo){
+      mostrarToast('No encontré una columna de número de empleado (Numero_Empleado). Verifica los encabezados del archivo.', true);
+      return;
+    }
+
+    let actualizados = 0;
+    const errores = [];
+    btn.textContent = 'Actualizando 0...';
+
+    for(let i=0;i<filas.length;i++){
+      const fila = filas[i];
+      const codigo = String(fila[colCodigo]||'').trim();
+      const numFila = i+2;
+      if(!codigo) continue;
+      const emp = EMP_BY_CODIGO[codigo];
+      if(!emp){ errores.push(`Fila ${numFila}: el empleado #${codigo} no existe en el directorio.`); continue; }
+
+      let estatus = emp.estatus || 'ALTA';
+      if(colEstatus && String(fila[colEstatus]||'').trim()){
+        const val = String(fila[colEstatus]).trim().toUpperCase();
+        if(val==='ALTA' || val==='BAJA') estatus = val;
+        else { errores.push(`Fila ${numFila}: el estatus "${fila[colEstatus]}" no es válido (debe ser ALTA o BAJA). Se dejó el estatus actual.`); }
+      }
+      const fechaIngreso = colFechaIngreso ? excelFechaATexto(fila[colFechaIngreso]) : '';
+      const fechaBaja = colFechaBaja ? excelFechaATexto(fila[colFechaBaja]) : '';
+
+      try{
+        await apiPost({action:'updateEmpleado', empleado:{
+          codigo, nombre: emp.nombre, depto: emp.depto, puesto: emp.puesto,
+          estatus, fechaBaja: estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '',
+          fechaIngreso: fechaIngreso || undefined
+        }});
+        emp.estatus = estatus;
+        emp.fechaBaja = estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '';
+        if(fechaIngreso) emp.fechaIngreso = fechaIngreso;
+        actualizados++;
+        btn.textContent = `Actualizando ${actualizados}...`;
+      }catch(err){
+        errores.push(`Fila ${numFila}: #${codigo} — no se pudo guardar en Google Sheets.`);
+      }
+    }
+
+    recalcularDepartamentos();
+    renderEmpleados();
+    renderDashboard();
+    mostrarResultadoPlantilla(actualizados, errores.length, errores);
+  }catch(err){
+    mostrarToast('No se pudo leer el archivo. Verifica que sea .xlsx, .xls o .csv.', true);
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Actualizar catálogo (Excel)';
+  }
+});
+
+/* ============================================================
    EDITAR EMPLEADO EXISTENTE (planta, puesto, estatus alta/baja)
    ============================================================ */
 let editandoEmpleadoCodigo = null;
@@ -2604,19 +2719,44 @@ document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
    ============================================================ */
 let periodoPendienteHE = null;
 
+function etiquetaPeriodo(p){
+  const d0 = new Date(p.inicio+'T00:00:00Z'), d1 = new Date(p.fin+'T00:00:00Z');
+  const rango = `${d0.getUTCDate()} al ${d1.getUTCDate()} de ${NOMBRES_MES[d1.getUTCMonth()]} ${d1.getUTCFullYear()}`;
+  return `Periodo ${p.numero} — ${p.mes} (${rango})`;
+}
+function poblarSelectPeriodoHE(){
+  const sel = document.getElementById('sel-periodo-he');
+  // sugiere primero el periodo cuya fecha de hoy cae dentro de su rango
+  const hoy = new Date().toISOString().slice(0,10);
+  let periodoSugerido = PERIODOS_NOMINA.find(p => hoy >= p.inicio && hoy <= p.fin);
+  sel.innerHTML = '<option value="">Selecciona un periodo...</option>'
+    + PERIODOS_NOMINA.map(p=>{
+        const valor = etiquetaPeriodo(p);
+        return `<option value="${valor.replace(/"/g,'')}">${valor}</option>`;
+      }).join('')
+    + '<option value="__otro__">Otro (escribir manualmente)</option>';
+  if(periodoSugerido) sel.value = etiquetaPeriodo(periodoSugerido);
+}
+document.getElementById('sel-periodo-he').addEventListener('change', function(){
+  document.getElementById('inp-periodo-he').style.display = (this.value==='__otro__') ? 'block' : 'none';
+  if(this.value==='__otro__') document.getElementById('inp-periodo-he').focus();
+});
+
 document.getElementById('btn-horas-extra-subir').addEventListener('click', ()=>{
   if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
   if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
   document.getElementById('inp-periodo-he').value = '';
+  document.getElementById('inp-periodo-he').style.display = 'none';
+  poblarSelectPeriodoHE();
   document.getElementById('modal-periodo-he-bg').classList.add('show');
-  setTimeout(()=>document.getElementById('inp-periodo-he').focus(), 50);
 });
 function cerrarModalPeriodoHE(){
   document.getElementById('modal-periodo-he-bg').classList.remove('show');
 }
 document.getElementById('modal-periodo-he-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-periodo-he-bg') cerrarModalPeriodoHE(); });
 document.getElementById('btn-continuar-periodo-he').addEventListener('click', ()=>{
-  const periodo = document.getElementById('inp-periodo-he').value.trim();
+  const sel = document.getElementById('sel-periodo-he');
+  const periodo = sel.value === '__otro__' ? document.getElementById('inp-periodo-he').value.trim() : sel.value;
   if(!periodo){ mostrarToast('Indica el periodo de esta nómina', true); return; }
   periodoPendienteHE = periodo;
   cerrarModalPeriodoHE();
