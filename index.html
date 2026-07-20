@@ -893,7 +893,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.09-v23";
+const APP_VERSION = "2026.07.14-v24";
 // Modo de solo lectura: ?modo=lectura en la URL oculta todo lo que permite
 // registrar, editar o dar de alta información. Pensado para compartir un
 // link de "solo ver métricas" sin dar acceso a modificar datos.
@@ -1605,6 +1605,8 @@ function renderDashboard(){
   const alertEl = document.getElementById('alert-list');
   const pendientes = [];
   codigosUnicos.forEach(cod=>{
+    const empDeAlerta = EMP_BY_CODIGO[cod];
+    if(empDeAlerta && (empDeAlerta.estatus||'ALTA') === 'BAJA') return; // ya no está activo, no genera alerta
     const hist = ausenciasDe(cod).filter(a=>a.motivo === 'Injustificada'); // más reciente primero
     const porSemana = {};
     hist.forEach(a=>{
@@ -1635,9 +1637,10 @@ function renderDashboard(){
     }
   }
 
-  // faltas por mes: general y por depto/planta
+  // faltas por mes: general y por depto/planta — todo el año en curso (desde enero)
   const clavesMes = [...new Set(AUSENCIAS.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort();
-  const ultimosMeses = clavesMes.slice(-6); // últimos 6 meses con datos
+  const anioActual = new Date().getFullYear();
+  const ultimosMeses = clavesMes.filter(m => m.startsWith(String(anioActual)));
   const labelMes = (m)=>{ const [y,mm]=m.split('-'); return `${NOMBRES_MES[parseInt(mm)-1].slice(0,3)} ${y}`; };
 
   const generalPorMes = ultimosMeses.map(m=> AUSENCIAS.filter(a=>(a.fecha||'').slice(0,7)===m).length);
