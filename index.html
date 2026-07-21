@@ -269,7 +269,11 @@ tbody tr:hover{background:var(--paper);}
     <div class="navlabel">General</div>
     <button class="navbtn active" data-view="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-      <span>Dashboard</span>
+      <span>Dashboard Ausentismo</span>
+    </button>
+    <button class="navbtn" data-view="cumpleanos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 22v-9a2 2 0 00-2-2H6a2 2 0 00-2 2v9M4 13V9a2 2 0 012-2h1M20 13V9a2 2 0 00-2-2h-1M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M12 3v1"/><circle cx="12" cy="16" r="2"/></svg>
+      <span>Dashboard Cumpleañeros</span>
     </button>
     <button class="navbtn" data-view="registro" id="nav-registro">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -319,7 +323,7 @@ tbody tr:hover{background:var(--paper);}
     <section id="view-dashboard" class="view">
       <div class="topbar">
         <div>
-          <div class="pagetitle">Dashboard de ausentismo</div>
+          <div class="pagetitle">Dashboard Ausentismo</div>
           <div class="pagesub">Resumen general de faltas registradas</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -439,6 +443,79 @@ tbody tr:hover{background:var(--paper);}
               <tbody id="top-ausentes"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ DASHBOARD CUMPLEAÑEROS ============ -->
+    <section id="view-cumpleanos" class="view hidden">
+      <div class="topbar">
+        <div>
+          <div class="pagetitle">Dashboard Cumpleañeros</div>
+          <div class="pagesub">Control de cumpleaños del personal activo</div>
+        </div>
+        <button class="btn btn-ghost" id="btn-exportar-cumple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+          Exportar a Excel
+        </button>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-body">
+          <div class="field" style="max-width:280px;">
+            <label>Mes</label>
+            <select id="f-cumple-mes">
+              <option value="">Mes actual</option>
+              <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+              <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+              <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+              <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+              <option value="todos">Todo el año</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Cumpleañeros</div>
+          <div class="kpi-value" id="cumple-total">0</div>
+          <div class="kpi-sub" id="cumple-total-sub">este mes</div>
+        </div>
+        <div class="kpi bad">
+          <div class="kpi-label">Administrativos que cumplen años</div>
+          <div class="kpi-value" id="cumple-admin">0</div>
+          <div class="kpi-sub">requieren atención especial</div>
+        </div>
+        <div class="kpi ok">
+          <div class="kpi-label">Operativos</div>
+          <div class="kpi-value" id="cumple-operativo">0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">Sindicalizados</div>
+          <div class="kpi-value" id="cumple-sindicalizado">0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-alerta-admin-cumple" style="display:none;">
+        <div class="panel-head">
+          <div class="panel-title">⚠ Alerta <span>— empleados ADMINISTRATIVOS que cumplen años</span></div>
+        </div>
+        <div class="panel-body" id="cumple-alerta-admin-body"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Cumpleañeros</div>
+          <span class="small-muted" id="cumple-count"></span>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Día</th><th>Nombre</th><th>#</th><th>Planta</th><th>Puesto</th><th>Tipo de empleado</th><th>Edad que cumple</th></tr></thead>
+            <tbody id="cumple-body"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -986,6 +1063,19 @@ tbody tr:hover{background:var(--paper);}
           <input type="date" id="edit-emp-fecha-baja">
           <span class="help">Se usa para calcular la rotación de personal.</span>
         </div>
+        <div class="field">
+          <label>Fecha de nacimiento</label>
+          <input type="date" id="edit-emp-fecha-nacimiento">
+        </div>
+        <div class="field">
+          <label>Tipo de empleado</label>
+          <select id="edit-emp-tipo">
+            <option value="">Sin especificar</option>
+            <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+            <option value="OPERATIVO">OPERATIVO</option>
+            <option value="SINDICALIZADO">SINDICALIZADO</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1031,6 +1121,19 @@ tbody tr:hover{background:var(--paper);}
           <select id="new-emp-estatus">
             <option value="ALTA" selected>ALTA</option>
             <option value="BAJA">BAJA</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fecha de nacimiento</label>
+          <input type="date" id="new-emp-fecha-nacimiento">
+        </div>
+        <div class="field">
+          <label>Tipo de empleado</label>
+          <select id="new-emp-tipo">
+            <option value="">Sin especificar</option>
+            <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+            <option value="OPERATIVO">OPERATIVO</option>
+            <option value="SINDICALIZADO">SINDICALIZADO</option>
           </select>
         </div>
       </div>
@@ -1089,7 +1192,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v27";
+const APP_VERSION = "2026.07.20-v28";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1198,7 +1301,8 @@ function fusionarEmpleadosNuevos(lista){
     const emp = {
       codigo, nombre: e.nombre || '', depto: e.depto || '',
       puesto: e.puesto || '', fechaIngreso: e.fechaIngreso || '',
-      estatus: e.estatus || 'ALTA'
+      estatus: e.estatus || 'ALTA',
+      fechaNacimiento: e.fechaNacimiento || '', tipoEmpleado: e.tipoEmpleado || ''
     };
     EMPLEADOS.push(emp);
     EMP_BY_CODIGO[codigo] = emp;
@@ -1219,6 +1323,8 @@ function aplicarCambiosEmpleados(lista){
     if(c.estatus) e.estatus = c.estatus;
     e.fechaBaja = (c.estatus === 'BAJA') ? (c.fechaBaja || '') : '';
     if(c.fechaIngreso) e.fechaIngreso = c.fechaIngreso;
+    if(c.fechaNacimiento) e.fechaNacimiento = c.fechaNacimiento;
+    if(c.tipoEmpleado) e.tipoEmpleado = c.tipoEmpleado;
   });
   recalcularDepartamentos();
 }
@@ -1320,6 +1426,7 @@ function goTo(view){
   if(view==='conexion') renderConexion();
   if(view==='rotacion') renderRotacion();
   if(view==='horas-extra') renderHorasExtra();
+  if(view==='cumpleanos') renderCumple();
   window.scrollTo(0,0);
 }
 document.querySelectorAll('.navbtn').forEach(b=>{
@@ -2382,6 +2489,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const colFechaIngreso = buscarColGenerico(headersReales, ['fecha_ingreso','fecha de ingreso','fecha ingreso','fecha alta','fecha_alta','fecha de alta']);
     const colFechaBaja = buscarColGenerico(headersReales, ['fecha_baja','fecha de baja','fecha baja']);
     const colEstatus = buscarColGenerico(headersReales, ['estatus','status']);
+    const colFechaNacimiento = buscarColGenerico(headersReales, ['fecha_nacimiento','fecha de nacimiento','fecha nacimiento','cumpleanos','cumpleaños','fecha_nac']);
+    const colTipoEmpleado = buscarColGenerico(headersReales, ['tipo_empleado','tipo de empleado','tipo empleado','tipo']);
 
     if(!colCodigo){
       mostrarToast('No encontré una columna de número de empleado (Numero_Empleado). Verifica los encabezados del archivo.', true);
@@ -2408,16 +2517,26 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       }
       const fechaIngreso = colFechaIngreso ? excelFechaATexto(fila[colFechaIngreso]) : '';
       const fechaBaja = colFechaBaja ? excelFechaATexto(fila[colFechaBaja]) : '';
+      const fechaNacimiento = colFechaNacimiento ? excelFechaATexto(fila[colFechaNacimiento]) : '';
+      let tipoEmpleado = colTipoEmpleado ? String(fila[colTipoEmpleado]||'').trim().toUpperCase() : '';
+      if(tipoEmpleado && !['ADMINISTRATIVO','OPERATIVO','SINDICALIZADO'].includes(tipoEmpleado)){
+        errores.push(`Fila ${numFila}: el tipo de empleado "${fila[colTipoEmpleado]}" no es válido (debe ser ADMINISTRATIVO, OPERATIVO o SINDICALIZADO). No se actualizó ese campo.`);
+        tipoEmpleado = '';
+      }
 
       try{
         await apiPost({action:'updateEmpleado', empleado:{
           codigo, nombre: emp.nombre, depto: emp.depto, puesto: emp.puesto,
           estatus, fechaBaja: estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '',
-          fechaIngreso: fechaIngreso || undefined
+          fechaIngreso: fechaIngreso || undefined,
+          fechaNacimiento: fechaNacimiento || undefined,
+          tipoEmpleado: tipoEmpleado || undefined
         }});
         emp.estatus = estatus;
         emp.fechaBaja = estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '';
         if(fechaIngreso) emp.fechaIngreso = fechaIngreso;
+        if(fechaNacimiento) emp.fechaNacimiento = fechaNacimiento;
+        if(tipoEmpleado) emp.tipoEmpleado = tipoEmpleado;
         actualizados++;
         btn.textContent = `Actualizando ${actualizados}...`;
       }catch(err){
@@ -2452,6 +2571,8 @@ function abrirEditarEmpleado(codigo){
   document.getElementById('edit-emp-estatus').value = (e.estatus || 'ALTA');
   document.getElementById('edit-emp-fecha-baja').value = e.fechaBaja || '';
   document.getElementById('wrap-edit-emp-fecha-baja').style.display = (e.estatus==='BAJA') ? 'block' : 'none';
+  document.getElementById('edit-emp-fecha-nacimiento').value = excelFechaATexto(e.fechaNacimiento) || '';
+  document.getElementById('edit-emp-tipo').value = e.tipoEmpleado || '';
   document.getElementById('modal-editar-emp-bg').classList.add('show');
 }
 document.getElementById('edit-emp-estatus').addEventListener('change', function(){
@@ -2479,6 +2600,8 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const puesto = document.getElementById('edit-emp-puesto').value.trim().toUpperCase();
   const estatus = document.getElementById('edit-emp-estatus').value;
   const fechaBaja = estatus === 'BAJA' ? document.getElementById('edit-emp-fecha-baja').value : '';
+  const fechaNacimiento = document.getElementById('edit-emp-fecha-nacimiento').value;
+  const tipoEmpleado = document.getElementById('edit-emp-tipo').value;
 
   if(!nombre){ mostrarToast('Indica el nombre completo', true); return; }
   if(!depto){ mostrarToast('Indica el departamento / planta', true); return; }
@@ -2488,10 +2611,12 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const btn = document.getElementById('btn-guardar-edicion-empleado');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, estatus, fechaBaja}});
+    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, estatus, fechaBaja, fechaNacimiento, tipoEmpleado}});
     const e = EMP_BY_CODIGO[codigo];
     if(e){
       e.nombre = nombre; e.depto = depto; e.puesto = puesto; e.estatus = estatus; e.fechaBaja = fechaBaja;
+      if(fechaNacimiento) e.fechaNacimiento = fechaNacimiento;
+      if(tipoEmpleado) e.tipoEmpleado = tipoEmpleado;
     }
     recalcularDepartamentos();
     mostrarToast(`Empleado #${codigo} actualizado correctamente`);
@@ -2515,6 +2640,8 @@ function abrirModalNuevoEmpleado(){
   document.getElementById('new-emp-puesto').value = '';
   document.getElementById('new-emp-fecha-ingreso').value = new Date().toISOString().slice(0,10);
   document.getElementById('new-emp-estatus').value = 'ALTA';
+  document.getElementById('new-emp-fecha-nacimiento').value = '';
+  document.getElementById('new-emp-tipo').value = '';
   document.getElementById('new-emp-codigo-help').textContent = '';
   document.getElementById('modal-nuevo-emp-bg').classList.add('show');
   setTimeout(()=>document.getElementById('new-emp-codigo').focus(), 50);
@@ -2544,6 +2671,8 @@ document.getElementById('btn-guardar-nuevo-empleado').addEventListener('click', 
   const puesto = document.getElementById('new-emp-puesto').value.trim().toUpperCase();
   const fechaIngreso = document.getElementById('new-emp-fecha-ingreso').value;
   const estatus = document.getElementById('new-emp-estatus').value;
+  const fechaNacimiento = document.getElementById('new-emp-fecha-nacimiento').value;
+  const tipoEmpleado = document.getElementById('new-emp-tipo').value;
 
   if(!codigo){ mostrarToast('Indica el número de empleado', true); return; }
   if(!/^[0-9A-Za-z-]+$/.test(codigo)){ mostrarToast('El número de empleado solo puede tener letras, números y guiones', true); return; }
@@ -2553,7 +2682,7 @@ document.getElementById('btn-guardar-nuevo-empleado').addEventListener('click', 
   if(!puesto){ mostrarToast('Indica el puesto', true); return; }
   if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
 
-  const empleado = { codigo, nombre, depto, puesto, fechaIngreso, estatus };
+  const empleado = { codigo, nombre, depto, puesto, fechaIngreso, estatus, fechaNacimiento, tipoEmpleado };
   const btn = document.getElementById('btn-guardar-nuevo-empleado');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
@@ -2619,6 +2748,106 @@ document.getElementById('btn-guardar-supervisores').addEventListener('click', as
 /* ============================================================
    ROTACIÓN DE PERSONAL
    ============================================================ */
+/* ============================================================
+   DASHBOARD CUMPLEAÑEROS
+   ============================================================ */
+function calcularCumpleanerosDelMes(mesIndice){
+  // mesIndice: 0-11. Devuelve empleados ACTIVOS cuyo cumpleaños cae en ese mes.
+  return EMPLEADOS
+    .filter(e=>(e.estatus||'ALTA')==='ALTA')
+    .map(e=>{
+      const fn = excelFechaATexto(e.fechaNacimiento);
+      if(!fn || !/^\d{4}-\d{2}-\d{2}$/.test(fn)) return null;
+      const mes = parseInt(fn.slice(5,7),10) - 1;
+      const dia = parseInt(fn.slice(8,10),10);
+      if(mes !== mesIndice) return null;
+      const anioNac = parseInt(fn.slice(0,4),10);
+      const anioActual = new Date().getFullYear();
+      const edad = anioActual - anioNac;
+      return { ...e, _dia: dia, _mes: mesIndice, _edad: edad, _fechaNacNorm: fn };
+    })
+    .filter(Boolean)
+    .sort((a,b)=> a._dia - b._dia);
+}
+function calcularCumpleanerosDelAnio(){
+  let lista = [];
+  for(let m=0;m<12;m++) lista = lista.concat(calcularCumpleanerosDelMes(m));
+  return lista;
+}
+function renderCumple(){
+  const selMes = document.getElementById('f-cumple-mes').value;
+  const hoyMes = new Date().getMonth();
+  let lista, etiquetaPeriodo;
+
+  if(selMes === 'todos'){
+    lista = calcularCumpleanerosDelAnio().sort((a,b)=> a._mes - b._mes || a._dia - b._dia);
+    etiquetaPeriodo = 'todo el año';
+  } else {
+    const mesIndice = selMes === '' ? hoyMes : parseInt(selMes,10);
+    lista = calcularCumpleanerosDelMes(mesIndice);
+    etiquetaPeriodo = NOMBRES_MES[mesIndice];
+  }
+
+  document.getElementById('cumple-total').textContent = lista.length;
+  document.getElementById('cumple-total-sub').textContent = etiquetaPeriodo;
+
+  const admins = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO');
+  const operativos = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='OPERATIVO');
+  const sindicalizados = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='SINDICALIZADO');
+  document.getElementById('cumple-admin').textContent = admins.length;
+  document.getElementById('cumple-operativo').textContent = operativos.length;
+  document.getElementById('cumple-sindicalizado').textContent = sindicalizados.length;
+
+  const panelAlerta = document.getElementById('panel-alerta-admin-cumple');
+  if(admins.length > 0){
+    panelAlerta.style.display = 'block';
+    document.getElementById('cumple-alerta-admin-body').innerHTML = admins.map(e=>`
+      <div class="alert-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <span><b>${e.nombre}</b> — #${e.codigo} · ${e.puesto} (${e.depto}) · cumple años el día ${e._dia}${selMes==='todos' ? ' de '+NOMBRES_MES[e._mes] : ''}</span>
+      </div>`).join('');
+  } else {
+    panelAlerta.style.display = 'none';
+  }
+
+  document.getElementById('cumple-count').textContent = `${lista.length} colaborador(es)`;
+  const body = document.getElementById('cumple-body');
+  if(lista.length===0){
+    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.</td></tr>`;
+  } else {
+    body.innerHTML = lista.map(e=>{
+      const esAdmin = (e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO';
+      return `<tr style="${esAdmin?'background:#FBEAE7;':''}">
+        <td>${e._dia}${selMes==='todos'?' de '+NOMBRES_MES[e._mes].slice(0,3):''}</td>
+        <td>${e.nombre}${esAdmin?' <span style="color:var(--bad);font-weight:700;">★</span>':''}</td>
+        <td>#${e.codigo}</td>
+        <td>${e.depto}</td>
+        <td>${e.puesto}</td>
+        <td>${e.tipoEmpleado || 'Sin especificar'}</td>
+        <td>${e._edad || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+  window._cumpleCache = { lista, etiquetaPeriodo };
+}
+document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
+
+document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
+  const cache = window._cumpleCache;
+  if(!cache || cache.lista.length===0){ mostrarToast('No hay cumpleañeros para exportar en este periodo.', true); return; }
+  const filas = [['Dia','Mes','Numero_Empleado','Nombre','Planta','Puesto','Tipo_Empleado','Edad_Que_Cumple']];
+  cache.lista.forEach(e=>{
+    filas.push([e._dia, NOMBRES_MES[e._mes], e.codigo, e.nombre, e.depto, e.puesto, e.tipoEmpleado||'', e._edad||'']);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(filas);
+  ws['!cols'] = [{wch:8},{wch:14},{wch:14},{wch:32},{wch:18},{wch:26},{wch:18},{wch:12}];
+  const wbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wbook, ws, 'Cumpleañeros');
+  const hoy = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wbook, `cumpleaneros_${cache.etiquetaPeriodo.replace(/\s+/g,'_')}_${hoy}.xlsx`);
+  mostrarToast('Excel de cumpleañeros descargado.');
+});
+
 function renderRotacion(){
   const anioActual = new Date().getFullYear();
   document.getElementById('rot-anio-1').textContent = anioActual;
