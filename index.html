@@ -462,16 +462,22 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel" style="margin-bottom:18px;">
         <div class="panel-body">
-          <div class="field" style="max-width:280px;">
-            <label>Mes</label>
-            <select id="f-cumple-mes">
-              <option value="">Mes actual</option>
-              <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-              <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-              <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-              <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-              <option value="todos">Todo el año</option>
-            </select>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <div class="field" style="max-width:280px;">
+              <label>Mes</label>
+              <select id="f-cumple-mes">
+                <option value="">Mes actual</option>
+                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+                <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+                <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+                <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                <option value="todos">Todo el año</option>
+              </select>
+            </div>
+            <div class="field" style="max-width:280px;flex:1;min-width:220px;">
+              <label>Buscar por nombre o ficha</label>
+              <input type="text" id="f-cumple-buscar" placeholder="Nombre o número de empleado...">
+            </div>
           </div>
         </div>
       </div>
@@ -504,6 +510,13 @@ tbody tr:hover{background:var(--paper);}
           <div class="panel-title">⚠ Alerta <span>— empleados ADMINISTRATIVOS que cumplen años</span></div>
         </div>
         <div class="panel-body" id="cumple-alerta-admin-body"></div>
+      </div>
+
+      <div class="panel" id="panel-alerta-60" style="display:none;">
+        <div class="panel-head">
+          <div class="panel-title">⚠ Alerta <span>— empleados activos a un año o menos de cumplir 60 años (todo el directorio, sin importar el filtro de mes)</span></div>
+        </div>
+        <div class="panel-body" id="cumple-alerta-60-body"></div>
       </div>
 
       <div class="panel">
@@ -807,6 +820,7 @@ tbody tr:hover{background:var(--paper);}
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Bajas recientes</div>
+          <input type="text" id="f-rotacion-bajas-buscar" placeholder="Buscar por nombre o ficha..." style="max-width:260px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
         </div>
         <div class="panel-body" style="overflow-x:auto;">
           <table>
@@ -819,6 +833,7 @@ tbody tr:hover{background:var(--paper);}
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Altas recientes</div>
+          <input type="text" id="f-rotacion-altas-buscar" placeholder="Buscar por nombre o ficha..." style="max-width:260px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
         </div>
         <div class="panel-body" style="overflow-x:auto;">
           <table>
@@ -1207,7 +1222,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v31";
+const APP_VERSION = "2026.07.21-v32";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2888,12 +2903,52 @@ function renderCumple(){
     panelAlerta.style.display = 'none';
   }
 
-  document.getElementById('cumple-count').textContent = `${lista.length} colaborador(es)`;
-  const body = document.getElementById('cumple-body');
-  if(lista.length===0){
-    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.</td></tr>`;
+  // Alerta de próximos a cumplir 60 años (independiente del mes/búsqueda — mira a todos los activos)
+  const hoy = new Date();
+  const proximos60 = EMPLEADOS
+    .filter(e=>(e.estatus||'ALTA')==='ALTA')
+    .map(e=>{
+      const fn = excelFechaATexto(e.fechaNacimiento);
+      if(!fn || !/^\d{4}-\d{2}-\d{2}$/.test(fn)) return null;
+      const anioNac = parseInt(fn.slice(0,4),10);
+      const mes = parseInt(fn.slice(5,7),10)-1;
+      const dia = parseInt(fn.slice(8,10),10);
+      let fecha60 = new Date(anioNac+60, mes, dia);
+      if(fecha60 < hoy){
+        // si su cumpleaños 60 ya pasó este cálculo no aplica (ya tiene 60+), se omite
+        return null;
+      }
+      const diasFaltantes = Math.round((fecha60 - hoy) / 86400000);
+      if(diasFaltantes > 365) return null;
+      return { ...e, _fecha60: fecha60, _diasFaltantes: diasFaltantes };
+    })
+    .filter(Boolean)
+    .sort((a,b)=> a._diasFaltantes - b._diasFaltantes);
+
+  const panelAlerta60 = document.getElementById('panel-alerta-60');
+  if(proximos60.length > 0){
+    panelAlerta60.style.display = 'block';
+    document.getElementById('cumple-alerta-60-body').innerHTML = proximos60.map(e=>{
+      const meses = Math.floor(e._diasFaltantes/30);
+      const faltaTexto = e._diasFaltantes <= 0 ? 'cumple 60 hoy' : (meses >= 1 ? `en ~${meses} mes(es)` : `en ${e._diasFaltantes} día(s)`);
+      return `<div class="alert-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3M12 22a10 10 0 100-20 10 10 0 000 20z"/></svg>
+        <span><b>${e.nombre}</b> — #${e.codigo} · ${e.puesto} (${e.depto}) · cumple 60 años el ${fmtFecha(e._fecha60.toISOString().slice(0,10))} (${faltaTexto})</span>
+      </div>`;
+    }).join('');
   } else {
-    body.innerHTML = lista.map(e=>{
+    panelAlerta60.style.display = 'none';
+  }
+
+  const qBuscar = document.getElementById('f-cumple-buscar').value.trim().toLowerCase();
+  const listaFiltrada = qBuscar ? lista.filter(e=> e.nombre.toLowerCase().includes(qBuscar) || e.codigo.includes(qBuscar)) : lista;
+
+  document.getElementById('cumple-count').textContent = `${listaFiltrada.length} colaborador(es)`;
+  const body = document.getElementById('cumple-body');
+  if(listaFiltrada.length===0){
+    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">${qBuscar ? 'Sin resultados para esta búsqueda.' : 'No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.'}</td></tr>`;
+  } else {
+    body.innerHTML = listaFiltrada.map(e=>{
       const esAdmin = (e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO';
       return `<tr style="${esAdmin?'background:#FBEAE7;':''}">
         <td>${e._dia}${selMes==='todos'?' de '+NOMBRES_MES[e._mes].slice(0,3):''}</td>
@@ -2909,6 +2964,7 @@ function renderCumple(){
   window._cumpleCache = { lista, etiquetaPeriodo };
 }
 document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
+document.getElementById('f-cumple-buscar').addEventListener('input', renderCumple);
 
 document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
   const cache = window._cumpleCache;
@@ -2972,20 +3028,35 @@ function renderRotacion(){
     </div>`;
   }).join('');
 
-  const bajasBody = document.getElementById('rotacion-bajas-body');
-  const bajasOrdenadas = empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm).sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm)).slice(0,30);
-  bajasBody.innerHTML = bajasOrdenadas.length ? bajasOrdenadas.map(e=>`
-    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaBajaNorm)}</td></tr>
-  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">Sin bajas con fecha registrada.</td></tr>`;
-
-  const altasBody = document.getElementById('rotacion-altas-body');
-  const altasOrdenadas = empConFechas.filter(e=>e._fechaIngresoNorm).sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm)).slice(0,30);
-  altasBody.innerHTML = altasOrdenadas.length ? altasOrdenadas.map(e=>`
-    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaIngresoNorm)}</td></tr>
-  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">Sin datos de ingreso.</td></tr>`;
+  window._rotacionEmpConFechas = empConFechas;
+  renderTablasRotacion();
 
   window._rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas };
 }
+
+function renderTablasRotacion(){
+  const empConFechas = window._rotacionEmpConFechas || [];
+  const qBajas = document.getElementById('f-rotacion-bajas-buscar').value.trim().toLowerCase();
+  const qAltas = document.getElementById('f-rotacion-altas-buscar').value.trim().toLowerCase();
+
+  const bajasBody = document.getElementById('rotacion-bajas-body');
+  let bajasOrdenadas = empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm).sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm));
+  if(qBajas) bajasOrdenadas = bajasOrdenadas.filter(e=> e.nombre.toLowerCase().includes(qBajas) || e.codigo.includes(qBajas));
+  const bajasLimitadas = qBajas ? bajasOrdenadas : bajasOrdenadas.slice(0,30);
+  bajasBody.innerHTML = bajasLimitadas.length ? bajasLimitadas.map(e=>`
+    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaBajaNorm)}</td></tr>
+  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">${qBajas?'Sin resultados para esta búsqueda.':'Sin bajas con fecha registrada.'}</td></tr>`;
+
+  const altasBody = document.getElementById('rotacion-altas-body');
+  let altasOrdenadas = empConFechas.filter(e=>e._fechaIngresoNorm).sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm));
+  if(qAltas) altasOrdenadas = altasOrdenadas.filter(e=> e.nombre.toLowerCase().includes(qAltas) || e.codigo.includes(qAltas));
+  const altasLimitadas = qAltas ? altasOrdenadas : altasOrdenadas.slice(0,30);
+  altasBody.innerHTML = altasLimitadas.length ? altasLimitadas.map(e=>`
+    <tr><td>${e.nombre}</td><td>#${e.codigo}</td><td>${e.depto}</td><td>${e.puesto}</td><td>${fmtFecha(e._fechaIngresoNorm)}</td></tr>
+  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">${qAltas?'Sin resultados para esta búsqueda.':'Sin datos de ingreso.'}</td></tr>`;
+}
+document.getElementById('f-rotacion-bajas-buscar').addEventListener('input', renderTablasRotacion);
+document.getElementById('f-rotacion-altas-buscar').addEventListener('input', renderTablasRotacion);
 
 document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
   const cache = window._rotacionCache;
@@ -3097,24 +3168,6 @@ function numeroDe(valor){
 }
 function normalizarHeaderHE(h){ return String(h).replace(/\s+/g,' ').trim().toLowerCase(); }
 
-// Regla de la empresa para convertir horas extra DIARIAS en dobles/triples:
-// Lunes, Martes y Miércoles: hasta 3 horas de ese día son dobles, lo que exceda de 3 esos días es triple.
-// Jueves, Viernes, Sábado y Domingo: TODAS las horas de esos días son triples (ya se agotó el tope de dobles de la semana).
-const DIAS_CON_TOPE_DOBLES = ['lunes','martes','miercoles'];
-const DIAS_TODO_TRIPLE = ['jueves','viernes','sabado','domingo'];
-function calcularDoblesTriples(horasPorDia){
-  let dobles = 0, triples = 0;
-  DIAS_CON_TOPE_DOBLES.forEach(d=>{
-    const h = horasPorDia[d] || 0;
-    dobles += Math.min(3, h);
-    triples += Math.max(0, h - 3);
-  });
-  DIAS_TODO_TRIPLE.forEach(d=>{
-    triples += horasPorDia[d] || 0;
-  });
-  return { dobles, triples };
-}
-
 document.getElementById('inp-horas-extra-file').addEventListener('change', async function(){
   const file = this.files[0];
   this.value = '';
@@ -3138,23 +3191,16 @@ document.getElementById('inp-horas-extra-file').addEventListener('change', async
     const colNoEmp = buscarCampo('noempleado');
     const colNombre = buscarCampo('nombre');
     const colSalario = buscarCampo('salario diario');
-    // Columnas E a Q del Excel: horas extra capturadas día por día.
-    const colesDia = {
-      lunes: buscarCampo('lunes hora extra'),
-      martes: buscarCampo('martes hora extra'),
-      miercoles: buscarCampo('miercoles hora extra'),
-      jueves: buscarCampo('jueves hora extra'),
-      viernes: buscarCampo('viernes hora extra'),
-      sabado: buscarCampo('sabado hora extra'),
-      domingo: buscarCampo('domingo hora extra'),
-    };
+    // Columna BA del Excel: "horas extras dobles". Columna BC: "horas extras triples".
+    const colDobles = buscarCampo('horas extras dobles');
+    const colTriples = buscarCampo('horas extras triples');
 
     if(!colNoEmp){
       mostrarToast('No encontré la columna "NoEmpleado" en el archivo. Verifica que sea el mismo formato de nómina.', true);
       return;
     }
-    if(Object.values(colesDia).every(c=>!c)){
-      mostrarToast('No encontré las columnas de "Hora Extra" por día (Lunes...Domingo). Verifica que sea el mismo formato de nómina.', true);
+    if(!colDobles && !colTriples){
+      mostrarToast('No encontré las columnas "horas extras dobles" (BA) ni "horas extras triples" (BC). Verifica que sea el mismo formato de nómina.', true);
       return;
     }
 
@@ -3164,12 +3210,10 @@ document.getElementById('inp-horas-extra-file').addEventListener('change', async
       if(!codigo) return;
       const emp = EMP_BY_CODIGO[codigo];
       const salarioDiario = numeroDe(fila[colSalario]);
-      const horasPorDia = {};
-      Object.keys(colesDia).forEach(d=>{ horasPorDia[d] = colesDia[d] ? numeroDe(fila[colesDia[d]]) : 0; });
-      const totalHorasDia = Object.values(horasPorDia).reduce((s,h)=>s+h,0);
-      if(salarioDiario===0 && totalHorasDia===0) return; // fila vacía / sin movimientos
+      const horasDobles = colDobles ? numeroDe(fila[colDobles]) : 0;
+      const horasTriples = colTriples ? numeroDe(fila[colTriples]) : 0;
+      if(salarioDiario===0 && horasDobles===0 && horasTriples===0) return; // fila vacía / sin movimientos
 
-      const { dobles: horasDobles, triples: horasTriples } = calcularDoblesTriples(horasPorDia);
       const tarifaHora = salarioDiario / 8;
       const importeEstimado = Math.round((horasDobles*tarifaHora*2 + horasTriples*tarifaHora*3)*100)/100;
       registros.push({
