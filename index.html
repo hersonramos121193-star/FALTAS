@@ -3374,6 +3374,16 @@ document.getElementById('inp-horas-extra-file').addEventListener('change', async
   }
 });
 
+/**
+ * Extrae el número de periodo de nómina desde el texto ("Periodo 13 — MARZO...")
+ * para poder ordenar de forma numérica en vez de alfabética. Devuelve null si
+ * el texto no trae un número de periodo reconocible (ej. periodos escritos a mano).
+ */
+function numeroPeriodoDe(periodoStr){
+  const m = String(periodoStr||'').match(/Periodo\s+(\d+)/i);
+  return m ? parseInt(m[1],10) : null;
+}
+
 function renderHorasExtra(){
   const sel = document.getElementById('f-horas-extra-periodo');
   const mapaFechaPeriodo = {};
@@ -3417,7 +3427,18 @@ function renderHorasExtra(){
   if(datos.length===0){
     body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">${HORAS_EXTRA.length===0 ? 'Aún no has subido ningún Excel de horas extra.' : 'Sin resultados para esta búsqueda.'}</td></tr>`;
   } else {
-    body.innerHTML = datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo) || (a.nombre||'').localeCompare(b.nombre||'')).map(r=>{
+    body.innerHTML = datos.slice().sort((a,b)=>{
+      if(!filtro){
+        // Vista "Todos los periodos subidos": orden ascendente por el número
+        // del periodo (Periodo 9, Periodo 10, Periodo 13...), no alfabético.
+        const na = numeroPeriodoDe(a.periodo), nb = numeroPeriodoDe(b.periodo);
+        if(na!==null && nb!==null && na!==nb) return na - nb;
+        if(na!==null && nb===null) return -1;
+        if(na===null && nb!==null) return 1;
+        if(a.periodo !== b.periodo) return a.periodo.localeCompare(b.periodo);
+      }
+      return (a.nombre||'').localeCompare(b.nombre||'');
+    }).map(r=>{
       const total = numeroDe(r.horasDobles)+numeroDe(r.horasTriples);
       return `<tr>
         <td>#${r.codigo}</td>
