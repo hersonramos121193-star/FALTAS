@@ -1,4 +1,4 @@
-const CACHE_NAME = "ausentismo-mmx-v32";
+const CACHE_NAME = "ausentismo-mmx-v33";
 const ASSETS = [
   "./index.html",
   "./manifest.json",

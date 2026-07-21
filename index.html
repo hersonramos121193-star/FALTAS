@@ -462,23 +462,28 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel" style="margin-bottom:18px;">
         <div class="panel-body">
-          <div style="display:flex;gap:14px;flex-wrap:wrap;">
-            <div class="field" style="max-width:280px;">
-              <label>Mes</label>
-              <select id="f-cumple-mes">
-                <option value="">Mes actual</option>
-                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-                <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-                <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-                <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-                <option value="todos">Todo el año</option>
-              </select>
-            </div>
-            <div class="field" style="max-width:280px;flex:1;min-width:220px;">
-              <label>Buscar por nombre o ficha</label>
-              <input type="text" id="f-cumple-buscar" placeholder="Nombre o número de empleado...">
-            </div>
+          <div class="field" style="max-width:280px;">
+            <label>Mes</label>
+            <select id="f-cumple-mes">
+              <option value="">Mes actual</option>
+              <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+              <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+              <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+              <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+              <option value="todos">Todo el año</option>
+            </select>
           </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-head">
+          <div class="panel-title">Búsqueda individual por número de ficha</div>
+          <span class="small-muted">Escribe el código de empleado o su nombre</span>
+        </div>
+        <div class="panel-body">
+          <input type="text" id="f-cumple-buscar" placeholder="Ej. 12261 o nombre del colaborador..." style="width:100%;padding:12px 16px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;">
+          <div id="cumple-busqueda-individual-resultado" style="margin-top:16px;"></div>
         </div>
       </div>
 
@@ -1222,7 +1227,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.21-v32";
+const APP_VERSION = "2026.07.21-v33";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2940,15 +2945,12 @@ function renderCumple(){
     panelAlerta60.style.display = 'none';
   }
 
-  const qBuscar = document.getElementById('f-cumple-buscar').value.trim().toLowerCase();
-  const listaFiltrada = qBuscar ? lista.filter(e=> e.nombre.toLowerCase().includes(qBuscar) || e.codigo.includes(qBuscar)) : lista;
-
-  document.getElementById('cumple-count').textContent = `${listaFiltrada.length} colaborador(es)`;
+  document.getElementById('cumple-count').textContent = `${lista.length} colaborador(es)`;
   const body = document.getElementById('cumple-body');
-  if(listaFiltrada.length===0){
-    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">${qBuscar ? 'Sin resultados para esta búsqueda.' : 'No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.'}</td></tr>`;
+  if(lista.length===0){
+    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.</td></tr>`;
   } else {
-    body.innerHTML = listaFiltrada.map(e=>{
+    body.innerHTML = lista.map(e=>{
       const esAdmin = (e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO';
       return `<tr style="${esAdmin?'background:#FBEAE7;':''}">
         <td>${e._dia}${selMes==='todos'?' de '+NOMBRES_MES[e._mes].slice(0,3):''}</td>
@@ -2962,9 +2964,79 @@ function renderCumple(){
     }).join('');
   }
   window._cumpleCache = { lista, etiquetaPeriodo };
+  renderBusquedaIndividualCumple();
 }
 document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
-document.getElementById('f-cumple-buscar').addEventListener('input', renderCumple);
+
+/* ============================================================
+   BÚSQUEDA INDIVIDUAL POR NÚMERO DE FICHA (Cumpleañeros)
+   ============================================================ */
+function iniciales(nombre){
+  const partes = nombre.trim().split(/\s+/).filter(Boolean);
+  if(partes.length===0) return '?';
+  if(partes.length===1) return partes[0].slice(0,2).toUpperCase();
+  return (partes[0][0] + partes[1][0]).toUpperCase();
+}
+function etiquetaTipoEmpleado(tipo){
+  const t = (tipo||'').toUpperCase();
+  const mapa = {
+    'ADMINISTRATIVO':'Personal administrativo',
+    'OPERATIVO':'Personal operativo',
+    'SINDICALIZADO':'Personal sindicalizado',
+    'SERVICIOS':'Personal de servicios',
+    'TECNICOS':'Personal técnico'
+  };
+  return mapa[t] || 'Sin especificar';
+}
+function calcularProximoCumpleDias(fechaNacNorm){
+  if(!fechaNacNorm || !/^\d{4}-\d{2}-\d{2}$/.test(fechaNacNorm)) return null;
+  const hoy = new Date();
+  const mes = parseInt(fechaNacNorm.slice(5,7),10)-1;
+  const dia = parseInt(fechaNacNorm.slice(8,10),10);
+  let proximo = new Date(hoy.getFullYear(), mes, dia);
+  if(proximo < new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate())) proximo.setFullYear(proximo.getFullYear()+1);
+  const dias = Math.round((proximo - new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate())) / 86400000);
+  return dias;
+}
+function renderBusquedaIndividualCumple(){
+  const q = document.getElementById('f-cumple-buscar').value.trim().toLowerCase();
+  const cont = document.getElementById('cumple-busqueda-individual-resultado');
+  if(!q){ cont.innerHTML = ''; return; }
+
+  const resultados = EMPLEADOS.filter(e=>
+    e.nombre.toLowerCase().includes(q) || e.codigo.includes(q)
+  ).slice(0,10);
+
+  if(resultados.length===0){
+    cont.innerHTML = `<div class="small-muted" style="padding:14px 0;">Sin resultados para "${q}".</div>`;
+    return;
+  }
+
+  cont.innerHTML = resultados.map(e=>{
+    const fn = excelFechaATexto(e.fechaNacimiento);
+    const fnValida = fn && /^\d{4}-\d{2}-\d{2}$/.test(fn);
+    const fechaNacTexto = fnValida ? `${parseInt(fn.slice(8,10),10)} de ${NOMBRES_MES[parseInt(fn.slice(5,7),10)-1]}` : 'Sin capturar';
+    const edad = fnValida ? (new Date().getFullYear() - parseInt(fn.slice(0,4),10)) : null;
+    const diasProximo = fnValida ? calcularProximoCumpleDias(fn) : null;
+    const esBaja = (e.estatus||'ALTA')==='BAJA';
+    return `<div style="display:flex;gap:16px;align-items:flex-start;background:var(--paper);border-radius:12px;padding:18px 20px;margin-bottom:12px;${esBaja?'opacity:.6;':''}">
+      <div style="width:54px;height:54px;border-radius:50%;background:var(--navy-900);color:var(--gold-400);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0;">${iniciales(e.nombre)}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:16.5px;color:var(--navy-900);margin-bottom:12px;">${e.nombre}${esBaja?' <span style="color:var(--bad);font-weight:700;font-size:12px;">(BAJA)</span>':''}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px 18px;">
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Ficha</div><div style="font-weight:600;font-size:13.5px;">${e.codigo}</div></div>
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Departamento</div><div style="font-weight:600;font-size:13.5px;">${e.depto||'—'}</div></div>
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Puesto</div><div style="font-weight:600;font-size:13.5px;">${e.puesto||'—'}</div></div>
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Fecha de nacimiento</div><div style="font-weight:600;font-size:13.5px;">${fechaNacTexto}</div></div>
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Edad actual</div><div style="font-weight:600;font-size:13.5px;">${edad!==null ? edad+' años' : '—'}</div></div>
+          <div><div class="small-muted" style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;">Próximo cumpleaños</div><div style="font-weight:600;font-size:13.5px;">${diasProximo!==null ? (diasProximo===0?'¡Hoy!':'en '+diasProximo+' días') : '—'}</div></div>
+        </div>
+        <span style="display:inline-block;margin-top:12px;background:var(--gold-100);color:#7A5C1E;font-size:11px;font-weight:700;padding:4px 12px;border-radius:99px;">${etiquetaTipoEmpleado(e.tipoEmpleado)}</span>
+      </div>
+    </div>`;
+  }).join('') + (resultados.length===10 ? '<div class="small-muted" style="text-align:center;">Mostrando los primeros 10 resultados — afina tu búsqueda para ver menos coincidencias.</div>' : '');
+}
+document.getElementById('f-cumple-buscar').addEventListener('input', renderBusquedaIndividualCumple);
 
 document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
   const cache = window._cumpleCache;
