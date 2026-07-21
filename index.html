@@ -754,10 +754,22 @@ tbody tr:hover{background:var(--paper);}
           <div class="pagetitle">Rotación de personal</div>
           <div class="pagesub" id="rotacion-pagesub">Altas, bajas y % de rotación del año en curso</div>
         </div>
-        <button class="btn btn-ghost" id="btn-exportar-rotacion">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-          Exportar a Excel
-        </button>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          <div class="field" style="min-width:200px;">
+            <label>Mes (para exportar)</label>
+            <select id="f-rotacion-mes">
+              <option value="">Todo el año</option>
+              <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+              <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+              <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+              <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" id="btn-exportar-rotacion">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
       </div>
 
       <div class="kpi-grid">
@@ -1195,7 +1207,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v30";
+const APP_VERSION = "2026.07.20-v31";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2979,11 +2991,13 @@ document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
   const cache = window._rotacionCache;
   if(!cache){ mostrarToast('Espera a que cargue la vista de Rotación.', true); return; }
   const hoy = new Date().toISOString().slice(0,10);
+  const mesSel = document.getElementById('f-rotacion-mes').value;
   const wb = XLSX.utils.book_new();
 
   const wsResumen = XLSX.utils.aoa_to_sheet([
     ['Rotación de personal — Grupo Metelmex'],
     [`Año ${cache.anioActual} — exportado el ${fmtFecha(hoy)}`],
+    [mesSel!=='' ? `Filtrado a: ${NOMBRES_MES[parseInt(mesSel,10)]} ${cache.anioActual}` : 'Sin filtro de mes (todo el historial)'],
     [],
     ['Indicador', 'Valor'],
     ['Altas en el año', cache.altasAnio.length],
@@ -2996,23 +3010,33 @@ document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
   wsResumen['!cols'] = [{wch:30},{wch:18}];
   XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
 
+  let bajasFiltradas = cache.empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm);
+  let altasFiltradas = cache.empConFechas.filter(e=>e._fechaIngresoNorm);
+  if(mesSel !== ''){
+    const mm = String(parseInt(mesSel,10)+1).padStart(2,'0');
+    bajasFiltradas = bajasFiltradas.filter(e=> e._fechaBajaNorm.slice(0,4)===String(cache.anioActual) && e._fechaBajaNorm.slice(5,7)===mm);
+    altasFiltradas = altasFiltradas.filter(e=> e._fechaIngresoNorm.slice(0,4)===String(cache.anioActual) && e._fechaIngresoNorm.slice(5,7)===mm);
+  }
+
   const filasBajas = [['Numero_Empleado','Nombre','Planta','Puesto','Fecha_Baja']];
-  cache.empConFechas.filter(e=>(e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm)
-    .sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm))
+  bajasFiltradas.sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm))
     .forEach(e=> filasBajas.push([e.codigo, e.nombre, e.depto, e.puesto, e._fechaBajaNorm]));
   const wsBajas = XLSX.utils.aoa_to_sheet(filasBajas);
   wsBajas['!cols'] = [{wch:14},{wch:32},{wch:18},{wch:26},{wch:14}];
   XLSX.utils.book_append_sheet(wb, wsBajas, 'Bajas');
 
   const filasAltas = [['Numero_Empleado','Nombre','Planta','Puesto','Fecha_Ingreso']];
-  cache.empConFechas.filter(e=>e._fechaIngresoNorm)
-    .sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm))
+  altasFiltradas.sort((a,b)=> b._fechaIngresoNorm.localeCompare(a._fechaIngresoNorm))
     .forEach(e=> filasAltas.push([e.codigo, e.nombre, e.depto, e.puesto, e._fechaIngresoNorm]));
   const wsAltas = XLSX.utils.aoa_to_sheet(filasAltas);
   wsAltas['!cols'] = [{wch:14},{wch:32},{wch:18},{wch:26},{wch:14}];
   XLSX.utils.book_append_sheet(wb, wsAltas, 'Altas');
 
-  XLSX.writeFile(wb, `rotacion_personal_${hoy}.xlsx`);
+  if(bajasFiltradas.length===0 && altasFiltradas.length===0 && mesSel!==''){
+    mostrarToast(`No hay altas ni bajas registradas en ${NOMBRES_MES[parseInt(mesSel,10)]} ${cache.anioActual}, se exportó de todas formas con el resumen general.`, true);
+  }
+  const sufijoMes = mesSel!=='' ? '_'+NOMBRES_MES[parseInt(mesSel,10)] : '';
+  XLSX.writeFile(wb, `rotacion_personal${sufijoMes}_${hoy}.xlsx`);
   mostrarToast('Excel de rotación descargado.');
 });
 
