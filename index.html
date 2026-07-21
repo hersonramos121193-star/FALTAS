@@ -888,6 +888,10 @@ tbody tr:hover{background:var(--paper);}
               <label>Periodo</label>
               <select id="f-horas-extra-periodo"><option value="">Todos los periodos subidos</option></select>
             </div>
+            <div class="field" style="max-width:240px;flex:1;min-width:180px;">
+              <label>Planta</label>
+              <select id="f-horas-extra-planta"><option value="">Todas las plantas</option></select>
+            </div>
             <div class="field" style="max-width:320px;flex:1;min-width:240px;">
               <label>Buscar por nombre o ficha</label>
               <input type="text" id="f-horas-extra-buscar" placeholder="Nombre o número de empleado...">
@@ -3399,9 +3403,19 @@ function renderHorasExtra(){
   sel.innerHTML = '<option value="">Todos los periodos subidos</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
   if(periodos.includes(actual)) sel.value = actual;
 
+  const selPlanta = document.getElementById('f-horas-extra-planta');
+  const plantas = [...new Set(HORAS_EXTRA.map(r=>r.planta).filter(p=>p))].sort((a,b)=>a.localeCompare(b));
+  const plantaActual = selPlanta.value;
+  selPlanta.innerHTML = '<option value="">Todas las plantas</option>' + plantas.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
+  if(plantas.includes(plantaActual)) selPlanta.value = plantaActual;
+
   const filtro = sel.value;
+  const filtroPlanta = selPlanta.value;
   const q = document.getElementById('f-horas-extra-buscar').value.trim().toLowerCase();
   let datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
+  if(filtroPlanta){
+    datos = datos.filter(r=> r.planta===filtroPlanta);
+  }
   if(q){
     datos = datos.filter(r=> (r.nombre||'').toLowerCase().includes(q) || String(r.codigo||'').toLowerCase().includes(q));
   }
@@ -3453,6 +3467,7 @@ function renderHorasExtra(){
   }
 }
 document.getElementById('f-horas-extra-periodo').addEventListener('change', renderHorasExtra);
+document.getElementById('f-horas-extra-planta').addEventListener('change', renderHorasExtra);
 document.getElementById('f-horas-extra-buscar').addEventListener('input', renderHorasExtra);
 
 document.getElementById('btn-eliminar-periodo-he').addEventListener('click', async ()=>{
@@ -3480,8 +3495,10 @@ document.getElementById('btn-eliminar-periodo-he').addEventListener('click', asy
 document.getElementById('btn-exportar-horas-extra').addEventListener('click', ()=>{
   if(HORAS_EXTRA.length===0){ mostrarToast('Aún no hay horas extra para exportar.', true); return; }
   const filtro = document.getElementById('f-horas-extra-periodo').value;
+  const filtroPlanta = document.getElementById('f-horas-extra-planta').value;
   const q = document.getElementById('f-horas-extra-buscar').value.trim().toLowerCase();
   let datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
+  if(filtroPlanta) datos = datos.filter(r=> r.planta===filtroPlanta);
   if(q) datos = datos.filter(r=> (r.nombre||'').toLowerCase().includes(q) || String(r.codigo||'').toLowerCase().includes(q));
   if(datos.length===0){ mostrarToast('No hay registros para exportar con este filtro.', true); return; }
   const filas = [['Periodo','Numero_Empleado','Nombre','Planta','Salario_Diario','Horas_Dobles','Horas_Triples','Total_Horas']];
