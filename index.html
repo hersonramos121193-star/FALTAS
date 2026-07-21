@@ -824,6 +824,18 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel">
         <div class="panel-head">
+          <div class="panel-title">Rotación por planta <span>— año en curso</span></div>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Planta</th><th>Activos</th><th>Altas</th><th>Bajas</th><th>% Rotación</th></tr></thead>
+            <tbody id="rotacion-planta-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
           <div class="panel-title">Bajas recientes</div>
           <input type="text" id="f-rotacion-bajas-buscar" placeholder="Buscar por nombre o ficha..." style="max-width:260px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
         </div>
@@ -3103,7 +3115,44 @@ function renderRotacion(){
   window._rotacionEmpConFechas = empConFechas;
   renderTablasRotacion();
 
-  window._rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas };
+  const rotacionPorPlanta = calcularRotacionPorPlanta(empConFechas, anioActual);
+  renderRotacionPorPlanta(rotacionPorPlanta);
+
+  window._rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas, rotacionPorPlanta };
+}
+
+/**
+ * Agrupa altas, bajas y plantilla activa por planta (campo "depto" del
+ * empleado) y calcula el % de rotación anualizada de cada una:
+ * % = (bajas del año en esa planta / activos actuales en esa planta) x 100
+ */
+function calcularRotacionPorPlanta(empConFechas, anioActual){
+  const porPlanta = {};
+  function obtenerPlanta(nombrePlanta){
+    const clave = nombrePlanta || 'Sin planta';
+    if(!porPlanta[clave]) porPlanta[clave] = { planta: clave, activos:0, altas:0, bajas:0 };
+    return porPlanta[clave];
+  }
+  empConFechas.forEach(e=>{
+    if((e.estatus||'ALTA')==='ALTA') obtenerPlanta(e.depto).activos++;
+  });
+  empConFechas.forEach(e=>{
+    if(e._fechaIngresoNorm && e._fechaIngresoNorm.startsWith(String(anioActual))) obtenerPlanta(e.depto).altas++;
+  });
+  empConFechas.forEach(e=>{
+    if((e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm && e._fechaBajaNorm.startsWith(String(anioActual))) obtenerPlanta(e.depto).bajas++;
+  });
+  return Object.values(porPlanta)
+    .map(p=>({ ...p, pct: p.activos>0 ? Math.round((p.bajas/p.activos)*1000)/10 : 0 }))
+    .sort((a,b)=> b.pct - a.pct);
+}
+
+function renderRotacionPorPlanta(lista){
+  const body = document.getElementById('rotacion-planta-body');
+  if(!body) return;
+  body.innerHTML = lista.length ? lista.map(p=>`
+    <tr><td>${p.planta}</td><td>${p.activos}</td><td>${p.altas}</td><td>${p.bajas}</td><td>${p.pct}%</td></tr>
+  `).join('') : `<tr><td colspan="5" class="small-muted" style="text-align:center;padding:16px;">Sin datos de planta registrados.</td></tr>`;
 }
 
 function renderTablasRotacion(){
@@ -3160,6 +3209,12 @@ document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
     bajasFiltradas = bajasFiltradas.filter(e=> e._fechaBajaNorm.slice(0,4)===String(cache.anioActual) && e._fechaBajaNorm.slice(5,7)===mm);
     altasFiltradas = altasFiltradas.filter(e=> e._fechaIngresoNorm.slice(0,4)===String(cache.anioActual) && e._fechaIngresoNorm.slice(5,7)===mm);
   }
+
+  const filasPorPlanta = [['Planta','Activos','Altas','Bajas','% Rotación']];
+  (cache.rotacionPorPlanta || []).forEach(p=> filasPorPlanta.push([p.planta, p.activos, p.altas, p.bajas, p.pct + '%']));
+  const wsPorPlanta = XLSX.utils.aoa_to_sheet(filasPorPlanta);
+  wsPorPlanta['!cols'] = [{wch:22},{wch:12},{wch:10},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsPorPlanta, 'Por planta');
 
   const filasBajas = [['Numero_Empleado','Nombre','Planta','Puesto','Fecha_Baja']];
   bajasFiltradas.sort((a,b)=> b._fechaBajaNorm.localeCompare(a._fechaBajaNorm))
