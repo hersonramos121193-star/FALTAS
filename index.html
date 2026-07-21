@@ -488,13 +488,13 @@ tbody tr:hover{background:var(--paper);}
           <div class="kpi-sub">requieren atención especial</div>
         </div>
         <div class="kpi ok">
-          <div class="kpi-label">Operativos</div>
-          <div class="kpi-value" id="cumple-operativo">0</div>
+          <div class="kpi-label" id="cumple-cat2-label">—</div>
+          <div class="kpi-value" id="cumple-cat2-valor">0</div>
           <div class="kpi-sub">del periodo seleccionado</div>
         </div>
         <div class="kpi gold">
-          <div class="kpi-label">Sindicalizados</div>
-          <div class="kpi-value" id="cumple-sindicalizado">0</div>
+          <div class="kpi-label" id="cumple-cat3-label">—</div>
+          <div class="kpi-value" id="cumple-cat3-valor">0</div>
           <div class="kpi-sub">del periodo seleccionado</div>
         </div>
       </div>
@@ -1073,6 +1073,8 @@ tbody tr:hover{background:var(--paper);}
             <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
             <option value="OPERATIVO">OPERATIVO</option>
             <option value="SINDICALIZADO">SINDICALIZADO</option>
+            <option value="SERVICIOS">SERVICIOS</option>
+            <option value="TECNICOS">TECNICOS</option>
           </select>
         </div>
       </div>
@@ -1133,6 +1135,8 @@ tbody tr:hover{background:var(--paper);}
             <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
             <option value="OPERATIVO">OPERATIVO</option>
             <option value="SINDICALIZADO">SINDICALIZADO</option>
+            <option value="SERVICIOS">SERVICIOS</option>
+            <option value="TECNICOS">TECNICOS</option>
           </select>
         </div>
       </div>
@@ -1191,7 +1195,7 @@ tbody tr:hover{background:var(--paper);}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.07.20-v29";
+const APP_VERSION = "2026.07.20-v30";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2485,6 +2489,9 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
 
     const headersReales = Object.keys(filas[0]);
     const colCodigo = buscarColGenerico(headersReales, ['numero_empleado','numeroempleado','no empleado','noempleado','no. empleado','numero de empleado','número de empleado','codigo','código']);
+    const colNombre = buscarColGenerico(headersReales, ['nombre','nombre (referencia)','nombre completo']);
+    const colDepto = buscarColGenerico(headersReales, ['planta','planta (referencia)','depto','departamento','planta / departamento']);
+    const colPuesto = buscarColGenerico(headersReales, ['puesto']);
     const colFechaIngreso = buscarColGenerico(headersReales, ['fecha_ingreso','fecha de ingreso','fecha ingreso','fecha alta','fecha_alta','fecha de alta']);
     const colFechaBaja = buscarColGenerico(headersReales, ['fecha_baja','fecha de baja','fecha baja']);
     const colEstatus = buscarColGenerico(headersReales, ['estatus','status']);
@@ -2496,64 +2503,114 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       return;
     }
 
-    let actualizados = 0;
+    // Se procesa con un Map para que, si el archivo trae el mismo número de
+    // empleado repetido, se quede con la ÚLTIMA fila (no se duplica).
+    const porCodigo = new Map();
     const errores = [];
-    btn.textContent = 'Actualizando 0...';
-
-    for(let i=0;i<filas.length;i++){
-      const fila = filas[i];
+    let duplicados = 0;
+    filas.forEach((fila, i)=>{
       const codigo = String(fila[colCodigo]||'').trim();
       const numFila = i+2;
-      if(!codigo) continue;
-      const emp = EMP_BY_CODIGO[codigo];
-      if(!emp){ errores.push(`Fila ${numFila}: el empleado #${codigo} no existe en el directorio.`); continue; }
+      if(!codigo) return;
+      if(porCodigo.has(codigo)) duplicados++;
 
-      let estatus = emp.estatus || 'ALTA';
+      const empExistente = EMP_BY_CODIGO[codigo];
+      let estatus = empExistente ? (empExistente.estatus || 'ALTA') : 'ALTA';
       if(colEstatus && String(fila[colEstatus]||'').trim()){
         const val = String(fila[colEstatus]).trim().toUpperCase();
         if(val==='ALTA' || val==='BAJA') estatus = val;
-        else { errores.push(`Fila ${numFila}: el estatus "${fila[colEstatus]}" no es válido (debe ser ALTA o BAJA). Se dejó el estatus actual.`); }
+        else errores.push(`Fila ${numFila}: el estatus "${fila[colEstatus]}" no es válido (debe ser ALTA o BAJA). Se dejó el estatus actual.`);
       }
+      const nombre = colNombre ? String(fila[colNombre]||'').trim().toUpperCase() : '';
+      const depto = colDepto ? String(fila[colDepto]||'').trim().toUpperCase() : '';
+      const puesto = colPuesto ? String(fila[colPuesto]||'').trim().toUpperCase() : '';
       const fechaIngreso = colFechaIngreso ? excelFechaATexto(fila[colFechaIngreso]) : '';
       const fechaBaja = colFechaBaja ? excelFechaATexto(fila[colFechaBaja]) : '';
       const fechaNacimiento = colFechaNacimiento ? excelFechaATexto(fila[colFechaNacimiento]) : '';
-      let tipoEmpleado = colTipoEmpleado ? String(fila[colTipoEmpleado]||'').trim().toUpperCase() : '';
-      if(tipoEmpleado && !['ADMINISTRATIVO','OPERATIVO','SINDICALIZADO'].includes(tipoEmpleado)){
-        errores.push(`Fila ${numFila}: el tipo de empleado "${fila[colTipoEmpleado]}" no es válido (debe ser ADMINISTRATIVO, OPERATIVO o SINDICALIZADO). No se actualizó ese campo.`);
-        tipoEmpleado = '';
+      const tipoEmpleado = colTipoEmpleado ? String(fila[colTipoEmpleado]||'').trim().toUpperCase() : '';
+
+      if(!empExistente && (!nombre || !depto)){
+        errores.push(`Fila ${numFila}: el empleado #${codigo} no existe en el directorio y la fila no trae Nombre/Planta para darlo de alta, se omitió.`);
+        return;
       }
 
-      try{
-        await apiPost({action:'updateEmpleado', empleado:{
-          codigo, nombre: emp.nombre, depto: emp.depto, puesto: emp.puesto,
-          estatus, fechaBaja: estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '',
-          fechaIngreso: fechaIngreso || undefined,
-          fechaNacimiento: fechaNacimiento || undefined,
-          tipoEmpleado: tipoEmpleado || undefined
-        }});
-        emp.estatus = estatus;
-        emp.fechaBaja = estatus==='BAJA' ? (fechaBaja || emp.fechaBaja || '') : '';
-        if(fechaIngreso) emp.fechaIngreso = fechaIngreso;
-        if(fechaNacimiento) emp.fechaNacimiento = fechaNacimiento;
-        if(tipoEmpleado) emp.tipoEmpleado = tipoEmpleado;
-        actualizados++;
-        btn.textContent = `Actualizando ${actualizados}...`;
-      }catch(err){
-        errores.push(`Fila ${numFila}: #${codigo} — no se pudo guardar en Google Sheets.`);
-      }
+      porCodigo.set(codigo, {
+        codigo, nombre: nombre || (empExistente?empExistente.nombre:''), depto: depto || (empExistente?empExistente.depto:''),
+        puesto: puesto || (empExistente?empExistente.puesto:''), estatus, fechaBaja, fechaIngreso, fechaNacimiento, tipoEmpleado,
+        _esNuevo: !empExistente
+      });
+    });
+
+    const registros = [...porCodigo.values()];
+    if(registros.length === 0){
+      mostrarToast('No se encontraron registros válidos para actualizar.', true);
+      return;
     }
+
+    const nuevos = registros.filter(r=>r._esNuevo);
+    const actualizaciones = registros.filter(r=>!r._esNuevo);
+
+    btn.textContent = `Guardando ${registros.length} registros en Google Sheets...`;
+    const resultado = await apiPost({action:'sincronizarCatalogoLote', nuevos, actualizaciones});
+
+    // Reflejar los cambios localmente sin necesidad de recargar la página
+    nuevos.forEach(r=>{
+      if(EMP_BY_CODIGO[r.codigo]) return; // por si acaso ya existía
+      const emp = { codigo:r.codigo, nombre:r.nombre, depto:r.depto, puesto:r.puesto, estatus:r.estatus,
+        fechaIngreso:r.fechaIngreso, fechaBaja: r.estatus==='BAJA'?r.fechaBaja:'', fechaNacimiento:r.fechaNacimiento, tipoEmpleado:r.tipoEmpleado };
+      EMPLEADOS.push(emp);
+      EMP_BY_CODIGO[r.codigo] = emp;
+    });
+    actualizaciones.forEach(r=>{
+      const emp = EMP_BY_CODIGO[r.codigo];
+      if(!emp) return;
+      emp.nombre = r.nombre; emp.depto = r.depto; emp.puesto = r.puesto; emp.estatus = r.estatus;
+      emp.fechaBaja = r.estatus==='BAJA' ? (r.fechaBaja || emp.fechaBaja || '') : '';
+      if(r.fechaIngreso) emp.fechaIngreso = r.fechaIngreso;
+      if(r.fechaNacimiento) emp.fechaNacimiento = r.fechaNacimiento;
+      if(r.tipoEmpleado) emp.tipoEmpleado = r.tipoEmpleado;
+    });
 
     recalcularDepartamentos();
     renderEmpleados();
     renderDashboard();
-    mostrarResultadoPlantilla(actualizados, errores.length, errores);
+    const sub = document.getElementById('emp-pagesub');
+    if(sub) sub.textContent = `Búsqueda por nombre o número de empleado — ${EMPLEADOS.length} registros`;
+    if(duplicados>0) errores.unshift(`Se encontraron ${duplicados} número(s) de empleado repetidos dentro del mismo archivo — se usó la última fila de cada uno.`);
+    mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores);
   }catch(err){
-    mostrarToast('No se pudo leer el archivo. Verifica que sea .xlsx, .xls o .csv.', true);
+    mostrarToast('No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
   }finally{
     btn.disabled = false;
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Actualizar catálogo (Excel)';
   }
 });
+
+function mostrarResultadoCatalogo(agregados, actualizados, listaErrores){
+  const resumen = document.getElementById('resultado-plantilla-resumen');
+  resumen.innerHTML = `
+    <div class="kpi ok" style="flex:1;min-width:150px;">
+      <div class="kpi-label">Empleados agregados</div>
+      <div class="kpi-value">${agregados}</div>
+    </div>
+    <div class="kpi" style="flex:1;min-width:150px;">
+      <div class="kpi-label">Empleados actualizados</div>
+      <div class="kpi-value">${actualizados}</div>
+    </div>
+    <div class="kpi ${listaErrores.length>0?'bad':''}" style="flex:1;min-width:150px;">
+      <div class="kpi-label">Avisos / filas omitidas</div>
+      <div class="kpi-value">${listaErrores.length}</div>
+    </div>`;
+  const detalle = document.getElementById('resultado-plantilla-detalle');
+  if(listaErrores.length === 0){
+    detalle.innerHTML = '<div class="small-muted">Todo se guardó sin ningún aviso. 👍</div>';
+  } else {
+    detalle.innerHTML = `<div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:8px;">Avisos</div>` +
+      listaErrores.slice(0,300).map(e=>`<div class="alert-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><span>${e}</span></div>`).join('') +
+      (listaErrores.length>300 ? `<div class="small-muted" style="text-align:center;padding-top:8px;">+${listaErrores.length-300} avisos más (no se muestran todos por espacio).</div>` : '');
+  }
+  document.getElementById('modal-resultado-plantilla-bg').classList.add('show');
+}
 
 /* ============================================================
    EDITAR EMPLEADO EXISTENTE (planta, puesto, estatus alta/baja)
@@ -2791,11 +2848,21 @@ function renderCumple(){
   document.getElementById('cumple-total-sub').textContent = etiquetaPeriodo;
 
   const admins = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO');
-  const operativos = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='OPERATIVO');
-  const sindicalizados = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='SINDICALIZADO');
   document.getElementById('cumple-admin').textContent = admins.length;
-  document.getElementById('cumple-operativo').textContent = operativos.length;
-  document.getElementById('cumple-sindicalizado').textContent = sindicalizados.length;
+
+  const conteoPorTipo = {};
+  lista.forEach(e=>{
+    const t = (e.tipoEmpleado||'').toUpperCase();
+    if(!t || t==='ADMINISTRATIVO') return;
+    conteoPorTipo[t] = (conteoPorTipo[t]||0) + 1;
+  });
+  const topCategorias = Object.entries(conteoPorTipo).sort((a,b)=>b[1]-a[1]);
+  const cat2 = topCategorias[0] || ['Otros', 0];
+  const cat3 = topCategorias[1] || ['Sin especificar', lista.filter(e=>!e.tipoEmpleado).length];
+  document.getElementById('cumple-cat2-label').textContent = cat2[0].charAt(0) + cat2[0].slice(1).toLowerCase();
+  document.getElementById('cumple-cat2-valor').textContent = cat2[1];
+  document.getElementById('cumple-cat3-label').textContent = cat3[0].charAt(0) + cat3[0].slice(1).toLowerCase();
+  document.getElementById('cumple-cat3-valor').textContent = cat3[1];
 
   const panelAlerta = document.getElementById('panel-alerta-admin-cumple');
   if(admins.length > 0){
