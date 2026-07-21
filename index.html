@@ -933,6 +933,15 @@ tbody tr:hover{background:var(--paper);}
             <tbody id="horas-extra-body"></tbody>
           </table>
         </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 0 4px;">
+          <button class="btn btn-ghost" id="he-pag-prev" style="padding:6px 12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <span class="small-muted" id="he-pag-info">Página 1 de 1</span>
+          <button class="btn btn-ghost" id="he-pag-next" style="padding:6px 12px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -3388,6 +3397,9 @@ function numeroPeriodoDe(periodoStr){
   return m ? parseInt(m[1],10) : null;
 }
 
+let heCurrentPage = 1;
+const HE_PAGE_SIZE = 100;
+
 function renderHorasExtra(){
   const sel = document.getElementById('f-horas-extra-periodo');
   const mapaFechaPeriodo = {};
@@ -3438,10 +3450,16 @@ function renderHorasExtra(){
 
   document.getElementById('he-count').textContent = `${datos.length} registro(s)`;
   const body = document.getElementById('horas-extra-body');
+  const infoPag = document.getElementById('he-pag-info');
+  const btnPrev = document.getElementById('he-pag-prev');
+  const btnNext = document.getElementById('he-pag-next');
+
   if(datos.length===0){
     body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">${HORAS_EXTRA.length===0 ? 'Aún no has subido ningún Excel de horas extra.' : 'Sin resultados para esta búsqueda.'}</td></tr>`;
+    infoPag.textContent = 'Página 1 de 1';
+    btnPrev.disabled = true; btnNext.disabled = true;
   } else {
-    body.innerHTML = datos.slice().sort((a,b)=>{
+    const ordenado = datos.slice().sort((a,b)=>{
       if(!filtro){
         // Vista "Todos los periodos subidos": orden ascendente por el número
         // del periodo (Periodo 9, Periodo 10, Periodo 13...), no alfabético.
@@ -3452,7 +3470,15 @@ function renderHorasExtra(){
         if(a.periodo !== b.periodo) return a.periodo.localeCompare(b.periodo);
       }
       return (a.nombre||'').localeCompare(b.nombre||'');
-    }).map(r=>{
+    });
+
+    const totalPaginas = Math.max(1, Math.ceil(ordenado.length / HE_PAGE_SIZE));
+    if(heCurrentPage > totalPaginas) heCurrentPage = totalPaginas;
+    if(heCurrentPage < 1) heCurrentPage = 1;
+    const inicio = (heCurrentPage - 1) * HE_PAGE_SIZE;
+    const pagina = ordenado.slice(inicio, inicio + HE_PAGE_SIZE);
+
+    body.innerHTML = pagina.map(r=>{
       const total = numeroDe(r.horasDobles)+numeroDe(r.horasTriples);
       return `<tr>
         <td>#${r.codigo}</td>
@@ -3464,11 +3490,17 @@ function renderHorasExtra(){
         <td>${total.toFixed(1)}</td>
       </tr>`;
     }).join('');
+
+    infoPag.textContent = `Página ${heCurrentPage} de ${totalPaginas}`;
+    btnPrev.disabled = heCurrentPage <= 1;
+    btnNext.disabled = heCurrentPage >= totalPaginas;
   }
 }
-document.getElementById('f-horas-extra-periodo').addEventListener('change', renderHorasExtra);
-document.getElementById('f-horas-extra-planta').addEventListener('change', renderHorasExtra);
-document.getElementById('f-horas-extra-buscar').addEventListener('input', renderHorasExtra);
+document.getElementById('f-horas-extra-periodo').addEventListener('change', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
+document.getElementById('f-horas-extra-planta').addEventListener('change', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
+document.getElementById('f-horas-extra-buscar').addEventListener('input', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
+document.getElementById('he-pag-prev').addEventListener('click', ()=>{ heCurrentPage--; renderHorasExtra(); });
+document.getElementById('he-pag-next').addEventListener('click', ()=>{ heCurrentPage++; renderHorasExtra(); });
 
 document.getElementById('btn-eliminar-periodo-he').addEventListener('click', async ()=>{
   if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
