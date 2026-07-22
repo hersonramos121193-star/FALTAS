@@ -297,6 +297,10 @@ tbody tr:hover{background:var(--paper);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
       <span>Horas extra</span>
     </button>
+    <button class="navbtn" data-view="kpis-semanales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+      <span>KPI's semanales</span>
+    </button>
 
     <div class="navlabel">Configuración</div>
     <button class="navbtn" data-view="supervisores">
@@ -945,6 +949,62 @@ tbody tr:hover{background:var(--paper);}
       </div>
     </section>
 
+    <!-- ============ KPI'S SEMANALES ============ -->
+    <section id="view-kpis-semanales" class="view hidden">
+      <div class="topbar">
+        <div>
+          <div class="pagetitle">KPI's semanales</div>
+          <div class="pagesub">Ausentismo, horas extra y rotación del periodo seleccionado</div>
+        </div>
+        <button class="btn btn-ghost" id="btn-exportar-kpis-periodo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+          Exportar métricas del periodo a Excel
+        </button>
+      </div>
+
+      <div class="filters" style="margin-bottom:16px;">
+        <div class="field" style="max-width:340px;flex:1;min-width:260px;">
+          <label>Periodo</label>
+          <select id="f-kpis-semanales-periodo"><option value="">Todos los periodos subidos</option></select>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Ausencias del periodo</div>
+          <div class="kpi-value" id="ks-ausencias">0</div>
+          <div class="kpi-sub">registros en el rango de fechas del periodo</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total horas dobles</div>
+          <div class="kpi-value" id="ks-dobles">0.0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Total horas triples</div>
+          <div class="kpi-value" id="ks-triples">0.0</div>
+          <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Altas / Bajas</div>
+          <div class="kpi-value" id="ks-altas-bajas">0 / 0</div>
+          <div class="kpi-sub" id="ks-pct-rotacion">% rotación: 0%</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Detalle por planta <span>— periodo seleccionado</span></div>
+        </div>
+        <div class="panel-body" style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Planta</th><th>Ausencias</th><th>H. dobles</th><th>H. triples</th><th>Altas</th><th>Bajas</th></tr></thead>
+            <tbody id="ks-planta-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CONEXIÓN ============ -->
     <section id="view-conexion" class="view hidden">
       <div class="topbar">
@@ -1486,6 +1546,7 @@ function goTo(view){
   if(view==='conexion') renderConexion();
   if(view==='rotacion') renderRotacion();
   if(view==='horas-extra') renderHorasExtra();
+  if(view==='kpis-semanales') renderKpisSemanales();
   if(view==='cumpleanos') renderCumple();
   window.scrollTo(0,0);
 }
@@ -3501,6 +3562,147 @@ document.getElementById('f-horas-extra-planta').addEventListener('change', ()=>{
 document.getElementById('f-horas-extra-buscar').addEventListener('input', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
 document.getElementById('he-pag-prev').addEventListener('click', ()=>{ heCurrentPage--; renderHorasExtra(); });
 document.getElementById('he-pag-next').addEventListener('click', ()=>{ heCurrentPage++; renderHorasExtra(); });
+
+/* ============================================================
+   KPI'S SEMANALES — ausentismo + horas extra + rotación por periodo
+   ============================================================ */
+
+/**
+ * Devuelve el rango de fechas (inicio, fin) a usar para un periodo dado.
+ * Si periodoEtiqueta es '' (todos los periodos subidos), devuelve el rango
+ * que va desde el inicio del periodo más antiguo hasta el fin del más
+ * reciente entre los que tienen carga de horas extra.
+ */
+function rangoFechasKpisSemanales(periodoEtiqueta){
+  const mapaPeriodos = {};
+  PERIODOS_NOMINA.forEach(p=>{ mapaPeriodos[etiquetaPeriodo(p)] = p; });
+
+  if(periodoEtiqueta){
+    const p = mapaPeriodos[periodoEtiqueta];
+    return p ? { inicio: p.inicio, fin: p.fin } : null;
+  }
+
+  const etiquetasSubidas = [...new Set(HORAS_EXTRA.map(r=>r.periodo))];
+  const periodosSubidos = etiquetasSubidas.map(e=>mapaPeriodos[e]).filter(Boolean);
+  if(periodosSubidos.length===0) return null;
+  const inicio = periodosSubidos.reduce((min,p)=> p.inicio < min ? p.inicio : min, periodosSubidos[0].inicio);
+  const fin = periodosSubidos.reduce((max,p)=> p.fin > max ? p.fin : max, periodosSubidos[0].fin);
+  return { inicio, fin };
+}
+
+function renderKpisSemanales(){
+  const sel = document.getElementById('f-kpis-semanales-periodo');
+  const mapaFechaPeriodo = {};
+  PERIODOS_NOMINA.forEach(p=>{ mapaFechaPeriodo[etiquetaPeriodo(p)] = p.inicio; });
+  const periodos = [...new Set(HORAS_EXTRA.map(r=>r.periodo))].sort((a,b)=>{
+    const fa = mapaFechaPeriodo[a], fb = mapaFechaPeriodo[b];
+    if(fa && fb) return fa.localeCompare(fb);
+    if(fa && !fb) return -1;
+    if(!fa && fb) return 1;
+    return a.localeCompare(b);
+  });
+  const actual = sel.value;
+  sel.innerHTML = '<option value="">Todos los periodos subidos</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
+  if(periodos.includes(actual)) sel.value = actual;
+
+  const periodoSel = sel.value;
+  const rango = rangoFechasKpisSemanales(periodoSel);
+
+  if(!rango){
+    document.getElementById('ks-ausencias').textContent = '0';
+    document.getElementById('ks-dobles').textContent = '0.0';
+    document.getElementById('ks-triples').textContent = '0.0';
+    document.getElementById('ks-altas-bajas').textContent = '0 / 0';
+    document.getElementById('ks-pct-rotacion').textContent = '% rotación: 0%';
+    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Sube al menos un periodo de horas extra para ver estos KPIs.</td></tr>`;
+    return;
+  }
+
+  // ---- Ausencias del rango ----
+  const ausenciasPeriodo = AUSENCIAS.filter(a=> a.fecha && a.fecha >= rango.inicio && a.fecha <= rango.fin);
+
+  // ---- Horas extra del periodo (o de todos los periodos subidos) ----
+  const horasExtraPeriodo = periodoSel ? HORAS_EXTRA.filter(r=>r.periodo===periodoSel) : HORAS_EXTRA;
+  const totalDobles = horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasDobles),0);
+  const totalTriples = horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
+
+  // ---- Rotación del rango (altas/bajas cuya fecha cae dentro del periodo) ----
+  const empConFechas = EMPLEADOS.map(e=>({ ...e, _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso), _fechaBajaNorm: excelFechaATexto(e.fechaBaja) }));
+  const altasPeriodo = empConFechas.filter(e=> e._fechaIngresoNorm && e._fechaIngresoNorm >= rango.inicio && e._fechaIngresoNorm <= rango.fin);
+  const bajasPeriodo = empConFechas.filter(e=> (e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm && e._fechaBajaNorm >= rango.inicio && e._fechaBajaNorm <= rango.fin);
+  const activos = empConFechas.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
+  const pctRotacion = activos>0 ? Math.round((bajasPeriodo.length/activos)*1000)/10 : 0;
+
+  document.getElementById('ks-ausencias').textContent = ausenciasPeriodo.length;
+  document.getElementById('ks-dobles').textContent = totalDobles.toFixed(1);
+  document.getElementById('ks-triples').textContent = totalTriples.toFixed(1);
+  document.getElementById('ks-altas-bajas').textContent = `${altasPeriodo.length} / ${bajasPeriodo.length}`;
+  document.getElementById('ks-pct-rotacion').textContent = `% rotación: ${pctRotacion}%`;
+
+  // ---- Detalle por planta ----
+  const porPlanta = {};
+  function obtenerPlanta(nombrePlanta){
+    const clave = nombrePlanta || 'Sin planta';
+    if(!porPlanta[clave]) porPlanta[clave] = { planta: clave, ausencias:0, dobles:0, triples:0, altas:0, bajas:0 };
+    return porPlanta[clave];
+  }
+  ausenciasPeriodo.forEach(a=> obtenerPlanta(a.depto).ausencias++);
+  horasExtraPeriodo.forEach(r=>{ const p = obtenerPlanta(r.planta); p.dobles += numeroDe(r.horasDobles); p.triples += numeroDe(r.horasTriples); });
+  altasPeriodo.forEach(e=> obtenerPlanta(e.depto).altas++);
+  bajasPeriodo.forEach(e=> obtenerPlanta(e.depto).bajas++);
+
+  const listaPlantas = Object.values(porPlanta).sort((a,b)=> a.planta.localeCompare(b.planta));
+  const body = document.getElementById('ks-planta-body');
+  body.innerHTML = listaPlantas.length ? listaPlantas.map(p=>`
+    <tr><td>${p.planta}</td><td>${p.ausencias}</td><td>${p.dobles.toFixed(1)}</td><td>${p.triples.toFixed(1)}</td><td>${p.altas}</td><td>${p.bajas}</td></tr>
+  `).join('') : `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
+
+  window._kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, horasExtraPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
+}
+document.getElementById('f-kpis-semanales-periodo').addEventListener('change', renderKpisSemanales);
+
+document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', ()=>{
+  const cache = window._kpisSemanalesCache;
+  if(!cache || !cache.rango){ mostrarToast('No hay datos que exportar. Sube al menos un periodo de horas extra.', true); return; }
+
+  const wb = XLSX.utils.book_new();
+  const etiquetaPeriodoTxt = cache.periodoSel || `Todos (${fmtFecha(cache.rango.inicio)} al ${fmtFecha(cache.rango.fin)})`;
+
+  const wsResumen = XLSX.utils.aoa_to_sheet([
+    ['KPI\'s semanales'],
+    ['Periodo', etiquetaPeriodoTxt],
+    [],
+    ['Ausencias del periodo', cache.ausenciasPeriodo.length],
+    ['Total horas dobles', cache.horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasDobles),0).toFixed(1)],
+    ['Total horas triples', cache.horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasTriples),0).toFixed(1)],
+    ['Altas', cache.altasPeriodo.length],
+    ['Bajas', cache.bajasPeriodo.length],
+  ]);
+  wsResumen['!cols'] = [{wch:26},{wch:34}];
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
+
+  const filasPlanta = [['Planta','Ausencias','H. dobles','H. triples','Altas','Bajas']];
+  cache.listaPlantas.forEach(p=> filasPlanta.push([p.planta, p.ausencias, p.dobles.toFixed(1), p.triples.toFixed(1), p.altas, p.bajas]));
+  const wsPlanta = XLSX.utils.aoa_to_sheet(filasPlanta);
+  wsPlanta['!cols'] = [{wch:22},{wch:12},{wch:12},{wch:12},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsPlanta, 'Por planta');
+
+  const filasAusencias = [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor']];
+  cache.ausenciasPeriodo.forEach(a=> filasAusencias.push([a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor]));
+  const wsAusencias = XLSX.utils.aoa_to_sheet(filasAusencias);
+  wsAusencias['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:14},{wch:20},{wch:26}];
+  XLSX.utils.book_append_sheet(wb, wsAusencias, 'Ausencias');
+
+  const filasHE = [['Numero_Empleado','Nombre','Planta','Periodo','H. dobles','H. triples']];
+  cache.horasExtraPeriodo.forEach(r=> filasHE.push([r.codigo, r.nombre, r.planta, r.periodo, numeroDe(r.horasDobles).toFixed(1), numeroDe(r.horasTriples).toFixed(1)]));
+  const wsHE = XLSX.utils.aoa_to_sheet(filasHE);
+  wsHE['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:26},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsHE, 'Horas extra');
+
+  const hoy = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `kpis_semanales_periodo_${hoy}.xlsx`);
+  mostrarToast('Excel de KPIs del periodo descargado.');
+});
 
 document.getElementById('btn-eliminar-periodo-he').addEventListener('click', async ()=>{
   if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
