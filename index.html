@@ -969,6 +969,10 @@ tbody tr:hover{background:var(--paper);}
         </div>
       </div>
 
+      <div id="ks-sin-datos" class="small-muted" style="display:none;background:#FFF8E1;border:1px solid #F0DA9A;border-radius:8px;padding:10px 14px;margin-bottom:16px;">
+        No hay ausencias, horas extra ni movimientos de altas/bajas registrados para el periodo seleccionado.
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label">Ausencias del periodo</div>
@@ -3582,39 +3586,41 @@ function rangoFechasKpisSemanales(periodoEtiqueta){
     return p ? { inicio: p.inicio, fin: p.fin } : null;
   }
 
-  const etiquetasSubidas = [...new Set(HORAS_EXTRA.map(r=>r.periodo))];
-  const periodosSubidos = etiquetasSubidas.map(e=>mapaPeriodos[e]).filter(Boolean);
-  if(periodosSubidos.length===0) return null;
-  const inicio = periodosSubidos.reduce((min,p)=> p.inicio < min ? p.inicio : min, periodosSubidos[0].inicio);
-  const fin = periodosSubidos.reduce((max,p)=> p.fin > max ? p.fin : max, periodosSubidos[0].fin);
+  const etiquetasSubidas = periodosSubidos_o_todos(mapaPeriodos);
+  if(etiquetasSubidas.length===0) return null;
+  const inicio = etiquetasSubidas.reduce((min,p)=> p.inicio < min ? p.inicio : min, etiquetasSubidas[0].inicio);
+  const fin = etiquetasSubidas.reduce((max,p)=> p.fin > max ? p.fin : max, etiquetasSubidas[0].fin);
   return { inicio, fin };
+}
+function periodosSubidos_o_todos(mapaPeriodos){
+  // Cuando se elige "Todos los periodos del año", el rango cubre TODO el
+  // catálogo de periodos definido (no solo los que ya tienen horas extra
+  // cargadas), para que ausencias y rotación de cualquier fecha del año
+  // aparezcan aunque ese periodo no tenga carga de horas extra.
+  return Object.values(mapaPeriodos);
 }
 
 function renderKpisSemanales(){
   const sel = document.getElementById('f-kpis-semanales-periodo');
-  const mapaFechaPeriodo = {};
-  PERIODOS_NOMINA.forEach(p=>{ mapaFechaPeriodo[etiquetaPeriodo(p)] = p.inicio; });
-  const periodos = [...new Set(HORAS_EXTRA.map(r=>r.periodo))].sort((a,b)=>{
-    const fa = mapaFechaPeriodo[a], fb = mapaFechaPeriodo[b];
-    if(fa && fb) return fa.localeCompare(fb);
-    if(fa && !fb) return -1;
-    if(!fa && fb) return 1;
-    return a.localeCompare(b);
-  });
+  const periodos = PERIODOS_NOMINA.map(p=>etiquetaPeriodo(p)); // ya vienen ordenados cronológicamente
   const actual = sel.value;
-  sel.innerHTML = '<option value="">Todos los periodos subidos</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
+  sel.innerHTML = '<option value="">Todos los periodos del año</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
   if(periodos.includes(actual)) sel.value = actual;
 
   const periodoSel = sel.value;
   const rango = rangoFechasKpisSemanales(periodoSel);
+  const avisoSinDatos = document.getElementById('ks-sin-datos');
 
   if(!rango){
+    // No debería pasar ya que ahora siempre se elige de PERIODOS_NOMINA, pero se
+    // deja como resguardo por si el periodo seleccionado ya no existe en el catálogo.
     document.getElementById('ks-ausencias').textContent = '0';
     document.getElementById('ks-dobles').textContent = '0.0';
     document.getElementById('ks-triples').textContent = '0.0';
     document.getElementById('ks-altas-bajas').textContent = '0 / 0';
     document.getElementById('ks-pct-rotacion').textContent = '% rotación: 0%';
-    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Sube al menos un periodo de horas extra para ver estos KPIs.</td></tr>`;
+    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Periodo no reconocido.</td></tr>`;
+    avisoSinDatos.style.display = 'block';
     return;
   }
 
@@ -3658,6 +3664,9 @@ function renderKpisSemanales(){
   `).join('') : `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
 
   window._kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, horasExtraPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
+
+  const sinDatos = ausenciasPeriodo.length===0 && horasExtraPeriodo.length===0 && altasPeriodo.length===0 && bajasPeriodo.length===0;
+  avisoSinDatos.style.display = sinDatos ? 'block' : 'none';
 }
 document.getElementById('f-kpis-semanales-periodo').addEventListener('change', renderKpisSemanales);
 
