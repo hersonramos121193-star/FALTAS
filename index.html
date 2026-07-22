@@ -3687,10 +3687,10 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', (
   wsPlanta['!cols'] = [{wch:22},{wch:12},{wch:12},{wch:12},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb, wsPlanta, 'Por planta');
 
-  const filasAusencias = [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor']];
-  cache.ausenciasPeriodo.forEach(a=> filasAusencias.push([a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor]));
+  const filasAusencias = [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor','Notas']];
+  cache.ausenciasPeriodo.forEach(a=> filasAusencias.push([a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor, a.notas || '']));
   const wsAusencias = XLSX.utils.aoa_to_sheet(filasAusencias);
-  wsAusencias['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:14},{wch:20},{wch:26}];
+  wsAusencias['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:14},{wch:20},{wch:26},{wch:34}];
   XLSX.utils.book_append_sheet(wb, wsAusencias, 'Ausencias');
 
   const filasHE = [['Numero_Empleado','Nombre','Planta','Periodo','H. dobles','H. triples']];
