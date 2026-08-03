@@ -396,6 +396,15 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel">
         <div class="panel-head">
+          <div class="panel-title">⚠ Alerta <span>— reincidencia con carta compromiso firmada</span></div>
+        </div>
+        <div class="panel-body">
+          <div id="alert-list-reincidencia" class="alert-list"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
           <div class="panel-title">Ausencias por supervisor</div>
           <span class="small-muted">Total de faltas acumuladas de la gente a cargo de cada supervisor</span>
         </div>
@@ -2174,6 +2183,39 @@ function renderDashboard(){
       </div>`).join('');
     if(pendientes.length>8){
       alertEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${pendientes.length-8} pendientes más</div>`;
+    }
+  }
+
+  // alertas: empleado que YA tiene carta compromiso firmada (en cualquiera de
+  // sus faltas) y vuelve a faltar de manera INJUSTIFICADA después de esa firma
+  const alertReincidenciaEl = document.getElementById('alert-list-reincidencia');
+  const reincidencias = [];
+  codigosUnicos.forEach(cod=>{
+    const empDeAlerta = EMP_BY_CODIGO[cod];
+    if(empDeAlerta && (empDeAlerta.estatus||'ALTA') === 'BAJA') return; // ya no está activo, no genera alerta
+    const todasSusFaltas = ausenciasDe(cod);
+    const cartasFirmadas = todasSusFaltas.filter(a=>a.carta && a.fechaCarta).map(a=>a.fechaCarta).sort();
+    if(cartasFirmadas.length===0) return; // no tiene carta compromiso firmada, no aplica esta alerta
+    const fechaUltimaCarta = cartasFirmadas[cartasFirmadas.length-1];
+    const reincidentes = todasSusFaltas.filter(a=> a.motivo==='Injustificada' && a.fecha && a.fecha > fechaUltimaCarta);
+    if(reincidentes.length>0){
+      const masReciente = reincidentes.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+      reincidencias.push({ cod, cantidad: reincidentes.length, fechaUltimaCarta, ultima: masReciente });
+    }
+  });
+  reincidencias.sort((a,b)=> b.ultima.fecha.localeCompare(a.ultima.fecha));
+
+  if(reincidencias.length===0){
+    alertReincidenciaEl.innerHTML = '<div class="small-muted">No hay empleados con carta compromiso firmada que hayan vuelto a faltar de forma injustificada. 👍</div>';
+  } else {
+    alertReincidenciaEl.innerHTML = reincidencias.slice(0,8).map(p=>`
+      <div class="alert-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
+        <span><b>${p.ultima.nombre}</b> — #${p.ultima.codigo} · ${p.cantidad} falta(s) injustificada(s) después de firmar carta compromiso (firmada: ${fmtFecha(p.fechaUltimaCarta)}, última falta: ${fmtFecha(p.ultima.fecha)})</span>
+        <span class="go" onclick="goTo('historial')">Ver</span>
+      </div>`).join('');
+    if(reincidencias.length>8){
+      alertReincidenciaEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${reincidencias.length-8} pendientes más</div>`;
     }
   }
 
