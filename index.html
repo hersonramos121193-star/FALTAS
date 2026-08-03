@@ -2145,7 +2145,9 @@ function renderDashboard(){
   codigosUnicos.forEach(cod=>{
     const empDeAlerta = EMP_BY_CODIGO[cod];
     if(empDeAlerta && (empDeAlerta.estatus||'ALTA') === 'BAJA') return; // ya no está activo, no genera alerta
-    const hist = ausenciasDe(cod).filter(a=>a.motivo === 'Injustificada'); // más reciente primero
+    const todasSusFaltas = ausenciasDe(cod);
+    if(todasSusFaltas.some(a=>a.carta)) return; // ya tiene carta compromiso firmada en alguna de sus faltas, no genera alerta
+    const hist = todasSusFaltas.filter(a=>a.motivo === 'Injustificada'); // más reciente primero
     const porSemana = {};
     hist.forEach(a=>{
       const key = semanaISO(a.fecha);
