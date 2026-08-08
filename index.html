@@ -544,7 +544,7 @@ tbody tr:hover{background:var(--paper);}
         </div>
         <div class="panel-body" style="overflow-x:auto;">
           <table>
-            <thead><tr><th>Día</th><th>Nombre</th><th>#</th><th>Planta</th><th>Puesto</th><th>Tipo de empleado</th><th>Edad que cumple</th></tr></thead>
+            <thead><tr><th>Día</th><th>Nombre</th><th>#</th><th>Planta</th><th>Puesto</th><th>Tipo de empleado</th><th>Edad que cumple</th><th style="text-align:center;">Felicitado</th></tr></thead>
             <tbody id="cumple-body"></tbody>
           </table>
         </div>
@@ -1350,6 +1350,7 @@ function recalcularDepartamentos(){
 
 let AUSENCIAS = [];
 let HORAS_EXTRA = [];
+let FELICITADOS = [];
 function aplicarModoLectura(){
   if(!MODO_LECTURA) return;
   document.body.classList.add('solo-lectura');
@@ -1463,22 +1464,23 @@ function aplicarCambiosEmpleados(lista){
 }
 async function cargarDatos(){
   if(!getScriptUrl()){
-    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = [];
+    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
     return;
   }
   try{
-    const [aus, sup, empNuevos, empCambios, horasExtra] = await Promise.all([
-      apiGet('list'), apiGet('listSup'), apiGet('listEmpleados'), apiGet('listCambiosEmpleados'), apiGet('listHorasExtra')
+    const [aus, sup, empNuevos, empCambios, horasExtra, felicitados] = await Promise.all([
+      apiGet('list'), apiGet('listSup'), apiGet('listEmpleados'), apiGet('listCambiosEmpleados'), apiGet('listHorasExtra'), apiGet('listFelicitados')
     ]);
     AUSENCIAS = Array.isArray(aus) ? aus : [];
     SUPERVISORES = normalizarSupervisores(sup);
     fusionarEmpleadosNuevos(empNuevos);
     aplicarCambiosEmpleados(empCambios);
     HORAS_EXTRA = Array.isArray(horasExtra) ? horasExtra : [];
+    FELICITADOS = Array.isArray(felicitados) ? felicitados : [];
     actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
   }catch(e){
-    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = [];
+    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
     actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
     mostrarToast('No se pudo conectar con Google Sheets', true);
   }
@@ -3086,6 +3088,8 @@ function renderCumple(){
   } else {
     body.innerHTML = lista.map(e=>{
       const esAdmin = (e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO';
+      const anio = String(new Date().getFullYear());
+      const felicitado = FELICITADOS.some(f=> String(f.codigo)===String(e.codigo) && String(f.anio)===anio);
       return `<tr style="${esAdmin?'background:#FBEAE7;':''}">
         <td>${e._dia}${selMes==='todos'?' de '+NOMBRES_MES[e._mes].slice(0,3):''}</td>
         <td>${e.nombre}${esAdmin?' <span style="color:var(--bad);font-weight:700;">★</span>':''}</td>
@@ -3094,6 +3098,9 @@ function renderCumple(){
         <td>${e.puesto}</td>
         <td>${e.tipoEmpleado || 'Sin especificar'}</td>
         <td>${e._edad || '—'}</td>
+        <td style="text-align:center;">
+          <input type="checkbox" class="chk-felicitado" data-codigo="${e.codigo}" data-anio="${anio}" ${felicitado?'checked':''} style="width:18px;height:18px;cursor:pointer;">
+        </td>
       </tr>`;
     }).join('');
   }
@@ -3101,6 +3108,26 @@ function renderCumple(){
   renderBusquedaIndividualCumple();
 }
 document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
+
+document.getElementById('cumple-body').addEventListener('change', async function(ev){
+  const chk = ev.target.closest('.chk-felicitado');
+  if(!chk) return;
+  const codigo = chk.dataset.codigo;
+  const anio = chk.dataset.anio;
+  const felicitado = chk.checked;
+  chk.disabled = true;
+  try{
+    await apiPost({action:'toggleFelicitado', codigo, anio, felicitado});
+    FELICITADOS = FELICITADOS.filter(f=> !(String(f.codigo)===String(codigo) && String(f.anio)===String(anio)));
+    if(felicitado) FELICITADOS.push({codigo, anio});
+    mostrarToast(felicitado ? 'Marcado como felicitado — visible para todos.' : 'Se quitó la marca de felicitado.');
+  }catch(err){
+    chk.checked = !felicitado; // revertir si falló el guardado
+    mostrarToast('No se pudo guardar el cambio. Revisa tu conexión.', true);
+  }finally{
+    chk.disabled = false;
+  }
+});
 
 /* ============================================================
    BÚSQUEDA INDIVIDUAL POR NÚMERO DE FICHA (Cumpleañeros)
