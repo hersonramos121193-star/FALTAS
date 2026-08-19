@@ -475,16 +475,34 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel" style="margin-bottom:18px;">
         <div class="panel-body">
-          <div class="field" style="max-width:280px;">
-            <label>Mes</label>
-            <select id="f-cumple-mes">
-              <option value="">Mes actual</option>
-              <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
-              <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
-              <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
-              <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
-              <option value="todos">Todo el año</option>
-            </select>
+          <div class="filters">
+            <div class="field" style="max-width:220px;flex:1;min-width:180px;">
+              <label>Mes</label>
+              <select id="f-cumple-mes">
+                <option value="">Mes actual</option>
+                <option value="0">Enero</option><option value="1">Febrero</option><option value="2">Marzo</option>
+                <option value="3">Abril</option><option value="4">Mayo</option><option value="5">Junio</option>
+                <option value="6">Julio</option><option value="7">Agosto</option><option value="8">Septiembre</option>
+                <option value="9">Octubre</option><option value="10">Noviembre</option><option value="11">Diciembre</option>
+                <option value="todos">Todo el año</option>
+              </select>
+            </div>
+            <div class="field" style="max-width:220px;flex:1;min-width:180px;">
+              <label>Planta</label>
+              <select id="f-cumple-planta"><option value="">Todas las plantas</option></select>
+            </div>
+            <div class="field" style="max-width:220px;flex:1;min-width:180px;">
+              <label>Tipo de empleado</label>
+              <select id="f-cumple-tipo"><option value="">Todos los tipos</option></select>
+            </div>
+            <div class="field" style="max-width:220px;flex:1;min-width:180px;">
+              <label>Felicitado</label>
+              <select id="f-cumple-felicitado">
+                <option value="">Todos</option>
+                <option value="si">Ya felicitado</option>
+                <option value="no">Aún no felicitado</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -3012,6 +3030,32 @@ function renderCumple(){
     etiquetaPeriodo = NOMBRES_MES[mesIndice];
   }
 
+  // ---- Poblar selects de Planta y Tipo de empleado a partir de la lista del mes/año elegido ----
+  const anioActualTxt = String(new Date().getFullYear());
+  const selPlanta = document.getElementById('f-cumple-planta');
+  const selTipo = document.getElementById('f-cumple-tipo');
+  const plantaActual = selPlanta.value;
+  const tipoActual = selTipo.value;
+  const plantas = [...new Set(lista.map(e=>e.depto).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const tipos = [...new Set(lista.map(e=>e.tipoEmpleado).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  selPlanta.innerHTML = '<option value="">Todas las plantas</option>' + plantas.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
+  selTipo.innerHTML = '<option value="">Todos los tipos</option>' + tipos.map(t=>`<option value="${t.replace(/"/g,'')}">${t}</option>`).join('');
+  if(plantas.includes(plantaActual)) selPlanta.value = plantaActual;
+  if(tipos.includes(tipoActual)) selTipo.value = tipoActual;
+
+  // ---- Aplicar filtros (se combinan todos con AND) ----
+  const filtroPlanta = selPlanta.value;
+  const filtroTipo = selTipo.value;
+  const filtroFelicitado = document.getElementById('f-cumple-felicitado').value;
+  if(filtroPlanta) lista = lista.filter(e=> e.depto === filtroPlanta);
+  if(filtroTipo) lista = lista.filter(e=> e.tipoEmpleado === filtroTipo);
+  if(filtroFelicitado){
+    lista = lista.filter(e=>{
+      const felicitado = FELICITADOS.some(f=> String(f.codigo)===String(e.codigo) && String(f.anio)===anioActualTxt);
+      return filtroFelicitado==='si' ? felicitado : !felicitado;
+    });
+  }
+
   document.getElementById('cumple-total').textContent = lista.length;
   document.getElementById('cumple-total-sub').textContent = etiquetaPeriodo;
 
@@ -3108,6 +3152,9 @@ function renderCumple(){
   renderBusquedaIndividualCumple();
 }
 document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
+document.getElementById('f-cumple-planta').addEventListener('change', renderCumple);
+document.getElementById('f-cumple-tipo').addEventListener('change', renderCumple);
+document.getElementById('f-cumple-felicitado').addEventListener('change', renderCumple);
 
 document.getElementById('cumple-body').addEventListener('change', async function(ev){
   const chk = ev.target.closest('.chk-felicitado');
