@@ -1650,6 +1650,30 @@ function poblarSelectSupervisor(depto){
     sel.value = '';
     document.getElementById('help-supervisor').textContent = `Supervisores capturados para ${depto}: ${lista.join(', ')}`;
   }
+  precargarSupervisorAnterior();
+}
+function precargarSupervisorAnterior(){
+  // Si este empleado ya tiene al menos una falta registrada anteriormente,
+  // se precarga automáticamente el supervisor de su falta más reciente para
+  // no tener que volver a capturarlo cada vez — el usuario puede cambiarlo
+  // si lo necesita, pero ya no se le exige elegirlo desde cero.
+  if(!empSeleccionado) return;
+  const hist = ausenciasDe(empSeleccionado.codigo);
+  if(hist.length===0 || !hist[0].supervisor) return;
+  const supervisorAnterior = hist[0].supervisor;
+  const sel = document.getElementById('inp-supervisor-select');
+  const otro = document.getElementById('inp-supervisor-otro');
+  const existeEnLista = [...sel.options].some(o=>o.value === supervisorAnterior);
+  if(existeEnLista){
+    sel.value = supervisorAnterior;
+    otro.style.display = 'none';
+    otro.value = '';
+  }else{
+    sel.value = '__otro__';
+    otro.style.display = 'block';
+    otro.value = supervisorAnterior;
+  }
+  document.getElementById('help-supervisor').textContent = `Se precargó "${supervisorAnterior}", el supervisor de su falta anterior (${fmtFecha(hist[0].fecha)}). Puedes cambiarlo si es necesario.`;
 }
 document.getElementById('inp-supervisor-select').addEventListener('change', function(){
   const otro = document.getElementById('inp-supervisor-otro');
