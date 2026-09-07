@@ -745,11 +745,11 @@ tbody tr:hover{background:var(--paper);}
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <a class="btn btn-ghost" href="plantilla_catalogo_empleados.xlsx" download style="text-decoration:none;" title="Descarga el catálogo actual precargado para corregirlo y volver a subirlo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-            Descargar catálogo actual
+            Descargar plantilla
           </a>
           <button class="btn btn-ghost" id="btn-actualizar-catalogo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
-            Actualizar catálogo (Excel)
+            Subir plantilla
           </button>
           <button class="btn btn-primary" id="btn-abrir-nuevo-empleado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
@@ -2792,7 +2792,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     mostrarToast('No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
   }finally{
     btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Actualizar catálogo (Excel)';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir plantilla';
   }
 });
 
