@@ -1486,22 +1486,32 @@ async function cargarDatos(){
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
     return;
   }
-  try{
-    const [aus, sup, empNuevos, empCambios, horasExtra, felicitados] = await Promise.all([
-      apiGet('list'), apiGet('listSup'), apiGet('listEmpleados'), apiGet('listCambiosEmpleados'), apiGet('listHorasExtra'), apiGet('listFelicitados')
-    ]);
-    AUSENCIAS = Array.isArray(aus) ? aus : [];
-    SUPERVISORES = normalizarSupervisores(sup);
-    fusionarEmpleadosNuevos(empNuevos);
-    aplicarCambiosEmpleados(empCambios);
-    HORAS_EXTRA = Array.isArray(horasExtra) ? horasExtra : [];
-    FELICITADOS = Array.isArray(felicitados) ? felicitados : [];
-    actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
-  }catch(e){
-    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
-    actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
-    mostrarToast('No se pudo conectar con Google Sheets', true);
+  // Trae todo en UNA sola petición al backend (en vez de 6 en paralelo) para
+  // evitar que Google rechace por exceso de ejecuciones simultáneas cuando
+  // las hojas ya tienen miles de filas; con reintento automático por si la
+  // primera petición se cae por una falla pasajera de red.
+  let datos = null;
+  for(let intento=1; intento<=2 && !datos; intento++){
+    try{
+      datos = await apiGet('listAll');
+      if(datos && datos.error) throw new Error(datos.error);
+    }catch(e){
+      if(intento===2){
+        AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
+        actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
+        mostrarToast('No se pudo conectar con Google Sheets', true);
+        return;
+      }
+      await new Promise(r=>setTimeout(r, 1200)); // pequeña pausa antes de reintentar
+    }
   }
+  AUSENCIAS = Array.isArray(datos.ausencias) ? datos.ausencias : [];
+  SUPERVISORES = normalizarSupervisores(datos.supervisores);
+  fusionarEmpleadosNuevos(datos.empleados);
+  aplicarCambiosEmpleados(datos.cambiosEmpleados);
+  HORAS_EXTRA = Array.isArray(datos.horasExtra) ? datos.horasExtra : [];
+  FELICITADOS = Array.isArray(datos.felicitados) ? datos.felicitados : [];
+  actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
 }
 async function agregarAusenciaRemota(registro){
   await apiPost({action:'add', registro});
