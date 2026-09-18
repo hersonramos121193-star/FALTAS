@@ -1897,8 +1897,20 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
     let subidas = 0;
     const fallasAlSubir = [];
     for(const registro of validas){
-      try{
-        await agregarAusenciaRemota(registro);
+      let guardado = false;
+      let ultimoError = null;
+      // Reintenta hasta 3 veces con una pequeña pausa: Google a veces rechaza
+      // peticiones momentáneamente si se suben muchas filas muy seguido.
+      for(let intento=1; intento<=3 && !guardado; intento++){
+        try{
+          await agregarAusenciaRemota(registro);
+          guardado = true;
+        }catch(err){
+          ultimoError = err;
+          if(intento<3) await new Promise(r=>setTimeout(r, 800*intento));
+        }
+      }
+      if(guardado){
         AUSENCIAS.push(registro);
         const lista = SUPERVISORES[registro.depto] || Array(10).fill('');
         const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === registro.supervisor.toLowerCase());
@@ -1911,8 +1923,9 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
         }
         subidas++;
         btn.textContent = `Subiendo ${subidas} de ${validas.length}...`;
-      }catch(err){
-        fallasAlSubir.push(`${registro.nombre} (#${registro.codigo}, ${fmtFecha(registro.fecha)}): no se pudo guardar en Google Sheets.`);
+      }else{
+        const motivo = (ultimoError && ultimoError.message) ? ultimoError.message : 'error desconocido';
+        fallasAlSubir.push(`${registro.nombre} (#${registro.codigo}, ${fmtFecha(registro.fecha)}): no se pudo guardar en Google Sheets (${motivo}). Puedes volver a intentar subiendo solo esta fila.`);
       }
     }
     if(subidas > 0){
