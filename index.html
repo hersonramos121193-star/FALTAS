@@ -2555,7 +2555,7 @@ function renderEmpleados(){
    (fecha de ingreso, fecha de baja, estatus — carga masiva)
    ============================================================ */
 function buscarColGenerico(headersReales, candidatos){
-  const normalizados = headersReales.map(h=>({h, n: normalizarHeaderHE(h)}));
+  const normalizados = headersReales.map(h=>({h, n: String(h).replace(/\s+/g,' ').trim().toLowerCase()}));
   for(const c of candidatos){
     const match = normalizados.find(x=>x.n===c);
     if(match) return match.h;
@@ -2915,23 +2915,17 @@ function cumpleanerosActivos(){
     })
     .filter(Boolean);
 }
-function calcularCumpleanerosDelMes(mesIndice){
-  return cumpleanerosActivos().filter(e=>e._mes===mesIndice).sort((a,b)=> a._dia - b._dia);
-}
-function calcularCumpleanerosDelAnio(){
-  return cumpleanerosActivos().sort((a,b)=> a._mes - b._mes || a._dia - b._dia);
-}
 function renderCumple(){
   const selMes = document.getElementById('f-cumple-mes').value;
   const hoyMes = new Date().getMonth();
   let lista, etiquetaPeriodo;
 
   if(selMes === 'todos'){
-    lista = calcularCumpleanerosDelAnio().sort((a,b)=> a._mes - b._mes || a._dia - b._dia);
+    lista = cumpleanerosActivos().sort((a,b)=> a._mes - b._mes || a._dia - b._dia);
     etiquetaPeriodo = 'todo el año';
   } else {
     const mesIndice = selMes === '' ? hoyMes : parseInt(selMes,10);
-    lista = calcularCumpleanerosDelMes(mesIndice);
+    lista = cumpleanerosActivos().filter(e=>e._mes===mesIndice).sort((a,b)=> a._dia - b._dia);
     etiquetaPeriodo = NOMBRES_MES[mesIndice];
   }
 
@@ -3352,31 +3346,19 @@ function etiquetaPeriodo(p){
 [['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado]].forEach(([id,cerrar])=>{
   document.getElementById(id).addEventListener('click', (e)=>{ if(e.target.id===id) cerrar(); });
 });
-function normalizarHeaderHE(h){ return String(h).replace(/\s+/g,' ').trim().toLowerCase(); }
 
 /* ============================================================
    KPIS AUSENTISMO SEMANAL — ausentismo + rotación por periodo
    ============================================================ */
 
 /**
- * Devuelve el rango de fechas (inicio, fin) a usar para un periodo dado.
- * Si periodoEtiqueta es '' (todos los periodos), devuelve el rango que va
- * desde el inicio del primer periodo del catálogo hasta el fin del último.
+ * Rango de fechas (inicio, fin) del periodo elegido. Con '' (todos los periodos)
+ * va del inicio del primer periodo del catálogo al fin del último (el catálogo
+ * ya viene en orden cronológico).
  */
 function rangoFechasKpisSemanales(periodoEtiqueta){
-  const mapaPeriodos = {};
-  PERIODOS_NOMINA.forEach(p=>{ mapaPeriodos[etiquetaPeriodo(p)] = p; });
-
-  if(periodoEtiqueta){
-    const p = mapaPeriodos[periodoEtiqueta];
-    return p ? { inicio: p.inicio, fin: p.fin } : null;
-  }
-
-  const etiquetasSubidas = Object.values(mapaPeriodos);
-  if(etiquetasSubidas.length===0) return null;
-  const inicio = etiquetasSubidas.reduce((min,p)=> p.inicio < min ? p.inicio : min, etiquetasSubidas[0].inicio);
-  const fin = etiquetasSubidas.reduce((max,p)=> p.fin > max ? p.fin : max, etiquetasSubidas[0].fin);
-  return { inicio, fin };
+  const p = periodoEtiqueta ? PERIODOS_NOMINA.find(x=>etiquetaPeriodo(x)===periodoEtiqueta) : null;
+  return p ? { inicio: p.inicio, fin: p.fin } : { inicio: PERIODOS_NOMINA[0].inicio, fin: PERIODOS_NOMINA.at(-1).fin };
 }
 function renderKpisSemanales(){
   const sel = document.getElementById('f-kpis-semanales-periodo');
@@ -3388,17 +3370,6 @@ function renderKpisSemanales(){
   const periodoSel = sel.value;
   const rango = rangoFechasKpisSemanales(periodoSel);
   const avisoSinDatos = document.getElementById('ks-sin-datos');
-
-  if(!rango){
-    // No debería pasar ya que ahora siempre se elige de PERIODOS_NOMINA, pero se
-    // deja como resguardo por si el periodo seleccionado ya no existe en el catálogo.
-    document.getElementById('ks-ausencias').textContent = '0';
-    document.getElementById('ks-altas-bajas').textContent = '0 / 0';
-    document.getElementById('ks-pct-rotacion').textContent = '% rotación: 0%';
-    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="4" class="small-muted" style="text-align:center;padding:16px;">Periodo no reconocido.</td></tr>`;
-    avisoSinDatos.style.display = 'block';
-    return;
-  }
 
   // ---- Ausencias del rango ----
   const ausenciasPeriodo = AUSENCIAS.filter(a=> a.fecha && a.fecha >= rango.inicio && a.fecha <= rango.fin);
