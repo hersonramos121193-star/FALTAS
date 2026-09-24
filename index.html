@@ -292,13 +292,9 @@ tbody tr:hover{background:var(--paper);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3"/></svg>
       <span>Rotación de personal</span>
     </button>
-    <button class="navbtn" data-view="horas-extra">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      <span>Horas extra</span>
-    </button>
     <button class="navbtn" data-view="kpis-semanales">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
-      <span>KPI's semanales</span>
+      <span>Kpis ausentismo semanal</span>
     </button>
 
     <div class="navlabel">Configuración</div>
@@ -891,96 +887,12 @@ tbody tr:hover{background:var(--paper);}
       </div>
     </section>
 
-    <!-- ============ HORAS EXTRA ============ -->
-    <section id="view-horas-extra" class="view hidden">
-      <div class="topbar">
-        <div>
-          <div class="pagetitle">Horas extra</div>
-          <div class="pagesub">Sube el Excel de nómina semanal y calcula las horas extra por colaborador</div>
-        </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" id="btn-exportar-horas-extra">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-            Exportar a Excel
-          </button>
-          <button class="btn btn-primary" id="btn-horas-extra-subir">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
-            Subir Excel de nómina
-          </button>
-          <input type="file" id="inp-horas-extra-file" accept=".xlsx,.xls,.csv" style="display:none;">
-        </div>
-      </div>
-
-      <div class="panel" style="margin-bottom:18px;">
-        <div class="panel-body">
-          <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-            <div class="field" style="max-width:340px;flex:1;min-width:260px;">
-              <label>Periodo</label>
-              <select id="f-horas-extra-periodo"><option value="">Todos los periodos subidos</option></select>
-            </div>
-            <div class="field" style="max-width:240px;flex:1;min-width:180px;">
-              <label>Planta</label>
-              <select id="f-horas-extra-planta"><option value="">Todas las plantas</option></select>
-            </div>
-            <div class="field" style="max-width:320px;flex:1;min-width:240px;">
-              <label>Buscar por nombre o ficha</label>
-              <input type="text" id="f-horas-extra-buscar" placeholder="Nombre o número de empleado...">
-            </div>
-            <button class="btn btn-ghost" id="btn-eliminar-periodo-he" style="border-color:#E3B7AC;color:#B2432E;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg>
-              Eliminar periodo seleccionado
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">Total horas dobles</div>
-          <div class="kpi-value" id="he-total-dobles">0</div>
-          <div class="kpi-sub">del periodo seleccionado</div>
-        </div>
-        <div class="kpi ok">
-          <div class="kpi-label">Total horas triples</div>
-          <div class="kpi-value" id="he-total-triples">0</div>
-          <div class="kpi-sub">del periodo seleccionado</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Colaborador con más horas</div>
-          <div class="kpi-value" id="he-top" style="font-size:15px;">—</div>
-          <div class="kpi-sub" id="he-top-sub"></div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Detalle por colaborador</div>
-          <span class="small-muted" id="he-count"></span>
-        </div>
-        <div class="panel-body" style="overflow-x:auto;">
-          <table>
-            <thead><tr><th>#</th><th>Nombre</th><th>Planta</th><th>Periodo</th><th>H. dobles</th><th>H. triples</th><th>Total horas</th></tr></thead>
-            <tbody id="horas-extra-body"></tbody>
-          </table>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:14px 0 4px;">
-          <button class="btn btn-ghost" id="he-pag-prev" style="padding:6px 12px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <span class="small-muted" id="he-pag-info">Página 1 de 1</span>
-          <button class="btn btn-ghost" id="he-pag-next" style="padding:6px 12px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M9 18l6-6-6-6"/></svg>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ KPI'S SEMANALES ============ -->
+    <!-- ============ KPIS AUSENTISMO SEMANAL ============ -->
     <section id="view-kpis-semanales" class="view hidden">
       <div class="topbar">
         <div>
-          <div class="pagetitle">KPI's semanales</div>
-          <div class="pagesub">Ausentismo, horas extra y rotación del periodo seleccionado</div>
+          <div class="pagetitle">Kpis ausentismo semanal</div>
+          <div class="pagesub">Ausentismo y rotación del periodo seleccionado</div>
         </div>
         <button class="btn btn-ghost" id="btn-exportar-kpis-periodo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
@@ -996,7 +908,7 @@ tbody tr:hover{background:var(--paper);}
       </div>
 
       <div id="ks-sin-datos" class="small-muted" style="display:none;background:#FFF8E1;border:1px solid #F0DA9A;border-radius:8px;padding:10px 14px;margin-bottom:16px;">
-        No hay ausencias, horas extra ni movimientos de altas/bajas registrados para el periodo seleccionado.
+        No hay ausencias ni movimientos de altas/bajas registrados para el periodo seleccionado.
       </div>
 
       <div class="kpi-grid">
@@ -1004,16 +916,6 @@ tbody tr:hover{background:var(--paper);}
           <div class="kpi-label">Ausencias del periodo</div>
           <div class="kpi-value" id="ks-ausencias">0</div>
           <div class="kpi-sub">registros en el rango de fechas del periodo</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Total horas dobles</div>
-          <div class="kpi-value" id="ks-dobles">0.0</div>
-          <div class="kpi-sub">del periodo seleccionado</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Total horas triples</div>
-          <div class="kpi-value" id="ks-triples">0.0</div>
-          <div class="kpi-sub">del periodo seleccionado</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Altas / Bajas</div>
@@ -1028,7 +930,7 @@ tbody tr:hover{background:var(--paper);}
         </div>
         <div class="panel-body" style="overflow-x:auto;">
           <table>
-            <thead><tr><th>Planta</th><th>Ausencias</th><th>H. dobles</th><th>H. triples</th><th>Altas</th><th>Bajas</th></tr></thead>
+            <thead><tr><th>Planta</th><th>Ausencias</th><th>Altas</th><th>Bajas</th></tr></thead>
             <tbody id="ks-planta-body"></tbody>
           </table>
         </div>
@@ -1295,30 +1197,6 @@ tbody tr:hover{background:var(--paper);}
   </div>
 </div>
 
-<!-- Modal periodo horas extra -->
-<div class="modal-bg" id="modal-periodo-he-bg">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>¿De qué periodo es esta nómina?</h3>
-      <button class="modal-close" onclick="cerrarModalPeriodoHE()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Periodo <span class="req">*</span></label>
-        <select id="sel-periodo-he">
-          <option value="">Selecciona un periodo...</option>
-        </select>
-        <input type="text" id="inp-periodo-he" placeholder='Ej. "Semana especial diciembre 2026"' style="display:none;margin-top:8px;">
-        <span class="help">Los periodos vienen del catálogo oficial de nómina (PERIODOS_2026.xlsx). Si vuelves a subir un Excel del mismo periodo, reemplaza los datos anteriores de ese periodo.</span>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="cerrarModalPeriodoHE()">Cancelar</button>
-      <button class="btn btn-primary" id="btn-continuar-periodo-he">Continuar y elegir archivo</button>
-    </div>
-  </div>
-</div>
-
 <!-- Modal resultado carga masiva -->
 <div class="modal-bg" id="modal-resultado-plantilla-bg">
   <div class="modal" style="max-width:640px;">
@@ -1366,7 +1244,6 @@ function recalcularDepartamentos(){
 }
 
 let AUSENCIAS = [];
-let HORAS_EXTRA = [];
 let FELICITADOS = [];
 function aplicarModoLectura(){
   if(!MODO_LECTURA) return;
@@ -1379,8 +1256,6 @@ function aplicarModoLectura(){
   ocultar('btn-actualizar-catalogo');
   ocultar('btn-guardar-supervisores');
   ocultar('btn-plantilla-subir');
-  ocultar('btn-horas-extra-subir');
-  ocultar('btn-eliminar-periodo-he');
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#122E4A;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;letter-spacing:.2px;';
   banner.textContent = 'Modo de solo lectura — puedes consultar el Dashboard, el Historial y el Directorio, pero no registrar ni modificar información.';
@@ -1481,7 +1356,7 @@ function aplicarCambiosEmpleados(lista){
 }
 async function cargarDatos(){
   if(!getScriptUrl()){
-    AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
+    AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
     return;
   }
@@ -1496,7 +1371,7 @@ async function cargarDatos(){
       if(datos && datos.error) throw new Error(datos.error);
     }catch(e){
       if(intento===2){
-        AUSENCIAS = []; SUPERVISORES = {}; HORAS_EXTRA = []; FELICITADOS = [];
+        AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
         actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
         mostrarToast('No se pudo conectar con Google Sheets', true);
         return;
@@ -1508,7 +1383,6 @@ async function cargarDatos(){
   SUPERVISORES = normalizarSupervisores(datos.supervisores);
   fusionarEmpleadosNuevos(datos.empleados);
   aplicarCambiosEmpleados(datos.cambiosEmpleados);
-  HORAS_EXTRA = Array.isArray(datos.horasExtra) ? datos.horasExtra : [];
   FELICITADOS = Array.isArray(datos.felicitados) ? datos.felicitados : [];
   actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
 }
@@ -1582,7 +1456,6 @@ function goTo(view){
   if(view==='supervisores') renderSupervisores();
   if(view==='conexion') renderConexion();
   if(view==='rotacion') renderRotacion();
-  if(view==='horas-extra') renderHorasExtra();
   if(view==='kpis-semanales') renderKpisSemanales();
   if(view==='cumpleanos') renderCumple();
   window.scrollTo(0,0);
@@ -3469,267 +3342,26 @@ document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
 });
 
 /* ============================================================
-   HORAS EXTRA — carga masiva desde Excel de nómina, por periodo
+   PERIODOS DE NÓMINA
    ============================================================ */
-let periodoPendienteHE = null;
-
 function etiquetaPeriodo(p){
   const d0 = new Date(p.inicio+'T00:00:00Z'), d1 = new Date(p.fin+'T00:00:00Z');
   const rango = `${d0.getUTCDate()} al ${d1.getUTCDate()} de ${NOMBRES_MES[d1.getUTCMonth()]} ${d1.getUTCFullYear()}`;
   return `Periodo ${p.numero} — ${p.mes} (${rango})`;
 }
-function poblarSelectPeriodoHE(){
-  const sel = document.getElementById('sel-periodo-he');
-  // sugiere primero el periodo cuya fecha de hoy cae dentro de su rango
-  const hoy = new Date().toISOString().slice(0,10);
-  let periodoSugerido = PERIODOS_NOMINA.find(p => hoy >= p.inicio && hoy <= p.fin);
-  sel.innerHTML = '<option value="">Selecciona un periodo...</option>'
-    + PERIODOS_NOMINA.map(p=>{
-        const valor = etiquetaPeriodo(p);
-        return `<option value="${valor.replace(/"/g,'')}">${valor}</option>`;
-      }).join('')
-    + '<option value="__otro__">Otro (escribir manualmente)</option>';
-  if(periodoSugerido) sel.value = etiquetaPeriodo(periodoSugerido);
-}
-document.getElementById('sel-periodo-he').addEventListener('change', function(){
-  document.getElementById('inp-periodo-he').style.display = (this.value==='__otro__') ? 'block' : 'none';
-  if(this.value==='__otro__') document.getElementById('inp-periodo-he').focus();
-});
-
-document.getElementById('btn-horas-extra-subir').addEventListener('click', ()=>{
-  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
-  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
-  document.getElementById('inp-periodo-he').value = '';
-  document.getElementById('inp-periodo-he').style.display = 'none';
-  poblarSelectPeriodoHE();
-  document.getElementById('modal-periodo-he-bg').classList.add('show');
-});
-function cerrarModalPeriodoHE(){
-  document.getElementById('modal-periodo-he-bg').classList.remove('show');
-}
-[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado],['modal-periodo-he-bg',cerrarModalPeriodoHE]].forEach(([id,cerrar])=>{
+[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado]].forEach(([id,cerrar])=>{
   document.getElementById(id).addEventListener('click', (e)=>{ if(e.target.id===id) cerrar(); });
 });
-document.getElementById('btn-continuar-periodo-he').addEventListener('click', ()=>{
-  const sel = document.getElementById('sel-periodo-he');
-  const periodo = sel.value === '__otro__' ? document.getElementById('inp-periodo-he').value.trim() : sel.value;
-  if(!periodo){ mostrarToast('Indica el periodo de esta nómina', true); return; }
-  periodoPendienteHE = periodo;
-  cerrarModalPeriodoHE();
-  document.getElementById('inp-horas-extra-file').click();
-});
-
-function numeroDe(valor){
-  if(valor === null || valor === undefined || valor === '') return 0;
-  if(typeof valor === 'number') return valor;
-  const n = parseFloat(String(valor).replace(/,/g,'').trim());
-  return isNaN(n) ? 0 : n;
-}
 function normalizarHeaderHE(h){ return String(h).replace(/\s+/g,' ').trim().toLowerCase(); }
 
-document.getElementById('inp-horas-extra-file').addEventListener('change', async function(){
-  const file = this.files[0];
-  this.value = '';
-  if(!file) return;
-  if(MODO_LECTURA || !periodoPendienteHE) return;
-  const periodo = periodoPendienteHE;
-  periodoPendienteHE = null;
-
-  const btn = document.getElementById('btn-horas-extra-subir');
-  btn.disabled = true; btn.textContent = 'Leyendo archivo...';
-
-  try{
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
-    const hoja = wb.Sheets[wb.SheetNames[0]];
-    const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
-    if(filas.length === 0){ mostrarToast('El archivo no tiene registros.', true); return; }
-
-    const headersReales = Object.keys(filas[0]);
-    const buscarCampo = (normalizado)=> headersReales.find(h => normalizarHeaderHE(h) === normalizado);
-    const colNoEmp = buscarCampo('noempleado');
-    const colNombre = buscarCampo('nombre');
-    const colSalario = buscarCampo('salario diario');
-    // Columna BA del Excel: "horas extras dobles". Columna BC: "horas extras triples".
-    const colDobles = buscarCampo('horas extras dobles');
-    const colTriples = buscarCampo('horas extras triples');
-
-    if(!colNoEmp){
-      mostrarToast('No encontré la columna "NoEmpleado" en el archivo. Verifica que sea el mismo formato de nómina.', true);
-      return;
-    }
-    if(!colDobles && !colTriples){
-      mostrarToast('No encontré las columnas "horas extras dobles" (BA) ni "horas extras triples" (BC). Verifica que sea el mismo formato de nómina.', true);
-      return;
-    }
-
-    const registros = [];
-    filas.forEach(fila=>{
-      const codigo = String(fila[colNoEmp]||'').trim();
-      if(!codigo) return;
-      const emp = EMP_BY_CODIGO[codigo];
-      const salarioDiario = numeroDe(fila[colSalario]);
-      const horasDobles = colDobles ? numeroDe(fila[colDobles]) : 0;
-      const horasTriples = colTriples ? numeroDe(fila[colTriples]) : 0;
-      if(salarioDiario===0 && horasDobles===0 && horasTriples===0) return; // fila vacía / sin movimientos
-
-      const tarifaHora = salarioDiario / 8;
-      const importeEstimado = Math.round((horasDobles*tarifaHora*2 + horasTriples*tarifaHora*3)*100)/100;
-      registros.push({
-        codigo,
-        nombre: emp ? emp.nombre : (colNombre ? String(fila[colNombre]||'').trim() : ''),
-        planta: emp ? emp.depto : '',
-        salarioDiario, horasDobles, horasTriples, importeEstimado
-      });
-    });
-
-    if(registros.length === 0){
-      mostrarToast('No se encontraron registros con horas extra en el archivo.', true);
-      return;
-    }
-
-    btn.textContent = 'Guardando en Google Sheets...';
-    await apiPost({action:'addHorasExtraLote', periodo, registros});
-
-    // reemplaza localmente cualquier carga previa del mismo periodo
-    HORAS_EXTRA = HORAS_EXTRA.filter(r=>r.periodo !== periodo);
-    const subidoEn = new Date().toISOString();
-    registros.forEach(r=> HORAS_EXTRA.push({ periodo, subidoEn, ...r }));
-
-    mostrarToast(`${registros.length} colaboradores con horas extra guardados para "${periodo}".`);
-    renderHorasExtra();
-  }catch(err){
-    mostrarToast('No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
-  }finally{
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir Excel de nómina';
-  }
-});
-
-/**
- * Extrae el número de periodo de nómina desde el texto ("Periodo 13 — MARZO...")
- * para poder ordenar de forma numérica en vez de alfabética. Devuelve null si
- * el texto no trae un número de periodo reconocible (ej. periodos escritos a mano).
- */
-function numeroPeriodoDe(periodoStr){
-  const m = String(periodoStr||'').match(/Periodo\s+(\d+)/i);
-  return m ? parseInt(m[1],10) : null;
-}
-
-let heCurrentPage = 1;
-const HE_PAGE_SIZE = 100;
-
-function renderHorasExtra(){
-  const sel = document.getElementById('f-horas-extra-periodo');
-  const mapaFechaPeriodo = {};
-  PERIODOS_NOMINA.forEach(p=>{ mapaFechaPeriodo[etiquetaPeriodo(p)] = p.inicio; });
-  const periodos = [...new Set(HORAS_EXTRA.map(r=>r.periodo))].sort((a,b)=>{
-    const fa = mapaFechaPeriodo[a], fb = mapaFechaPeriodo[b];
-    if(fa && fb) return fa.localeCompare(fb);
-    if(fa && !fb) return -1; // periodos del catálogo oficial primero
-    if(!fa && fb) return 1;
-    return a.localeCompare(b); // ambos son periodos escritos a mano: orden alfabético
-  });
-  const actual = sel.value;
-  sel.innerHTML = '<option value="">Todos los periodos subidos</option>' + periodos.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
-  if(periodos.includes(actual)) sel.value = actual;
-
-  const selPlanta = document.getElementById('f-horas-extra-planta');
-  const plantas = [...new Set(HORAS_EXTRA.map(r=>r.planta).filter(p=>p))].sort((a,b)=>a.localeCompare(b));
-  const plantaActual = selPlanta.value;
-  selPlanta.innerHTML = '<option value="">Todas las plantas</option>' + plantas.map(p=>`<option value="${p.replace(/"/g,'')}">${p}</option>`).join('');
-  if(plantas.includes(plantaActual)) selPlanta.value = plantaActual;
-
-  const filtro = sel.value;
-  const filtroPlanta = selPlanta.value;
-  const q = document.getElementById('f-horas-extra-buscar').value.trim().toLowerCase();
-  let datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
-  if(filtroPlanta){
-    datos = datos.filter(r=> r.planta===filtroPlanta);
-  }
-  if(q){
-    datos = datos.filter(r=> (r.nombre||'').toLowerCase().includes(q) || String(r.codigo||'').toLowerCase().includes(q));
-  }
-
-  const totalDobles = datos.reduce((s,r)=>s+numeroDe(r.horasDobles),0);
-  const totalTriples = datos.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
-
-  document.getElementById('he-total-dobles').textContent = totalDobles.toFixed(1);
-  document.getElementById('he-total-triples').textContent = totalTriples.toFixed(1);
-
-  if(datos.length===0){
-    document.getElementById('he-top').textContent = '—';
-    document.getElementById('he-top-sub').textContent = '';
-  } else {
-    const top = datos.slice().sort((a,b)=> (numeroDe(b.horasDobles)+numeroDe(b.horasTriples)) - (numeroDe(a.horasDobles)+numeroDe(a.horasTriples)))[0];
-    const totalTop = numeroDe(top.horasDobles)+numeroDe(top.horasTriples);
-    document.getElementById('he-top').textContent = top.nombre || `#${top.codigo}`;
-    document.getElementById('he-top-sub').textContent = `${totalTop.toFixed(1)} hrs — ${top.periodo}`;
-  }
-
-  document.getElementById('he-count').textContent = `${datos.length} registro(s)`;
-  const body = document.getElementById('horas-extra-body');
-  const infoPag = document.getElementById('he-pag-info');
-  const btnPrev = document.getElementById('he-pag-prev');
-  const btnNext = document.getElementById('he-pag-next');
-
-  if(datos.length===0){
-    body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">${HORAS_EXTRA.length===0 ? 'Aún no has subido ningún Excel de horas extra.' : 'Sin resultados para esta búsqueda.'}</td></tr>`;
-    infoPag.textContent = 'Página 1 de 1';
-    btnPrev.disabled = true; btnNext.disabled = true;
-  } else {
-    const ordenado = datos.slice().sort((a,b)=>{
-      if(!filtro){
-        // Vista "Todos los periodos subidos": orden ascendente por el número
-        // del periodo (Periodo 9, Periodo 10, Periodo 13...), no alfabético.
-        const na = numeroPeriodoDe(a.periodo), nb = numeroPeriodoDe(b.periodo);
-        if(na!==null && nb!==null && na!==nb) return na - nb;
-        if(na!==null && nb===null) return -1;
-        if(na===null && nb!==null) return 1;
-        if(a.periodo !== b.periodo) return a.periodo.localeCompare(b.periodo);
-      }
-      return (a.nombre||'').localeCompare(b.nombre||'');
-    });
-
-    const totalPaginas = Math.max(1, Math.ceil(ordenado.length / HE_PAGE_SIZE));
-    if(heCurrentPage > totalPaginas) heCurrentPage = totalPaginas;
-    if(heCurrentPage < 1) heCurrentPage = 1;
-    const inicio = (heCurrentPage - 1) * HE_PAGE_SIZE;
-    const pagina = ordenado.slice(inicio, inicio + HE_PAGE_SIZE);
-
-    body.innerHTML = pagina.map(r=>{
-      const total = numeroDe(r.horasDobles)+numeroDe(r.horasTriples);
-      return `<tr>
-        <td>#${r.codigo}</td>
-        <td>${r.nombre||''}</td>
-        <td>${r.planta||'N/D'}</td>
-        <td>${r.periodo}</td>
-        <td>${numeroDe(r.horasDobles).toFixed(1)}</td>
-        <td>${numeroDe(r.horasTriples).toFixed(1)}</td>
-        <td>${total.toFixed(1)}</td>
-      </tr>`;
-    }).join('');
-
-    infoPag.textContent = `Página ${heCurrentPage} de ${totalPaginas}`;
-    btnPrev.disabled = heCurrentPage <= 1;
-    btnNext.disabled = heCurrentPage >= totalPaginas;
-  }
-}
-document.getElementById('f-horas-extra-periodo').addEventListener('change', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
-document.getElementById('f-horas-extra-planta').addEventListener('change', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
-document.getElementById('f-horas-extra-buscar').addEventListener('input', ()=>{ heCurrentPage = 1; renderHorasExtra(); });
-document.getElementById('he-pag-prev').addEventListener('click', ()=>{ heCurrentPage--; renderHorasExtra(); });
-document.getElementById('he-pag-next').addEventListener('click', ()=>{ heCurrentPage++; renderHorasExtra(); });
-
 /* ============================================================
-   KPI'S SEMANALES — ausentismo + horas extra + rotación por periodo
+   KPIS AUSENTISMO SEMANAL — ausentismo + rotación por periodo
    ============================================================ */
 
 /**
  * Devuelve el rango de fechas (inicio, fin) a usar para un periodo dado.
- * Si periodoEtiqueta es '' (todos los periodos subidos), devuelve el rango
- * que va desde el inicio del periodo más antiguo hasta el fin del más
- * reciente entre los que tienen carga de horas extra.
+ * Si periodoEtiqueta es '' (todos los periodos), devuelve el rango que va
+ * desde el inicio del primer periodo del catálogo hasta el fin del último.
  */
 function rangoFechasKpisSemanales(periodoEtiqueta){
   const mapaPeriodos = {};
@@ -3740,20 +3372,12 @@ function rangoFechasKpisSemanales(periodoEtiqueta){
     return p ? { inicio: p.inicio, fin: p.fin } : null;
   }
 
-  const etiquetasSubidas = periodosSubidos_o_todos(mapaPeriodos);
+  const etiquetasSubidas = Object.values(mapaPeriodos);
   if(etiquetasSubidas.length===0) return null;
   const inicio = etiquetasSubidas.reduce((min,p)=> p.inicio < min ? p.inicio : min, etiquetasSubidas[0].inicio);
   const fin = etiquetasSubidas.reduce((max,p)=> p.fin > max ? p.fin : max, etiquetasSubidas[0].fin);
   return { inicio, fin };
 }
-function periodosSubidos_o_todos(mapaPeriodos){
-  // Cuando se elige "Todos los periodos del año", el rango cubre TODO el
-  // catálogo de periodos definido (no solo los que ya tienen horas extra
-  // cargadas), para que ausencias y rotación de cualquier fecha del año
-  // aparezcan aunque ese periodo no tenga carga de horas extra.
-  return Object.values(mapaPeriodos);
-}
-
 function renderKpisSemanales(){
   const sel = document.getElementById('f-kpis-semanales-periodo');
   const periodos = PERIODOS_NOMINA.map(p=>etiquetaPeriodo(p)); // ya vienen ordenados cronológicamente
@@ -3769,22 +3393,15 @@ function renderKpisSemanales(){
     // No debería pasar ya que ahora siempre se elige de PERIODOS_NOMINA, pero se
     // deja como resguardo por si el periodo seleccionado ya no existe en el catálogo.
     document.getElementById('ks-ausencias').textContent = '0';
-    document.getElementById('ks-dobles').textContent = '0.0';
-    document.getElementById('ks-triples').textContent = '0.0';
     document.getElementById('ks-altas-bajas').textContent = '0 / 0';
     document.getElementById('ks-pct-rotacion').textContent = '% rotación: 0%';
-    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Periodo no reconocido.</td></tr>`;
+    document.getElementById('ks-planta-body').innerHTML = `<tr><td colspan="4" class="small-muted" style="text-align:center;padding:16px;">Periodo no reconocido.</td></tr>`;
     avisoSinDatos.style.display = 'block';
     return;
   }
 
   // ---- Ausencias del rango ----
   const ausenciasPeriodo = AUSENCIAS.filter(a=> a.fecha && a.fecha >= rango.inicio && a.fecha <= rango.fin);
-
-  // ---- Horas extra del periodo (o de todos los periodos subidos) ----
-  const horasExtraPeriodo = periodoSel ? HORAS_EXTRA.filter(r=>r.periodo===periodoSel) : HORAS_EXTRA;
-  const totalDobles = horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasDobles),0);
-  const totalTriples = horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
 
   // ---- Rotación del rango (altas/bajas cuya fecha cae dentro del periodo) ----
   const empConFechas = empleadosConFechas();
@@ -3794,56 +3411,51 @@ function renderKpisSemanales(){
   const pctRotacion = activos>0 ? Math.round((bajasPeriodo.length/activos)*1000)/10 : 0;
 
   document.getElementById('ks-ausencias').textContent = ausenciasPeriodo.length;
-  document.getElementById('ks-dobles').textContent = totalDobles.toFixed(1);
-  document.getElementById('ks-triples').textContent = totalTriples.toFixed(1);
   document.getElementById('ks-altas-bajas').textContent = `${altasPeriodo.length} / ${bajasPeriodo.length}`;
   document.getElementById('ks-pct-rotacion').textContent = `% rotación: ${pctRotacion}%`;
 
   // ---- Detalle por planta ----
   const porPlanta = {};
-  const obtenerPlanta = plantaEn(porPlanta, { ausencias:0, dobles:0, triples:0, altas:0, bajas:0 });
+  const obtenerPlanta = plantaEn(porPlanta, { ausencias:0, altas:0, bajas:0 });
   ausenciasPeriodo.forEach(a=> obtenerPlanta(a.depto).ausencias++);
-  horasExtraPeriodo.forEach(r=>{ const p = obtenerPlanta(r.planta); p.dobles += numeroDe(r.horasDobles); p.triples += numeroDe(r.horasTriples); });
   altasPeriodo.forEach(e=> obtenerPlanta(e.depto).altas++);
   bajasPeriodo.forEach(e=> obtenerPlanta(e.depto).bajas++);
 
   const listaPlantas = Object.values(porPlanta).sort((a,b)=> a.planta.localeCompare(b.planta));
   const body = document.getElementById('ks-planta-body');
   body.innerHTML = listaPlantas.length ? listaPlantas.map(p=>`
-    <tr><td>${p.planta}</td><td>${p.ausencias}</td><td>${p.dobles.toFixed(1)}</td><td>${p.triples.toFixed(1)}</td><td>${p.altas}</td><td>${p.bajas}</td></tr>
-  `).join('') : `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
+    <tr><td>${p.planta}</td><td>${p.ausencias}</td><td>${p.altas}</td><td>${p.bajas}</td></tr>
+  `).join('') : `<tr><td colspan="4" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
 
-  window._kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, horasExtraPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
+  window._kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
 
-  const sinDatos = ausenciasPeriodo.length===0 && horasExtraPeriodo.length===0 && altasPeriodo.length===0 && bajasPeriodo.length===0;
+  const sinDatos = ausenciasPeriodo.length===0 && altasPeriodo.length===0 && bajasPeriodo.length===0;
   avisoSinDatos.style.display = sinDatos ? 'block' : 'none';
 }
 document.getElementById('f-kpis-semanales-periodo').addEventListener('change', renderKpisSemanales);
 
 document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', ()=>{
   const cache = window._kpisSemanalesCache;
-  if(!cache || !cache.rango){ mostrarToast('No hay datos que exportar. Sube al menos un periodo de horas extra.', true); return; }
+  if(!cache || !cache.rango){ mostrarToast('No hay datos que exportar para este periodo.', true); return; }
 
   const wb = XLSX.utils.book_new();
   const etiquetaPeriodoTxt = cache.periodoSel || `Todos (${fmtFecha(cache.rango.inicio)} al ${fmtFecha(cache.rango.fin)})`;
 
   const wsResumen = XLSX.utils.aoa_to_sheet([
-    ['KPI\'s semanales'],
+    ['Kpis ausentismo semanal'],
     ['Periodo', etiquetaPeriodoTxt],
     [],
     ['Ausencias del periodo', cache.ausenciasPeriodo.length],
-    ['Total horas dobles', cache.horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasDobles),0).toFixed(1)],
-    ['Total horas triples', cache.horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasTriples),0).toFixed(1)],
     ['Altas', cache.altasPeriodo.length],
     ['Bajas', cache.bajasPeriodo.length],
   ]);
   wsResumen['!cols'] = [{wch:26},{wch:34}];
   XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
 
-  const filasPlanta = [['Planta','Ausencias','H. dobles','H. triples','Altas','Bajas']];
-  cache.listaPlantas.forEach(p=> filasPlanta.push([p.planta, p.ausencias, p.dobles.toFixed(1), p.triples.toFixed(1), p.altas, p.bajas]));
+  const filasPlanta = [['Planta','Ausencias','Altas','Bajas']];
+  cache.listaPlantas.forEach(p=> filasPlanta.push([p.planta, p.ausencias, p.altas, p.bajas]));
   const wsPlanta = XLSX.utils.aoa_to_sheet(filasPlanta);
-  wsPlanta['!cols'] = [{wch:22},{wch:12},{wch:12},{wch:12},{wch:10},{wch:10}];
+  wsPlanta['!cols'] = [{wch:22},{wch:12},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb, wsPlanta, 'Por planta');
 
   const filasAusencias = [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor','Notas']];
@@ -3852,59 +3464,9 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', (
   wsAusencias['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:14},{wch:20},{wch:26},{wch:34}];
   XLSX.utils.book_append_sheet(wb, wsAusencias, 'Ausencias');
 
-  const filasHE = [['Numero_Empleado','Nombre','Planta','Periodo','H. dobles','H. triples']];
-  cache.horasExtraPeriodo.forEach(r=> filasHE.push([r.codigo, r.nombre, r.planta, r.periodo, numeroDe(r.horasDobles).toFixed(1), numeroDe(r.horasTriples).toFixed(1)]));
-  const wsHE = XLSX.utils.aoa_to_sheet(filasHE);
-  wsHE['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:26},{wch:12},{wch:12}];
-  XLSX.utils.book_append_sheet(wb, wsHE, 'Horas extra');
-
   const hoy = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `kpis_semanales_periodo_${hoy}.xlsx`);
+  XLSX.writeFile(wb, `kpis_ausentismo_semanal_${hoy}.xlsx`);
   mostrarToast('Excel de KPIs del periodo descargado.');
-});
-
-document.getElementById('btn-eliminar-periodo-he').addEventListener('click', async ()=>{
-  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
-  const periodo = document.getElementById('f-horas-extra-periodo').value;
-  if(!periodo){ mostrarToast('Selecciona primero el periodo que quieres eliminar.', true); return; }
-  if(!confirm(`¿Eliminar TODOS los registros de horas extra del periodo "${periodo}"? Esta acción no se puede deshacer.`)) return;
-
-  const btn = document.getElementById('btn-eliminar-periodo-he');
-  btn.disabled = true; btn.textContent = 'Eliminando...';
-  try{
-    await apiPost({action:'deleteHorasExtraPeriodo', periodo});
-    HORAS_EXTRA = HORAS_EXTRA.filter(r=>r.periodo !== periodo);
-    document.getElementById('f-horas-extra-periodo').value = '';
-    mostrarToast(`Periodo "${periodo}" eliminado.`);
-    renderHorasExtra();
-  }catch(err){
-    mostrarToast('No se pudo eliminar. Revisa tu conexión.', true);
-  }finally{
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6h16z"/></svg> Eliminar periodo seleccionado';
-  }
-});
-
-document.getElementById('btn-exportar-horas-extra').addEventListener('click', ()=>{
-  if(HORAS_EXTRA.length===0){ mostrarToast('Aún no hay horas extra para exportar.', true); return; }
-  const filtro = document.getElementById('f-horas-extra-periodo').value;
-  const filtroPlanta = document.getElementById('f-horas-extra-planta').value;
-  const q = document.getElementById('f-horas-extra-buscar').value.trim().toLowerCase();
-  let datos = filtro ? HORAS_EXTRA.filter(r=>r.periodo===filtro) : HORAS_EXTRA;
-  if(filtroPlanta) datos = datos.filter(r=> r.planta===filtroPlanta);
-  if(q) datos = datos.filter(r=> (r.nombre||'').toLowerCase().includes(q) || String(r.codigo||'').toLowerCase().includes(q));
-  if(datos.length===0){ mostrarToast('No hay registros para exportar con este filtro.', true); return; }
-  const filas = [['Periodo','Numero_Empleado','Nombre','Planta','Salario_Diario','Horas_Dobles','Horas_Triples','Total_Horas']];
-  datos.slice().sort((a,b)=> b.periodo.localeCompare(a.periodo)).forEach(r=>{
-    filas.push([r.periodo, r.codigo, r.nombre, r.planta, numeroDe(r.salarioDiario), numeroDe(r.horasDobles), numeroDe(r.horasTriples), numeroDe(r.horasDobles)+numeroDe(r.horasTriples)]);
-  });
-  const ws = XLSX.utils.aoa_to_sheet(filas);
-  ws['!cols'] = [{wch:26},{wch:14},{wch:32},{wch:18},{wch:14},{wch:14},{wch:14},{wch:14}];
-  const wbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wbook, ws, 'Horas Extra');
-  const hoy = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wbook, `horas_extra_${filtro?filtro.replace(/[^a-z0-9]+/gi,'_'):'todos'}_${hoy}.xlsx`);
-  mostrarToast('Excel de horas extra descargado.');
 });
 
 /* ============================================================
