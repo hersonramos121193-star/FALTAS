@@ -3037,7 +3037,7 @@ function cumpleanerosActivos(){
     .filter(e=>(e.estatus||'ALTA')==='ALTA')
     .map(e=>{
       const fn = excelFechaATexto(e.fechaNacimiento);
-      if(!fn || !/^d{4}-d{2}-d{2}$/.test(fn)) return null;
+      if(!fn || !/^\d{4}-\d{2}-\d{2}$/.test(fn)) return null;
       return { ...e, _dia: parseInt(fn.slice(8,10),10), _mes: parseInt(fn.slice(5,7),10) - 1, _edad: anioActual - parseInt(fn.slice(0,4),10), _fechaNacNorm: fn };
     })
     .filter(Boolean);
