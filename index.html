@@ -326,10 +326,6 @@ tbody tr:hover{background:var(--paper);}
           <div class="pagesub">Resumen general de faltas registradas</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-ghost" id="btn-exportar-metricas" title="Descarga las métricas del Dashboard en un Excel">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-            Exportar métricas a Excel
-          </button>
           <button class="btn btn-primary solo-edicion" id="btn-goto-registro" onclick="goTo('registro')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
             Registrar ausencia
@@ -1845,87 +1841,6 @@ function cerrarModalResultadoPlantilla(){
 /* ============================================================
    EXPORTAR MÉTRICAS A EXCEL
    ============================================================ */
-document.getElementById('btn-exportar-metricas').addEventListener('click', async ()=>{
-  if(!await cargarXLSX()) return;
-  if(AUSENCIAS.length === 0){ mostrarToast('Aún no hay ausencias registradas para exportar.', true); return; }
-
-  const wb = XLSX.utils.book_new();
-  const hoy = new Date().toISOString().slice(0,10);
-
-  // ---- Resumen ----
-  const totalGeneral = AUSENCIAS.length;
-  const codigosUnicos = [...new Set(AUSENCIAS.map(a=>a.codigo))];
-  const conCarta = AUSENCIAS.filter(a=>a.carta).length;
-  const pctCarta = totalGeneral ? Math.round((conCarta/totalGeneral)*100) : 0;
-  const totalActivos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
-  const wsResumen = XLSX.utils.aoa_to_sheet([
-    ['Métricas de ausentismo — Grupo Metelmex'],
-    [`Exportado el ${fmtFecha(hoy)}`],
-    [],
-    ['Indicador', 'Valor'],
-    ['Total de faltas registradas', totalGeneral],
-    ['Empleados con al menos una falta', codigosUnicos.length],
-    ['Empleados activos en el directorio', totalActivos],
-    ['Faltas con carta compromiso firmada', conCarta],
-    ['% con carta compromiso', pctCarta + '%'],
-    ['Faltas sin carta compromiso', totalGeneral - conCarta],
-  ]);
-  wsResumen['!cols'] = [{wch:36},{wch:18}];
-  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
-
-  // ---- Por mes ----
-  const clavesMes = [...new Set(AUSENCIAS.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort();
-  const labelMes = (m)=>{ const [y,mm]=m.split('-'); return `${NOMBRES_MES[parseInt(mm)-1]} ${y}`; };
-  const filasMes = [['Mes', 'Total de faltas']];
-  clavesMes.forEach(m=>{
-    filasMes.push([labelMes(m), AUSENCIAS.filter(a=>(a.fecha||'').slice(0,7)===m).length]);
-  });
-  const wsMes = XLSX.utils.aoa_to_sheet(filasMes);
-  wsMes['!cols'] = [{wch:18},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, wsMes, 'Por mes');
-
-  // ---- Por planta/departamento ----
-  const porDepto = {};
-  AUSENCIAS.forEach(a=>{ porDepto[a.depto||'Sin planta'] = (porDepto[a.depto||'Sin planta']||0)+1; });
-  const filasDepto = [['Planta / Departamento', 'Total de faltas']];
-  Object.entries(porDepto).sort((a,b)=>b[1]-a[1]).forEach(([d,c])=> filasDepto.push([d,c]));
-  const wsDepto = XLSX.utils.aoa_to_sheet(filasDepto);
-  wsDepto['!cols'] = [{wch:26},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, wsDepto, 'Por planta');
-
-  // ---- Por motivo ----
-  const porMotivo = {};
-  AUSENCIAS.forEach(a=>{ porMotivo[a.motivo||'Sin motivo'] = (porMotivo[a.motivo||'Sin motivo']||0)+1; });
-  const filasMotivo = [['Motivo', 'Total de faltas']];
-  Object.entries(porMotivo).sort((a,b)=>b[1]-a[1]).forEach(([m,c])=> filasMotivo.push([m,c]));
-  const wsMotivo = XLSX.utils.aoa_to_sheet(filasMotivo);
-  wsMotivo['!cols'] = [{wch:20},{wch:16}];
-  XLSX.utils.book_append_sheet(wb, wsMotivo, 'Por motivo');
-
-  // ---- Por supervisor ----
-  const porSupervisor = {};
-  AUSENCIAS.forEach(a=>{
-    const sup = (a.supervisor || '').trim() || 'Sin supervisor asignado';
-    porSupervisor[sup] = (porSupervisor[sup]||0)+1;
-  });
-  const filasSup = [['Supervisor', 'Total de faltas de su gente']];
-  Object.entries(porSupervisor).sort((a,b)=>b[1]-a[1]).forEach(([s,c])=> filasSup.push([s,c]));
-  const wsSup = XLSX.utils.aoa_to_sheet(filasSup);
-  wsSup['!cols'] = [{wch:32},{wch:22}];
-  XLSX.utils.book_append_sheet(wb, wsSup, 'Por supervisor');
-
-  // ---- Detalle (todas las faltas) ----
-  const filasDetalle = [['Numero_Empleado','Nombre','Planta','Puesto','Supervisor','Fecha_Falta','Motivo','Carta_Compromiso','Fecha_Firma_Carta','Notas']];
-  AUSENCIAS.slice().sort((a,b)=> b.fecha.localeCompare(a.fecha)).forEach(a=>{
-    filasDetalle.push([a.codigo, a.nombre, a.depto, a.puesto, a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||'']);
-  });
-  const wsDetalle = XLSX.utils.aoa_to_sheet(filasDetalle);
-  wsDetalle['!cols'] = [{wch:14},{wch:32},{wch:16},{wch:26},{wch:26},{wch:14},{wch:16},{wch:14},{wch:16},{wch:30}];
-  XLSX.utils.book_append_sheet(wb, wsDetalle, 'Detalle');
-
-  XLSX.writeFile(wb, `metricas_ausentismo_${hoy}.xlsx`);
-  mostrarToast('Excel de métricas descargado.');
-});
 
 function lunesDeLaSemana(fechaStr){
   const [y,m,d] = fechaStr.split('-').map(Number);
@@ -3362,14 +3277,26 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
   };
   const dias = DIAS_LABORABLES_SEMANA;
 
+  const t = c.ausenciasPeriodo.length;
   const resumen = filas(general, (sem, _, v)=> [sem, v.faltas, activos.length, porc(v.faltas, activos.length*dias), v.altas, v.bajas, porc(v.bajas, activos.length)]);
   if(resumen.length>1){
     const semanasTranscurridas = PERIODOS_NOMINA.filter(x=> x.inicio>=c.rango.inicio && x.fin<=c.rango.fin && x.inicio<=hoy).length;
-    const t = c.ausenciasPeriodo.length;
     resumen.push(['TOTAL de la selección', t, activos.length, porc(t, activos.length*dias*semanasTranscurridas), c.altasPeriodo.length, c.bajasPeriodo.length, porc(c.bajasPeriodo.length, activos.length)]);
   }
+  const conCarta = c.ausenciasPeriodo.filter(a=>a.carta).length;
   hoja('Resumen', [['Selección', seleccion], ['Exportado', fmtFecha(hoy)], [],
+    ['Empleados con al menos una falta', new Set(c.ausenciasPeriodo.map(a=>a.codigo)).size],
+    ['Faltas con carta compromiso firmada', conCarta],
+    ['Faltas sin carta compromiso', t - conCarta],
+    ['% con carta compromiso', porc(conCarta, t)], [],
     ['Semana','Faltas','Empleados activos','% Ausentismo','Altas','Bajas','% Rotación'], ...resumen], [44,10,18,14,8,8,12]);
+
+  // Conteo simple por una clave, de mayor a menor.
+  const contar = clave=>{ const m = {}; c.ausenciasPeriodo.forEach(a=>{ const k = clave(a); m[k] = (m[k]||0)+1; }); return Object.entries(m); };
+  if(!c.periodoSel){
+    hoja('Por_Mes', [['Mes','Faltas'], ...contar(a=>a.fecha.slice(0,7)).sort().map(([m,n])=> [NOMBRES_MES[parseInt(m.slice(5),10)-1]+' '+m.slice(0,4), n])], [18,10]);
+  }
+  hoja('Por_Motivo', [['Motivo','Faltas','% del total'], ...contar(a=>a.motivo||'Sin motivo').sort((a,b)=>b[1]-a[1]).map(([m,n])=> [m, n, porc(n, t)])], [22,10,12]);
 
   hoja('Por_Planta', [['Semana','Planta','Faltas','Activos en la planta','% Ausentismo','Altas','Bajas'],
     ...filas(porPlanta, (sem, planta, v)=>{ const n = activosPlanta[planta]||0; return [sem, planta, v.faltas, n, porc(v.faltas, n*dias), v.altas, v.bajas]; })], [44,20,10,20,14,8,8]);
@@ -3377,8 +3304,8 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
   hoja('Por_Supervisor', [['Semana','Supervisor','Faltas','Empleados a su cargo (aprox.)','% Ausentismo (aprox.)'],
     ...filas(porSup, (sem, sup, v)=>{ const n = aCargo[sup] ? aCargo[sup].size : 0; return [sem, sup, v.faltas, n, porc(v.faltas, n*dias)]; })], [44,32,10,26,20]);
 
-  hoja('Ausencias', [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor','Notas'],
-    ...c.ausenciasPeriodo.map(a=> [a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor, a.notas || ''])], [16,30,18,14,20,26,34]);
+  hoja('Ausencias', [['Numero_Empleado','Nombre','Planta','Puesto','Supervisor','Fecha_Falta','Motivo','Carta_Compromiso','Fecha_Firma_Carta','Notas'],
+    ...c.ausenciasPeriodo.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha)).map(a=> [a.codigo, a.nombre, a.depto, a.puesto||'', a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||''])], [14,30,18,26,26,14,20,16,16,34]);
 
   hoja('Metodología', [
     ['Selección: ' + seleccion],
