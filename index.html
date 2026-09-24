@@ -13,7 +13,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Ausentismo MMX">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --navy-950:#0B1F33;
@@ -250,6 +249,7 @@ tbody tr:hover{background:var(--paper);}
 .small-muted{font-size:11.5px;color:var(--ink-500);}
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#C6D0DA;border-radius:99px;}
+.solo-lectura .solo-edicion{display:none !important;}
 </style>
 </head>
 <body>
@@ -274,7 +274,7 @@ tbody tr:hover{background:var(--paper);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 22v-9a2 2 0 00-2-2H6a2 2 0 00-2 2v9M4 13V9a2 2 0 012-2h1M20 13V9a2 2 0 00-2-2h-1M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M12 3v1"/><circle cx="12" cy="16" r="2"/></svg>
       <span>Dashboard Cumpleañeros</span>
     </button>
-    <button class="navbtn" data-view="registro" id="nav-registro">
+    <button class="navbtn solo-edicion" data-view="registro" id="nav-registro">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
       <span>Registrar ausencia</span>
     </button>
@@ -302,7 +302,7 @@ tbody tr:hover{background:var(--paper);}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Supervisores</span>
     </button>
-    <button class="navbtn" data-view="conexion" id="nav-conexion">
+    <button class="navbtn solo-edicion" data-view="conexion" id="nav-conexion">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12a8 8 0 0116 0M1 9a12 12 0 0122 0M8 16a4 4 0 018 0M12 20h.01"/></svg>
       <span>Conexión</span>
       <span id="nav-conn-dot" style="width:7px;height:7px;border-radius:50%;background:#B2432E;margin-left:auto;flex-shrink:0;"></span>
@@ -330,11 +330,7 @@ tbody tr:hover{background:var(--paper);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
             Exportar métricas a Excel
           </button>
-          <button class="btn btn-ghost" id="btn-exportar-kpis-semanales" title="Descarga % de ausentismo por supervisor, planta y semana">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-            KPI's semanales
-          </button>
-          <button class="btn btn-primary" id="btn-goto-registro" onclick="goTo('registro')">
+          <button class="btn btn-primary solo-edicion" id="btn-goto-registro" onclick="goTo('registro')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
             Registrar ausencia
           </button>
@@ -576,7 +572,7 @@ tbody tr:hover{background:var(--paper);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
             Descargar plantilla
           </a>
-          <button class="btn btn-primary" id="btn-plantilla-subir" title="Sube una plantilla de Excel para registrar varias faltas a la vez">
+          <button class="btn btn-primary solo-edicion" id="btn-plantilla-subir" title="Sube una plantilla de Excel para registrar varias faltas a la vez">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
             Subir plantilla
           </button>
@@ -742,11 +738,11 @@ tbody tr:hover{background:var(--paper);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
             Descargar plantilla
           </a>
-          <button class="btn btn-ghost" id="btn-actualizar-catalogo">
+          <button class="btn btn-ghost solo-edicion" id="btn-actualizar-catalogo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
             Subir plantilla
           </button>
-          <button class="btn btn-primary" id="btn-abrir-nuevo-empleado">
+          <button class="btn btn-primary solo-edicion" id="btn-abrir-nuevo-empleado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
             Añadir empleado
           </button>
@@ -785,7 +781,7 @@ tbody tr:hover{background:var(--paper);}
         <div class="panel-body">
           <div class="form-grid" id="supervisores-grid"></div>
           <div style="margin-top:18px;">
-            <button class="btn btn-primary" id="btn-guardar-supervisores">Guardar supervisores</button>
+            <button class="btn btn-primary solo-edicion" id="btn-guardar-supervisores">Guardar supervisores</button>
           </div>
         </div>
       </div>
@@ -896,7 +892,7 @@ tbody tr:hover{background:var(--paper);}
         </div>
         <button class="btn btn-ghost" id="btn-exportar-kpis-periodo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-          Exportar métricas del periodo a Excel
+          Exportar Información seleccionada a Excel
         </button>
       </div>
 
@@ -1243,19 +1239,27 @@ function recalcularDepartamentos(){
   if(dl) dl.innerHTML = DEPARTAMENTOS.map(d=>`<option value="${d}">`).join('');
 }
 
+// Datos que cada vista guarda para su botón de exportar.
+let cumpleCache = null, rotacionCache = null, rotacionEmpConFechas = null, kpisSemanalesCache = null;
+
+// La librería de Excel (~900KB) se descarga solo la primera vez que se necesita.
+let xlsxPromesa = null;
+function cargarXLSX(){
+  if(window.XLSX) return Promise.resolve(true);
+  return xlsxPromesa ??= new Promise(listo=>{
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = ()=> listo(true);
+    sc.onerror = ()=>{ xlsxPromesa = null; sc.remove(); mostrarToast('No se pudo cargar el módulo de Excel. Revisa tu conexión.', true); listo(false); };
+    document.head.append(sc);
+  });
+}
+
 let AUSENCIAS = [];
 let FELICITADOS = [];
 function aplicarModoLectura(){
   if(!MODO_LECTURA) return;
   document.body.classList.add('solo-lectura');
-  const ocultar = (id)=>{ const el = document.getElementById(id); if(el) el.style.display='none'; };
-  ocultar('nav-registro');
-  ocultar('nav-conexion');
-  ocultar('btn-goto-registro');
-  ocultar('btn-abrir-nuevo-empleado');
-  ocultar('btn-actualizar-catalogo');
-  ocultar('btn-guardar-supervisores');
-  ocultar('btn-plantilla-subir');
   const banner = document.createElement('div');
   banner.style.cssText = 'background:#122E4A;color:#fff;padding:10px 18px;font-size:13px;font-weight:600;text-align:center;letter-spacing:.2px;';
   banner.textContent = 'Modo de solo lectura — puedes consultar el Dashboard, el Historial y el Directorio, pero no registrar ni modificar información.';
@@ -1730,6 +1734,7 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
   btn.disabled = true; btn.textContent = 'Leyendo archivo...';
 
   try{
+    if(!await cargarXLSX()) return;
     const buffer = await file.arrayBuffer();
     const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
     const nombreHoja = wb.SheetNames.includes('Plantilla') ? 'Plantilla' : wb.SheetNames[0];
@@ -1840,7 +1845,8 @@ function cerrarModalResultadoPlantilla(){
 /* ============================================================
    EXPORTAR MÉTRICAS A EXCEL
    ============================================================ */
-document.getElementById('btn-exportar-metricas').addEventListener('click', ()=>{
+document.getElementById('btn-exportar-metricas').addEventListener('click', async ()=>{
+  if(!await cargarXLSX()) return;
   if(AUSENCIAS.length === 0){ mostrarToast('Aún no hay ausencias registradas para exportar.', true); return; }
 
   const wb = XLSX.utils.book_new();
@@ -1929,94 +1935,6 @@ function lunesDeLaSemana(fechaStr){
   return fecha.toISOString().slice(0,10);
 }
 const DIAS_LABORABLES_SEMANA = 6; // lunes a sábado — ajustable si tu operación trabaja distinto
-
-document.getElementById('btn-exportar-kpis-semanales').addEventListener('click', ()=>{
-  if(AUSENCIAS.length === 0){ mostrarToast('Aún no hay ausencias registradas para calcular KPIs.', true); return; }
-  const hoy = new Date().toISOString().slice(0,10);
-  const totalActivos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
-
-  const labelSemana = (lunes)=>{
-    const d1 = new Date(lunes+'T00:00:00Z'); d1.setUTCDate(d1.getUTCDate()+6);
-    return `${fmtFecha(lunes)} al ${fmtFecha(d1.toISOString().slice(0,10))}`;
-  };
-
-  // ---- Semanal general ----
-  const porSemana = {};
-  AUSENCIAS.forEach(a=>{ if(!a.fecha) return; const l=lunesDeLaSemana(a.fecha); porSemana[l]=(porSemana[l]||0)+1; });
-  const semanasOrdenadas = Object.keys(porSemana).sort();
-  const filasGeneral = [['Semana', 'Total de faltas', 'Empleados activos', '% Ausentismo']];
-  semanasOrdenadas.forEach(l=>{
-    const total = porSemana[l];
-    const pct = totalActivos>0 ? Math.round((total/(totalActivos*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
-    filasGeneral.push([labelSemana(l), total, totalActivos, pct + '%']);
-  });
-  const wsGeneral = XLSX.utils.aoa_to_sheet(filasGeneral);
-  wsGeneral['!cols'] = [{wch:26},{wch:16},{wch:16},{wch:14}];
-
-  // ---- Semanal por planta ----
-  const porSemanaPlanta = {};
-  AUSENCIAS.forEach(a=>{
-    if(!a.fecha) return;
-    const l = lunesDeLaSemana(a.fecha);
-    const k = l+'||'+(a.depto||'Sin planta');
-    porSemanaPlanta[k] = (porSemanaPlanta[k]||0)+1;
-  });
-  const filasPlanta = [['Semana', 'Planta', 'Total de faltas', 'Empleados activos en la planta', '% Ausentismo']];
-  Object.keys(porSemanaPlanta).sort().forEach(k=>{
-    const [l, planta] = k.split('||');
-    const total = porSemanaPlanta[k];
-    const activosPlanta = EMPLEADOS.filter(e=>e.depto===planta && (e.estatus||'ALTA')==='ALTA').length;
-    const pct = activosPlanta>0 ? Math.round((total/(activosPlanta*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
-    filasPlanta.push([labelSemana(l), planta, total, activosPlanta, pct + '%']);
-  });
-  const wsPlanta = XLSX.utils.aoa_to_sheet(filasPlanta);
-  wsPlanta['!cols'] = [{wch:26},{wch:20},{wch:16},{wch:24},{wch:14}];
-
-  // ---- Semanal por supervisor ----
-  const porSemanaSup = {};
-  const empleadosPorSupervisor = {};
-  AUSENCIAS.forEach(a=>{
-    const sup = (a.supervisor||'').trim() || 'Sin supervisor asignado';
-    if(!empleadosPorSupervisor[sup]) empleadosPorSupervisor[sup] = new Set();
-    empleadosPorSupervisor[sup].add(a.codigo);
-    if(!a.fecha) return;
-    const l = lunesDeLaSemana(a.fecha);
-    const k = l+'||'+sup;
-    porSemanaSup[k] = (porSemanaSup[k]||0)+1;
-  });
-  const filasSup = [['Semana', 'Supervisor', 'Total de faltas', 'Empleados a su cargo (aprox.)', '% Ausentismo (aprox.)']];
-  Object.keys(porSemanaSup).sort().forEach(k=>{
-    const [l, sup] = k.split('||');
-    const total = porSemanaSup[k];
-    const aCargo = empleadosPorSupervisor[sup] ? empleadosPorSupervisor[sup].size : 0;
-    const pct = aCargo>0 ? Math.round((total/(aCargo*DIAS_LABORABLES_SEMANA))*1000)/10 : 0;
-    filasSup.push([labelSemana(l), sup, total, aCargo, pct + '%']);
-  });
-  const wsSupSemanal = XLSX.utils.aoa_to_sheet(filasSup);
-  wsSupSemanal['!cols'] = [{wch:26},{wch:32},{wch:16},{wch:26},{wch:20}];
-
-  // ---- Metodología ----
-  const wsMeta = XLSX.utils.aoa_to_sheet([
-    ['Metodología de los KPIs semanales'],
-    [],
-    ['% Ausentismo = (Total de faltas de la semana / (Empleados activos × ' + DIAS_LABORABLES_SEMANA + ' días laborables)) × 100'],
-    [],
-    ['Semanal_General: usa la plantilla activa total de la empresa (hoy).'],
-    ['Semanal_por_Planta: usa la plantilla activa de cada planta (hoy).'],
-    ['Semanal_por_Supervisor: como la app no asigna empleados a un supervisor de forma fija (el supervisor se captura por cada falta), "empleados a su cargo" es una APROXIMACIÓN: se cuentan los empleados distintos que alguna vez tuvieron una falta registrada con ese supervisor. Si un supervisor tiene gente que nunca ha faltado, esa gente no se refleja en este cálculo.'],
-    [],
-    ['La plantilla activa usada es la de HOY (fecha de exportación), no la de cada semana histórica — es una simplificación razonable para uso operativo, no un cálculo retroactivo exacto.'],
-  ]);
-  wsMeta['!cols'] = [{wch:100}];
-
-  const wb2 = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb2, wsGeneral, 'Semanal_General');
-  XLSX.utils.book_append_sheet(wb2, wsPlanta, 'Semanal_por_Planta');
-  XLSX.utils.book_append_sheet(wb2, wsSupSemanal, 'Semanal_por_Supervisor');
-  XLSX.utils.book_append_sheet(wb2, wsMeta, 'Metodología');
-  XLSX.writeFile(wb2, `kpis_semanales_${hoy}.xlsx`);
-  mostrarToast('Excel de KPIs semanales descargado.');
-});
 
 function renderDashboard(){
   const total = AUSENCIAS.length;
@@ -2460,7 +2378,8 @@ function limpiarFiltros(){
 /* ============================================================
    EXPORTAR A EXCEL
    ============================================================ */
-function exportarExcel(){
+async function exportarExcel(){
+  if(!await cargarXLSX()) return;
   if(typeof XLSX === 'undefined'){
     mostrarToast('No se pudo cargar el componente de Excel. Revisa tu conexión a internet e intenta de nuevo.', true);
     return;
@@ -2579,6 +2498,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
   btn.disabled = true; btn.textContent = 'Leyendo archivo...';
 
   try{
+    if(!await cargarXLSX()) return;
     const buffer = await file.arrayBuffer();
     const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
     const hoja = wb.Sheets[wb.SheetNames[0]];
@@ -3047,7 +2967,7 @@ function renderCumple(){
       </tr>`;
     }).join('');
   }
-  window._cumpleCache = { lista, etiquetaPeriodo };
+  cumpleCache = { lista, etiquetaPeriodo };
   renderBusquedaIndividualCumple();
 }
 document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
@@ -3145,8 +3065,9 @@ function renderBusquedaIndividualCumple(){
 }
 document.getElementById('f-cumple-buscar').addEventListener('input', renderBusquedaIndividualCumple);
 
-document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
-  const cache = window._cumpleCache;
+document.getElementById('btn-exportar-cumple').addEventListener('click', async ()=>{
+  if(!await cargarXLSX()) return;
+  const cache = cumpleCache;
   if(!cache || cache.lista.length===0){ mostrarToast('No hay cumpleañeros para exportar en este periodo.', true); return; }
   const filas = [['Dia','Mes','Numero_Empleado','Nombre','Planta','Puesto','Tipo_Empleado','Edad_Que_Cumple']];
   cache.lista.forEach(e=>{
@@ -3213,13 +3134,13 @@ function renderRotacion(){
     </div>`;
   }).join('');
 
-  window._rotacionEmpConFechas = empConFechas;
+  rotacionEmpConFechas = empConFechas;
   renderTablasRotacion();
 
   const rotacionPorPlanta = calcularRotacionPorPlanta(empConFechas, anioActual);
   renderRotacionPorPlanta(rotacionPorPlanta);
 
-  window._rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas, rotacionPorPlanta };
+  rotacionCache = { anioActual, altasAnio, bajasAnio, activos, pctRotacion, empConFechas, rotacionPorPlanta };
 }
 
 /**
@@ -3253,7 +3174,7 @@ function renderRotacionPorPlanta(lista){
 }
 
 function renderTablasRotacion(){
-  const empConFechas = window._rotacionEmpConFechas || [];
+  const empConFechas = rotacionEmpConFechas || [];
   const qBajas = document.getElementById('f-rotacion-bajas-buscar').value.trim().toLowerCase();
   const qAltas = document.getElementById('f-rotacion-altas-buscar').value.trim().toLowerCase();
 
@@ -3276,8 +3197,9 @@ function renderTablasRotacion(){
 document.getElementById('f-rotacion-bajas-buscar').addEventListener('input', renderTablasRotacion);
 document.getElementById('f-rotacion-altas-buscar').addEventListener('input', renderTablasRotacion);
 
-document.getElementById('btn-exportar-rotacion').addEventListener('click', ()=>{
-  const cache = window._rotacionCache;
+document.getElementById('btn-exportar-rotacion').addEventListener('click', async ()=>{
+  if(!await cargarXLSX()) return;
+  const cache = rotacionCache;
   if(!cache){ mostrarToast('Espera a que cargue la vista de Rotación.', true); return; }
   const hoy = new Date().toISOString().slice(0,10);
   const mesSel = document.getElementById('f-rotacion-mes').value;
@@ -3398,46 +3320,80 @@ function renderKpisSemanales(){
     <tr><td>${p.planta}</td><td>${p.ausencias}</td><td>${p.altas}</td><td>${p.bajas}</td></tr>
   `).join('') : `<tr><td colspan="4" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
 
-  window._kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
+  kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo, altasPeriodo, bajasPeriodo, listaPlantas };
 
   const sinDatos = ausenciasPeriodo.length===0 && altasPeriodo.length===0 && bajasPeriodo.length===0;
   avisoSinDatos.style.display = sinDatos ? 'block' : 'none';
 }
 document.getElementById('f-kpis-semanales-periodo').addEventListener('change', renderKpisSemanales);
 
-document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', ()=>{
-  const cache = window._kpisSemanalesCache;
-  if(!cache || !cache.rango){ mostrarToast('No hay datos que exportar para este periodo.', true); return; }
-
-  const wb = XLSX.utils.book_new();
-  const etiquetaPeriodoTxt = cache.periodoSel || `Todos (${fmtFecha(cache.rango.inicio)} al ${fmtFecha(cache.rango.fin)})`;
-
-  const wsResumen = XLSX.utils.aoa_to_sheet([
-    ['Kpis ausentismo semanal'],
-    ['Periodo', etiquetaPeriodoTxt],
-    [],
-    ['Ausencias del periodo', cache.ausenciasPeriodo.length],
-    ['Altas', cache.altasPeriodo.length],
-    ['Bajas', cache.bajasPeriodo.length],
-  ]);
-  wsResumen['!cols'] = [{wch:26},{wch:34}];
-  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen');
-
-  const filasPlanta = [['Planta','Ausencias','Altas','Bajas']];
-  cache.listaPlantas.forEach(p=> filasPlanta.push([p.planta, p.ausencias, p.altas, p.bajas]));
-  const wsPlanta = XLSX.utils.aoa_to_sheet(filasPlanta);
-  wsPlanta['!cols'] = [{wch:22},{wch:12},{wch:10},{wch:10}];
-  XLSX.utils.book_append_sheet(wb, wsPlanta, 'Por planta');
-
-  const filasAusencias = [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor','Notas']];
-  cache.ausenciasPeriodo.forEach(a=> filasAusencias.push([a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor, a.notas || '']));
-  const wsAusencias = XLSX.utils.aoa_to_sheet(filasAusencias);
-  wsAusencias['!cols'] = [{wch:16},{wch:30},{wch:18},{wch:14},{wch:20},{wch:26},{wch:34}];
-  XLSX.utils.book_append_sheet(wb, wsAusencias, 'Ausencias');
+document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', async ()=>{
+  const c = kpisSemanalesCache;
+  if(!c || (!c.ausenciasPeriodo.length && !c.altasPeriodo.length && !c.bajasPeriodo.length)){ mostrarToast('No hay datos que exportar para este periodo.', true); return; }
+  if(!await cargarXLSX()) return;
 
   const hoy = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `kpis_ausentismo_semanal_${hoy}.xlsx`);
-  mostrarToast('Excel de KPIs del periodo descargado.');
+  const seleccion = c.periodoSel || `Todos los periodos (${fmtFecha(c.rango.inicio)} al ${fmtFecha(c.rango.fin)})`;
+  const porc = (num, den)=> (den>0 ? Math.round(num/den*1000)/10 : 0) + '%';
+  const semanaTxt = lunes=>{ const p = PERIODOS_NOMINA.find(x=>x.inicio===lunes); return p ? etiquetaPeriodo(p) : 'Semana del '+fmtFecha(lunes); };
+  const plantaDe = x=> x.depto || 'Sin planta';
+  const supervisorDe = a=> (a.supervisor||'').trim() || 'Sin supervisor asignado';
+
+  const activos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA');
+  const activosPlanta = {};
+  activos.forEach(e=>{ activosPlanta[plantaDe(e)] = (activosPlanta[plantaDe(e)]||0)+1; });
+  // "A su cargo" es aproximado: empleados distintos que alguna vez faltaron con ese supervisor (todo el historial).
+  const aCargo = {};
+  AUSENCIAS.forEach(a=> (aCargo[supervisorDe(a)] ??= new Set()).add(a.codigo));
+
+  // Conteos por semana (lunes) y por planta / supervisor.
+  const general = {}, porPlanta = {}, porSup = {};
+  const sumar = (mapa, fecha, clave, campo)=>{ (mapa[lunesDeLaSemana(fecha.slice(0,10))+'||'+clave] ??= { faltas:0, altas:0, bajas:0 })[campo]++; };
+  c.ausenciasPeriodo.forEach(a=>{ sumar(general, a.fecha, '', 'faltas'); sumar(porPlanta, a.fecha, plantaDe(a), 'faltas'); sumar(porSup, a.fecha, supervisorDe(a), 'faltas'); });
+  c.altasPeriodo.forEach(e=>{ sumar(general, e._fechaIngresoNorm, '', 'altas'); sumar(porPlanta, e._fechaIngresoNorm, plantaDe(e), 'altas'); });
+  c.bajasPeriodo.forEach(e=>{ sumar(general, e._fechaBajaNorm, '', 'bajas'); sumar(porPlanta, e._fechaBajaNorm, plantaDe(e), 'bajas'); });
+  const filas = (mapa, fila)=> Object.keys(mapa).sort().map(k=>{ const [lunes, clave] = k.split('||'); return fila(semanaTxt(lunes), clave, mapa[k]); });
+
+  const wb = XLSX.utils.book_new();
+  const hoja = (nombre, datos, anchos)=>{
+    const ws = XLSX.utils.aoa_to_sheet(datos);
+    ws['!cols'] = anchos.map(wch=>({wch}));
+    XLSX.utils.book_append_sheet(wb, ws, nombre);
+  };
+  const dias = DIAS_LABORABLES_SEMANA;
+
+  const resumen = filas(general, (sem, _, v)=> [sem, v.faltas, activos.length, porc(v.faltas, activos.length*dias), v.altas, v.bajas, porc(v.bajas, activos.length)]);
+  if(resumen.length>1){
+    const semanasTranscurridas = PERIODOS_NOMINA.filter(x=> x.inicio>=c.rango.inicio && x.fin<=c.rango.fin && x.inicio<=hoy).length;
+    const t = c.ausenciasPeriodo.length;
+    resumen.push(['TOTAL de la selección', t, activos.length, porc(t, activos.length*dias*semanasTranscurridas), c.altasPeriodo.length, c.bajasPeriodo.length, porc(c.bajasPeriodo.length, activos.length)]);
+  }
+  hoja('Resumen', [['Selección', seleccion], ['Exportado', fmtFecha(hoy)], [],
+    ['Semana','Faltas','Empleados activos','% Ausentismo','Altas','Bajas','% Rotación'], ...resumen], [44,10,18,14,8,8,12]);
+
+  hoja('Por_Planta', [['Semana','Planta','Faltas','Activos en la planta','% Ausentismo','Altas','Bajas'],
+    ...filas(porPlanta, (sem, planta, v)=>{ const n = activosPlanta[planta]||0; return [sem, planta, v.faltas, n, porc(v.faltas, n*dias), v.altas, v.bajas]; })], [44,20,10,20,14,8,8]);
+
+  hoja('Por_Supervisor', [['Semana','Supervisor','Faltas','Empleados a su cargo (aprox.)','% Ausentismo (aprox.)'],
+    ...filas(porSup, (sem, sup, v)=>{ const n = aCargo[sup] ? aCargo[sup].size : 0; return [sem, sup, v.faltas, n, porc(v.faltas, n*dias)]; })], [44,32,10,26,20]);
+
+  hoja('Ausencias', [['Numero_Empleado','Nombre','Planta','Fecha_Falta','Motivo','Supervisor','Notas'],
+    ...c.ausenciasPeriodo.map(a=> [a.codigo, a.nombre, a.depto, a.fecha, a.motivo, a.supervisor, a.notas || ''])], [16,30,18,14,20,26,34]);
+
+  hoja('Metodología', [
+    ['Selección: ' + seleccion],
+    [],
+    ['% Ausentismo = Faltas / (Empleados activos × ' + dias + ' días laborables) × 100'],
+    ['% Rotación = Bajas / Empleados activos × 100'],
+    ['Empleados activos: plantilla activa de HOY (fecha de exportación), no la de cada semana histórica.'],
+    ['Altas: empleados cuya fecha de ingreso cae en la semana. Bajas: empleados en BAJA cuya fecha de baja cae en la semana.'],
+    ['Por_Supervisor: la app no asigna empleados a un supervisor de forma fija (se captura en cada falta), así que "empleados a su cargo" es una APROXIMACIÓN: empleados distintos que alguna vez tuvieron una falta registrada con ese supervisor.'],
+    ['TOTAL de la selección: el % de ausentismo se calcula sobre las semanas ya transcurridas a la fecha de exportación.'],
+  ], [110]);
+
+  const num = c.periodoSel.match(/Periodo\s+(\d+)/);
+  XLSX.writeFile(wb, `kpis_ausentismo_semanal_${num ? 'periodo_'+num[1] : 'todos'}_${hoy}.xlsx`);
+  mostrarToast('Excel de la información seleccionada descargado.');
 });
 
 /* ============================================================
