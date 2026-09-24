@@ -1291,13 +1291,15 @@ async function apiPost(payload){
   return data;
 }
 
+// ok: true (conectado), false (sin conexión) o 'aviso' (mostrando datos guardados).
 function actualizarEstadoConexion(ok, mensaje){
   const dotNav = document.getElementById('nav-conn-dot');
   const dotBig = document.getElementById('conn-status-dot');
   const txt = document.getElementById('conn-status-text');
   const banner = document.getElementById('dash-conn-banner');
-  if(dotNav) dotNav.style.background = ok ? 'var(--ok)' : 'var(--bad)';
-  if(dotBig) dotBig.style.background = ok ? 'var(--ok)' : 'var(--bad)';
+  const color = ok==='aviso' ? 'var(--warn)' : ok ? 'var(--ok)' : 'var(--bad)';
+  if(dotNav) dotNav.style.background = color;
+  if(dotBig) dotBig.style.background = color;
   if(txt) txt.textContent = mensaje;
   if(banner) banner.classList.toggle('hidden', !!ok);
 }
@@ -1318,18 +1320,22 @@ function normalizarSupervisores(raw){
   }
   return out;
 }
+const EMP_REMOTOS = new Set(); // códigos de empleados dados de alta desde Google Sheets
 function fusionarEmpleadosNuevos(lista){
   if(!Array.isArray(lista)) return;
   lista.forEach(e=>{
     if(!e || !e.codigo) return;
     const codigo = String(e.codigo);
-    if(EMP_BY_CODIGO[codigo]) return; // ya existe (no se duplica)
     const emp = {
       codigo, nombre: e.nombre || '', depto: e.depto || '',
       puesto: e.puesto || '', fechaIngreso: e.fechaIngreso || '',
       estatus: e.estatus || 'ALTA',
       fechaNacimiento: e.fechaNacimiento || '', tipoEmpleado: e.tipoEmpleado || ''
     };
+    // Si ya vino de una carga anterior (p. ej. la copia local), se actualiza con lo más reciente.
+    if(EMP_REMOTOS.has(codigo)){ Object.assign(EMP_BY_CODIGO[codigo], emp); return; }
+    if(EMP_BY_CODIGO[codigo]) return; // ya existe en el catálogo base (no se duplica)
+    EMP_REMOTOS.add(codigo);
     EMPLEADOS.push(emp);
     EMP_BY_CODIGO[codigo] = emp;
   });
@@ -1354,7 +1360,31 @@ function aplicarCambiosEmpleados(lista){
   });
   recalcularDepartamentos();
 }
-async function cargarDatos(){
+function aplicarDatos(datos){
+  AUSENCIAS = Array.isArray(datos.ausencias) ? datos.ausencias : [];
+  SUPERVISORES = normalizarSupervisores(datos.supervisores);
+  fusionarEmpleadosNuevos(datos.empleados);
+  aplicarCambiosEmpleados(datos.cambiosEmpleados);
+  FELICITADOS = Array.isArray(datos.felicitados) ? datos.felicitados : [];
+}
+
+// Copia local de la última descarga: la app abre con ella al instante y
+// luego se actualiza con Google Sheets en segundo plano.
+const CLAVE_CACHE_DATOS = 'mmx_cache_datos';
+function leerCacheDatos(){
+  try{
+    const c = JSON.parse(localStorage.getItem(CLAVE_CACHE_DATOS));
+    return c && c.url === getScriptUrl() ? c : null; // solo si es de la misma hoja
+  }catch(e){ return null; }
+}
+function guardarCacheDatos(datos){
+  // ponytail: localStorage (~5MB). Si las hojas crecen más, se omite la copia; pasar a IndexedDB si pasa seguido.
+  try{ localStorage.setItem(CLAVE_CACHE_DATOS, JSON.stringify({ url: getScriptUrl(), guardado: new Date().toISOString(), datos })); }
+  catch(e){ try{ localStorage.removeItem(CLAVE_CACHE_DATOS); }catch(_){} }
+}
+
+// respaldo: copia local ya mostrada en pantalla; si la descarga falla se conserva.
+async function cargarDatos(respaldo){
   if(!getScriptUrl()){
     AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
@@ -1370,6 +1400,11 @@ async function cargarDatos(){
       datos = await apiGet('listAll');
       if(datos && datos.error) throw new Error(datos.error);
     }catch(e){
+      if(intento===2 && respaldo){
+        actualizarEstadoConexion('aviso', `Sin conexión — mostrando los datos guardados el ${new Date(respaldo.guardado).toLocaleString('es-MX')}`);
+        mostrarToast('No se pudo actualizar con Google Sheets. Se muestran los últimos datos guardados.', true);
+        return;
+      }
       if(intento===2){
         AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
         actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
@@ -1379,11 +1414,8 @@ async function cargarDatos(){
       await new Promise(r=>setTimeout(r, 1200)); // pequeña pausa antes de reintentar
     }
   }
-  AUSENCIAS = Array.isArray(datos.ausencias) ? datos.ausencias : [];
-  SUPERVISORES = normalizarSupervisores(datos.supervisores);
-  fusionarEmpleadosNuevos(datos.empleados);
-  aplicarCambiosEmpleados(datos.cambiosEmpleados);
-  FELICITADOS = Array.isArray(datos.felicitados) ? datos.felicitados : [];
+  aplicarDatos(datos);
+  guardarCacheDatos(datos);
   actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
 }
 async function agregarAusenciaRemota(registro){
@@ -1450,6 +1482,10 @@ function goTo(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
   document.getElementById('view-'+view).classList.remove('hidden');
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  renderVista(view);
+  window.scrollTo(0,0);
+}
+function renderVista(view){
   if(view==='dashboard') renderDashboard();
   if(view==='historial') renderHistorial();
   if(view==='empleados') renderEmpleados();
@@ -1458,7 +1494,6 @@ function goTo(view){
   if(view==='rotacion') renderRotacion();
   if(view==='kpis-semanales') renderKpisSemanales();
   if(view==='cumpleanos') renderCumple();
-  window.scrollTo(0,0);
 }
 document.querySelectorAll('.navbtn').forEach(b=>{
   b.addEventListener('click', ()=>goTo(b.dataset.view));
@@ -3378,11 +3413,21 @@ document.getElementById('btn-probar-conexion').addEventListener('click', async (
   aplicarModoLectura();
   const sv = document.getElementById('sidebar-version');
   if(sv) sv.textContent = 'v. ' + APP_VERSION;
-  await cargarDatos();
   const hoy = new Date().toISOString().slice(0,10);
   // La fecha de la falta SÍ admite fechas futuras (faltas por adelantado / programadas).
   document.getElementById('inp-fecha-carta').max = hoy;
-  renderDashboard();
+
+  const copia = getScriptUrl() ? leerCacheDatos() : null;
+  if(copia){
+    aplicarDatos(copia.datos);
+    actualizarEstadoConexion('aviso', 'Mostrando datos guardados — actualizando con tu Google Sheet…');
+    renderDashboard();
+  }
+  await cargarDatos(copia);
+  // Se vuelve a dibujar la vista abierta con los datos nuevos (Supervisores no,
+  // para no borrar cambios que se estén capturando en ese momento).
+  const vista = copia ? document.querySelector('.view:not(.hidden)').id.slice(5) : 'dashboard';
+  if(vista !== 'supervisores') renderVista(vista);
 })();
 </script>
 
