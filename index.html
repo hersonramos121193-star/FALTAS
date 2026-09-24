@@ -251,7 +251,6 @@ tbody tr:hover{background:var(--paper);}
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#C6D0DA;border-radius:99px;}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -1534,11 +1533,6 @@ async function guardarSupervisores(){
 /* ============================================================
    UTILIDADES
    ============================================================ */
-function excelDateToJSDate(serial){
-  if(!serial || isNaN(serial)) return null;
-  const utc = new Date(Math.round((serial - 25569) * 86400 * 1000));
-  return utc;
-}
 function fmtFecha(iso){
   if(!iso) return '—';
   const [y,m,d] = iso.split('-');
@@ -2496,7 +2490,6 @@ function abrirModal(titulo, hist){
   document.getElementById('modal-bg').classList.add('show');
 }
 function cerrarModal(){ document.getElementById('modal-bg').classList.remove('show'); }
-document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-bg') cerrarModal(); });
 
 /* ============================================================
    EDITAR AUSENCIA
@@ -2522,7 +2515,6 @@ function cerrarModalEditar(){
   document.getElementById('modal-editar-bg').classList.remove('show');
   editandoId = null;
 }
-document.getElementById('modal-editar-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-editar-bg') cerrarModalEditar(); });
 document.getElementById('edit-carta').addEventListener('change', function(){
   document.getElementById('edit-wrap-fecha-carta').style.display = this.checked ? 'flex' : 'none';
   if(!this.checked) document.getElementById('edit-fecha-carta').value = '';
@@ -2878,7 +2870,6 @@ function cerrarModalEditarEmpleado(){
   document.getElementById('modal-editar-emp-bg').classList.remove('show');
   editandoEmpleadoCodigo = null;
 }
-document.getElementById('modal-editar-emp-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-editar-emp-bg') cerrarModalEditarEmpleado(); });
 
 document.getElementById('btn-guardar-edicion-empleado').addEventListener('click', async ()=>{
   if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
@@ -2939,7 +2930,6 @@ function cerrarModalNuevoEmpleado(){
   document.getElementById('modal-nuevo-emp-bg').classList.remove('show');
 }
 document.getElementById('btn-abrir-nuevo-empleado').addEventListener('click', abrirModalNuevoEmpleado);
-document.getElementById('modal-nuevo-emp-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-nuevo-emp-bg') cerrarModalNuevoEmpleado(); });
 
 document.getElementById('new-emp-codigo').addEventListener('input', function(){
   const codigo = this.value.trim();
@@ -3309,17 +3299,16 @@ document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
   mostrarToast('Excel de cumpleañeros descargado.');
 });
 
+function empleadosConFechas(){
+  return EMPLEADOS.map(e=>({ ...e, _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso), _fechaBajaNorm: excelFechaATexto(e.fechaBaja) }));
+}
 function renderRotacion(){
   const anioActual = new Date().getFullYear();
   document.getElementById('rot-anio-1').textContent = anioActual;
   document.getElementById('rot-anio-2').textContent = anioActual;
   document.getElementById('rotacion-pagesub').textContent = `Altas, bajas y % de rotación de ${anioActual}`;
 
-  const empConFechas = EMPLEADOS.map(e=>({
-    ...e,
-    _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso),
-    _fechaBajaNorm: excelFechaATexto(e.fechaBaja)
-  }));
+  const empConFechas = empleadosConFechas();
 
   const altasAnio = empConFechas.filter(e=> e._fechaIngresoNorm && e._fechaIngresoNorm.startsWith(String(anioActual)));
   const bajasAnio = empConFechas.filter(e=> (e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm && e._fechaBajaNorm.startsWith(String(anioActual)));
@@ -3520,7 +3509,9 @@ document.getElementById('btn-horas-extra-subir').addEventListener('click', ()=>{
 function cerrarModalPeriodoHE(){
   document.getElementById('modal-periodo-he-bg').classList.remove('show');
 }
-document.getElementById('modal-periodo-he-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-periodo-he-bg') cerrarModalPeriodoHE(); });
+[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado],['modal-periodo-he-bg',cerrarModalPeriodoHE]].forEach(([id,cerrar])=>{
+  document.getElementById(id).addEventListener('click', (e)=>{ if(e.target.id===id) cerrar(); });
+});
 document.getElementById('btn-continuar-periodo-he').addEventListener('click', ()=>{
   const sel = document.getElementById('sel-periodo-he');
   const periodo = sel.value === '__otro__' ? document.getElementById('inp-periodo-he').value.trim() : sel.value;
@@ -3798,7 +3789,7 @@ function renderKpisSemanales(){
   const totalTriples = horasExtraPeriodo.reduce((s,r)=>s+numeroDe(r.horasTriples),0);
 
   // ---- Rotación del rango (altas/bajas cuya fecha cae dentro del periodo) ----
-  const empConFechas = EMPLEADOS.map(e=>({ ...e, _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso), _fechaBajaNorm: excelFechaATexto(e.fechaBaja) }));
+  const empConFechas = empleadosConFechas();
   const altasPeriodo = empConFechas.filter(e=> e._fechaIngresoNorm && e._fechaIngresoNorm >= rango.inicio && e._fechaIngresoNorm <= rango.fin);
   const bajasPeriodo = empConFechas.filter(e=> (e.estatus||'ALTA')==='BAJA' && e._fechaBajaNorm && e._fechaBajaNorm >= rango.inicio && e._fechaBajaNorm <= rango.fin);
   const activos = empConFechas.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
@@ -3953,7 +3944,6 @@ document.getElementById('btn-guardar-conexion').addEventListener('click', async 
   mostrarToast('Conectando con tu Google Sheet...');
   await cargarDatos();
   renderDashboard();
-  const ok = document.getElementById('conn-status-dot').style.background === 'var(--ok)' || getScriptUrl();
   mostrarToast(AUSENCIAS !== null ? 'Conexión guardada correctamente' : 'No se pudo conectar, revisa la URL');
 });
 document.getElementById('btn-probar-conexion').addEventListener('click', async ()=>{
