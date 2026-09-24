@@ -170,7 +170,6 @@ tbody tr:hover{background:var(--paper);}
 .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;}
 .badge-ok{background:var(--ok-bg);color:var(--ok);}
 .badge-bad{background:var(--bad-bg);color:var(--bad);}
-.badge-warn{background:var(--warn-bg);color:var(--warn);}
 .badge-neutral{background:var(--navy-100);color:var(--navy-800);}
 .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
 .count-pill{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--navy-800);color:#fff;font-weight:700;font-size:11.5px;}
@@ -193,8 +192,6 @@ tbody tr:hover{background:var(--paper);}
 .chip-clear:hover{text-decoration:underline;}
 
 /* ---------- EXPANDABLE HISTORY ---------- */
-.hist-row td{background:var(--paper);padding:0;}
-.hist-inner{padding:14px 22px 16px 60px;}
 .hist-list{display:flex;flex-direction:column;gap:6px;}
 .hist-item{display:flex;align-items:center;gap:10px;font-size:12px;padding:7px 10px;background:#fff;border:1px solid var(--line);border-radius:7px;}
 .hist-item .hd{font-weight:700;color:var(--navy-800);min-width:88px;}
@@ -220,8 +217,8 @@ tbody tr:hover{background:var(--paper);}
 .alert-item .go:hover{text-decoration:underline;}
 
 /* ---------- MODAL ---------- */
-.modal-bg{position:fixed;inset:0;background:rgba(11,31,51,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
-.modal-bg.show{display:flex;}
+.modal-bg{border:none;padding:0;background:transparent;width:min(560px, calc(100% - 40px));max-width:none;overflow:visible;}
+.modal-bg::backdrop{background:rgba(11,31,51,.5);}
 .modal{background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
 .modal-head{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
 .modal-head h3{margin:0;font-size:15.5px;color:var(--navy-900);}
@@ -229,7 +226,7 @@ tbody tr:hover{background:var(--paper);}
 .modal-body{padding:20px 22px;}
 .modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
 
-.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast-wrap{position:fixed;inset:auto 22px 22px auto;margin:0;border:0;padding:0;background:transparent;overflow:visible;z-index:200;display:flex;flex-direction:column;gap:8px;}
 .toast{background:var(--navy-900);color:#fff;padding:11px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;animation:slidein .2s ease;}
 .toast.err{background:var(--bad);}
 .toast svg{width:15px;height:15px;flex-shrink:0;}
@@ -245,7 +242,6 @@ tbody tr:hover{background:var(--paper);}
   .form-grid{grid-template-columns:1fr;}
 }
 .hidden{display:none !important;}
-.mt-0{margin-top:0;}
 .small-muted{font-size:11.5px;color:var(--ink-500);}
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#C6D0DA;border-radius:99px;}
@@ -1004,7 +1000,7 @@ tbody tr:hover{background:var(--paper);}
 </div>
 
 <!-- Modal historial individual -->
-<div class="modal-bg" id="modal-bg">
+<dialog class="modal-bg" id="modal-bg">
   <div class="modal">
     <div class="modal-head">
       <h3 id="modal-title">Historial de ausencias</h3>
@@ -1015,10 +1011,10 @@ tbody tr:hover{background:var(--paper);}
       <button class="btn btn-ghost" onclick="cerrarModal()">Cerrar</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- Modal editar ausencia -->
-<div class="modal-bg" id="modal-editar-bg">
+<dialog class="modal-bg" id="modal-editar-bg">
   <div class="modal">
     <div class="modal-head">
       <h3>Editar ausencia</h3>
@@ -1066,10 +1062,10 @@ tbody tr:hover{background:var(--paper);}
       <button class="btn btn-primary" id="btn-guardar-edicion">Guardar cambios</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- Modal editar empleado -->
-<div class="modal-bg" id="modal-editar-emp-bg">
+<dialog class="modal-bg" id="modal-editar-emp-bg">
   <div class="modal">
     <div class="modal-head">
       <h3>Editar empleado</h3>
@@ -1125,10 +1121,10 @@ tbody tr:hover{background:var(--paper);}
       <button class="btn btn-primary" id="btn-guardar-edicion-empleado">Guardar cambios</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- Modal nuevo empleado -->
-<div class="modal-bg" id="modal-nuevo-emp-bg">
+<dialog class="modal-bg" id="modal-nuevo-emp-bg">
   <div class="modal">
     <div class="modal-head">
       <h3>Añadir empleado</h3>
@@ -1187,10 +1183,10 @@ tbody tr:hover{background:var(--paper);}
       <button class="btn btn-primary" id="btn-guardar-nuevo-empleado">Guardar empleado</button>
     </div>
   </div>
-</div>
+</dialog>
 
 <!-- Modal resultado carga masiva -->
-<div class="modal-bg" id="modal-resultado-plantilla-bg">
+<dialog class="modal-bg" id="modal-resultado-plantilla-bg" style="width:min(640px, calc(100% - 40px));">
   <div class="modal" style="max-width:640px;">
     <div class="modal-head">
       <h3>Resultado de la carga masiva</h3>
@@ -1204,9 +1200,9 @@ tbody tr:hover{background:var(--paper);}
       <button class="btn btn-primary" onclick="cerrarModalResultadoPlantilla()">Entendido</button>
     </div>
   </div>
-</div>
+</dialog>
 
-<div class="toast-wrap" id="toast-wrap"></div>
+<div class="toast-wrap" id="toast-wrap" popover="manual"></div>
 
 <script>
 /* ============================================================
@@ -1384,11 +1380,12 @@ function guardarCacheDatos(datos){
 }
 
 // respaldo: copia local ya mostrada en pantalla; si la descarga falla se conserva.
+// Devuelve true si se descargaron datos de Google Sheets.
 async function cargarDatos(respaldo){
   if(!getScriptUrl()){
     AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
     actualizarEstadoConexion(false, 'Sin configurar — pega la URL de tu Google Apps Script en "Conexión"');
-    return;
+    return false;
   }
   // Trae todo en UNA sola petición al backend (en vez de 6 en paralelo) para
   // evitar que Google rechace por exceso de ejecuciones simultáneas cuando
@@ -1400,16 +1397,17 @@ async function cargarDatos(respaldo){
       datos = await apiGet('listAll');
       if(datos && datos.error) throw new Error(datos.error);
     }catch(e){
+      datos = null; // una respuesta con "error" no cuenta como datos válidos
       if(intento===2 && respaldo){
         actualizarEstadoConexion('aviso', `Sin conexión — mostrando los datos guardados el ${new Date(respaldo.guardado).toLocaleString('es-MX')}`);
         mostrarToast('No se pudo actualizar con Google Sheets. Se muestran los últimos datos guardados.', true);
-        return;
+        return false;
       }
       if(intento===2){
         AUSENCIAS = []; SUPERVISORES = {}; FELICITADOS = [];
         actualizarEstadoConexion(false, 'No se pudo conectar. Revisa la URL o tu conexión a internet.');
         mostrarToast('No se pudo conectar con Google Sheets', true);
-        return;
+        return false;
       }
       await new Promise(r=>setTimeout(r, 1200)); // pequeña pausa antes de reintentar
     }
@@ -1417,15 +1415,7 @@ async function cargarDatos(respaldo){
   aplicarDatos(datos);
   guardarCacheDatos(datos);
   actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
-}
-async function agregarAusenciaRemota(registro){
-  await apiPost({action:'add', registro});
-}
-async function eliminarAusenciaRemota(id){
-  await apiPost({action:'delete', id});
-}
-async function actualizarAusenciaRemota(id, campos){
-  await apiPost({action:'update', id, campos});
+  return true;
 }
 async function guardarSupervisores(){
   try{
@@ -1446,32 +1436,17 @@ function fmtFecha(iso){
   return `${parseInt(d)} ${meses[parseInt(m)-1]} ${y}`;
 }
 function uid(){ return 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function semanaISO(fechaStr){
-  // fechaStr: 'YYYY-MM-DD' -> devuelve clave 'YYYY-Www' según semana ISO 8601
-  const [y,m,d] = fechaStr.split('-').map(Number);
-  const fecha = new Date(Date.UTC(y, m-1, d));
-  const diaSemana = (fecha.getUTCDay() + 6) % 7; // lunes=0 ... domingo=6
-  fecha.setUTCDate(fecha.getUTCDate() - diaSemana + 3); // jueves de esa semana
-  const primerJueves = new Date(Date.UTC(fecha.getUTCFullYear(),0,4));
-  const semana = 1 + Math.round(((fecha - primerJueves) / 86400000 - 3 + ((primerJueves.getUTCDay()+6)%7)) / 7);
-  return `${fecha.getUTCFullYear()}-W${String(semana).padStart(2,'0')}`;
-}
 function mostrarToast(msg, isErr){
   const wrap = document.getElementById('toast-wrap');
   const t = document.createElement('div');
   t.className = 'toast' + (isErr ? ' err' : '');
   t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="${isErr ? 'M12 8v5m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z' : 'M20 6L9 17l-5-5'}"/></svg><span>${msg}</span>`;
   wrap.appendChild(t);
+  if(wrap.showPopover){ if(wrap.matches(':popover-open')) wrap.hidePopover(); wrap.showPopover(); }
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3200);
 }
 function ausenciasDe(codigo){
   return AUSENCIAS.filter(a => a.codigo === codigo).sort((a,b)=> b.fecha.localeCompare(a.fecha));
-}
-function tieneCartaVigente(codigo){
-  // Se considera "con carta" si la ausencia MÁS RECIENTE del empleado tiene carta firmada
-  const hist = ausenciasDe(codigo);
-  if(hist.length===0) return null;
-  return !!hist[0].carta;
 }
 
 /* ============================================================
@@ -1653,7 +1628,7 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
   const btnGuardar = document.querySelector('#form-ausencia button[type=submit]');
   btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...';
   try{
-    await agregarAusenciaRemota(registro);
+    await apiPost({action:'add', registro});
     AUSENCIAS.push(registro);
     const lista = SUPERVISORES[empSeleccionado.depto] || Array(10).fill('');
     const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === supervisor.toLowerCase());
@@ -1806,7 +1781,7 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
       // peticiones momentáneamente si se suben muchas filas muy seguido.
       for(let intento=1; intento<=3 && !guardado; intento++){
         try{
-          await agregarAusenciaRemota(registro);
+          await apiPost({action:'add', registro});
           guardado = true;
         }catch(err){
           ultimoError = err;
@@ -1864,10 +1839,10 @@ function mostrarResultadoPlantilla(exitosas, conError, listaErrores){
     detalle.innerHTML = `<div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:8px;">Detalle de filas no subidas</div>` +
       listaErrores.map(e=>`<div class="alert-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><span>${e}</span></div>`).join('');
   }
-  document.getElementById('modal-resultado-plantilla-bg').classList.add('show');
+  document.getElementById('modal-resultado-plantilla-bg').showModal();
 }
 function cerrarModalResultadoPlantilla(){
-  document.getElementById('modal-resultado-plantilla-bg').classList.remove('show');
+  document.getElementById('modal-resultado-plantilla-bg').close();
 }
 
 /* ============================================================
@@ -1961,14 +1936,14 @@ function renderDashboard(){
     const hist = todasSusFaltas.filter(a=>a.motivo === 'Injustificada'); // más reciente primero
     const porSemana = {};
     hist.forEach(a=>{
-      const key = semanaISO(a.fecha);
+      const key = lunesDeLaSemana(a.fecha);
       if(!porSemana[key]) porSemana[key] = [];
       porSemana[key].push(a);
     });
-    Object.entries(porSemana).forEach(([semana, faltas])=>{
+    Object.values(porSemana).forEach(faltas=>{
       if(faltas.length >= 2){
         const masReciente = faltas.slice().sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
-        pendientes.push({ cod, semana, cantidad: faltas.length, ultima: masReciente });
+        pendientes.push({ cod, cantidad: faltas.length, ultima: masReciente });
       }
     });
   });
@@ -2228,9 +2203,9 @@ function abrirModal(titulo, hist){
         <span class="hm">${h.motivo}${h.notas ? ' — '+h.notas : ''}</span>
         <span class="hc">${badgeCarta(h.carta)}</span>
       </div>`).join('') + `</div>`;
-  document.getElementById('modal-bg').classList.add('show');
+  document.getElementById('modal-bg').showModal();
 }
-function cerrarModal(){ document.getElementById('modal-bg').classList.remove('show'); }
+function cerrarModal(){ document.getElementById('modal-bg').close(); }
 
 /* ============================================================
    EDITAR AUSENCIA
@@ -2250,10 +2225,10 @@ function abrirEditar(id){
   document.getElementById('edit-notas').value = a.notas || '';
   // La fecha de la falta SÍ admite fechas futuras al editar.
   document.getElementById('edit-fecha-carta').max = new Date().toISOString().slice(0,10);
-  document.getElementById('modal-editar-bg').classList.add('show');
+  document.getElementById('modal-editar-bg').showModal();
 }
 function cerrarModalEditar(){
-  document.getElementById('modal-editar-bg').classList.remove('show');
+  document.getElementById('modal-editar-bg').close();
   editandoId = null;
 }
 document.getElementById('edit-carta').addEventListener('change', function(){
@@ -2283,7 +2258,7 @@ document.getElementById('btn-guardar-edicion').addEventListener('click', async (
   const btn = document.getElementById('btn-guardar-edicion');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await actualizarAusenciaRemota(editandoId, campos);
+    await apiPost({action:'update', id: editandoId, campos});
     const idx = AUSENCIAS.findIndex(a=>a.id===editandoId);
     if(idx>-1) AUSENCIAS[idx] = { ...AUSENCIAS[idx], ...campos };
     mostrarToast('Ausencia actualizada correctamente');
@@ -2300,7 +2275,7 @@ document.getElementById('btn-guardar-edicion').addEventListener('click', async (
 async function eliminarAusencia(id){
   if(!confirm('¿Eliminar este registro de ausencia? Esta acción no se puede deshacer.')) return;
   try{
-    await eliminarAusenciaRemota(id);
+    await apiPost({action:'delete', id});
     AUSENCIAS = AUSENCIAS.filter(a=>a.id!==id);
     mostrarToast('Registro eliminado de Google Sheets');
     renderHistorial();
@@ -2577,7 +2552,7 @@ function mostrarResultadoCatalogo(agregados, actualizados, listaErrores){
       listaErrores.slice(0,300).map(e=>`<div class="alert-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg><span>${e}</span></div>`).join('') +
       (listaErrores.length>300 ? `<div class="small-muted" style="text-align:center;padding-top:8px;">+${listaErrores.length-300} avisos más (no se muestran todos por espacio).</div>` : '');
   }
-  document.getElementById('modal-resultado-plantilla-bg').classList.add('show');
+  document.getElementById('modal-resultado-plantilla-bg').showModal();
 }
 
 /* ============================================================
@@ -2597,7 +2572,7 @@ function abrirEditarEmpleado(codigo){
   document.getElementById('wrap-edit-emp-fecha-baja').style.display = (e.estatus==='BAJA') ? 'block' : 'none';
   document.getElementById('edit-emp-fecha-nacimiento').value = excelFechaATexto(e.fechaNacimiento) || '';
   document.getElementById('edit-emp-tipo').value = e.tipoEmpleado || '';
-  document.getElementById('modal-editar-emp-bg').classList.add('show');
+  document.getElementById('modal-editar-emp-bg').showModal();
 }
 document.getElementById('edit-emp-estatus').addEventListener('change', function(){
   const wrap = document.getElementById('wrap-edit-emp-fecha-baja');
@@ -2610,7 +2585,7 @@ document.getElementById('edit-emp-estatus').addEventListener('change', function(
   }
 });
 function cerrarModalEditarEmpleado(){
-  document.getElementById('modal-editar-emp-bg').classList.remove('show');
+  document.getElementById('modal-editar-emp-bg').close();
   editandoEmpleadoCodigo = null;
 }
 
@@ -2666,11 +2641,11 @@ function abrirModalNuevoEmpleado(){
   document.getElementById('new-emp-fecha-nacimiento').value = '';
   document.getElementById('new-emp-tipo').value = '';
   document.getElementById('new-emp-codigo-help').textContent = '';
-  document.getElementById('modal-nuevo-emp-bg').classList.add('show');
+  document.getElementById('modal-nuevo-emp-bg').showModal();
   setTimeout(()=>document.getElementById('new-emp-codigo').focus(), 50);
 }
 function cerrarModalNuevoEmpleado(){
-  document.getElementById('modal-nuevo-emp-bg').classList.remove('show');
+  document.getElementById('modal-nuevo-emp-bg').close();
 }
 document.getElementById('btn-abrir-nuevo-empleado').addEventListener('click', abrirModalNuevoEmpleado);
 
@@ -3215,8 +3190,10 @@ function etiquetaPeriodo(p){
   const rango = `${d0.getUTCDate()} al ${d1.getUTCDate()} de ${NOMBRES_MES[d1.getUTCMonth()]} ${d1.getUTCFullYear()}`;
   return `Periodo ${p.numero} — ${p.mes} (${rango})`;
 }
-[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado]].forEach(([id,cerrar])=>{
-  document.getElementById(id).addEventListener('click', (e)=>{ if(e.target.id===id) cerrar(); });
+[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado],['modal-resultado-plantilla-bg',cerrarModalResultadoPlantilla]].forEach(([id,cerrar])=>{
+  const d = document.getElementById(id);
+  d.addEventListener('click', (e)=>{ if(e.target===d) cerrar(); });
+  d.addEventListener('cancel', (e)=>{ e.preventDefault(); cerrar(); });
 });
 
 /* ============================================================
@@ -3387,9 +3364,9 @@ document.getElementById('btn-guardar-conexion').addEventListener('click', async 
   if(!url || !url.startsWith('http')){ mostrarToast('Pega una URL válida de Google Apps Script', true); return; }
   setScriptUrl(url);
   mostrarToast('Conectando con tu Google Sheet...');
-  await cargarDatos();
+  const ok = await cargarDatos(); // si falla, cargarDatos ya muestra el aviso de error
   renderDashboard();
-  mostrarToast(AUSENCIAS !== null ? 'Conexión guardada correctamente' : 'No se pudo conectar, revisa la URL');
+  if(ok) mostrarToast('Conexión guardada correctamente');
 });
 document.getElementById('btn-probar-conexion').addEventListener('click', async ()=>{
   const url = document.getElementById('inp-script-url').value.trim();
