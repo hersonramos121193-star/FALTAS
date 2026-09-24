@@ -3030,28 +3030,23 @@ document.getElementById('btn-guardar-supervisores').addEventListener('click', as
 /* ============================================================
    DASHBOARD CUMPLEAÑEROS
    ============================================================ */
-function calcularCumpleanerosDelMes(mesIndice){
-  // mesIndice: 0-11. Devuelve empleados ACTIVOS cuyo cumpleaños cae en ese mes.
+function cumpleanerosActivos(){
+  // Empleados ACTIVOS con fecha de nacimiento válida, con _mes (0-11) y _dia.
+  const anioActual = new Date().getFullYear();
   return EMPLEADOS
     .filter(e=>(e.estatus||'ALTA')==='ALTA')
     .map(e=>{
       const fn = excelFechaATexto(e.fechaNacimiento);
-      if(!fn || !/^\d{4}-\d{2}-\d{2}$/.test(fn)) return null;
-      const mes = parseInt(fn.slice(5,7),10) - 1;
-      const dia = parseInt(fn.slice(8,10),10);
-      if(mes !== mesIndice) return null;
-      const anioNac = parseInt(fn.slice(0,4),10);
-      const anioActual = new Date().getFullYear();
-      const edad = anioActual - anioNac;
-      return { ...e, _dia: dia, _mes: mesIndice, _edad: edad, _fechaNacNorm: fn };
+      if(!fn || !/^d{4}-d{2}-d{2}$/.test(fn)) return null;
+      return { ...e, _dia: parseInt(fn.slice(8,10),10), _mes: parseInt(fn.slice(5,7),10) - 1, _edad: anioActual - parseInt(fn.slice(0,4),10), _fechaNacNorm: fn };
     })
-    .filter(Boolean)
-    .sort((a,b)=> a._dia - b._dia);
+    .filter(Boolean);
+}
+function calcularCumpleanerosDelMes(mesIndice){
+  return cumpleanerosActivos().filter(e=>e._mes===mesIndice).sort((a,b)=> a._dia - b._dia);
 }
 function calcularCumpleanerosDelAnio(){
-  let lista = [];
-  for(let m=0;m<12;m++) lista = lista.concat(calcularCumpleanerosDelMes(m));
-  return lista;
+  return cumpleanerosActivos().sort((a,b)=> a._mes - b._mes || a._dia - b._dia);
 }
 function renderCumple(){
   const selMes = document.getElementById('f-cumple-mes').value;
@@ -3299,6 +3294,13 @@ document.getElementById('btn-exportar-cumple').addEventListener('click', ()=>{
   mostrarToast('Excel de cumpleañeros descargado.');
 });
 
+// Devuelve obtenerPlanta(nombre): crea en 'mapa' el acumulador de esa planta con los contadores 'base'.
+function plantaEn(mapa, base){
+  return nombre=>{
+    const clave = nombre || 'Sin planta';
+    return mapa[clave] ??= { planta: clave, ...base };
+  };
+}
 function empleadosConFechas(){
   return EMPLEADOS.map(e=>({ ...e, _fechaIngresoNorm: excelFechaATexto(e.fechaIngreso), _fechaBajaNorm: excelFechaATexto(e.fechaBaja) }));
 }
@@ -3360,11 +3362,7 @@ function renderRotacion(){
  */
 function calcularRotacionPorPlanta(empConFechas, anioActual){
   const porPlanta = {};
-  function obtenerPlanta(nombrePlanta){
-    const clave = nombrePlanta || 'Sin planta';
-    if(!porPlanta[clave]) porPlanta[clave] = { planta: clave, activos:0, altas:0, bajas:0 };
-    return porPlanta[clave];
-  }
+  const obtenerPlanta = plantaEn(porPlanta, { activos:0, altas:0, bajas:0 });
   empConFechas.forEach(e=>{
     if((e.estatus||'ALTA')==='ALTA') obtenerPlanta(e.depto).activos++;
   });
@@ -3803,11 +3801,7 @@ function renderKpisSemanales(){
 
   // ---- Detalle por planta ----
   const porPlanta = {};
-  function obtenerPlanta(nombrePlanta){
-    const clave = nombrePlanta || 'Sin planta';
-    if(!porPlanta[clave]) porPlanta[clave] = { planta: clave, ausencias:0, dobles:0, triples:0, altas:0, bajas:0 };
-    return porPlanta[clave];
-  }
+  const obtenerPlanta = plantaEn(porPlanta, { ausencias:0, dobles:0, triples:0, altas:0, bajas:0 });
   ausenciasPeriodo.forEach(a=> obtenerPlanta(a.depto).ausencias++);
   horasExtraPeriodo.forEach(r=>{ const p = obtenerPlanta(r.planta); p.dobles += numeroDe(r.horasDobles); p.triples += numeroDe(r.horasTriples); });
   altasPeriodo.forEach(e=> obtenerPlanta(e.depto).altas++);
