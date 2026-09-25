@@ -1448,6 +1448,9 @@ function mostrarToast(msg, isErr){
 function ausenciasDe(codigo){
   return AUSENCIAS.filter(a => a.codigo === codigo).sort((a,b)=> b.fecha.localeCompare(a.fecha));
 }
+// Cada falta guarda el puesto que tenía el empleado al registrarse; se muestra el
+// puesto ACTUAL del Directorio (si el empleado ya no existe, el guardado en la falta).
+function puestoActual(a){ return (EMP_BY_CODIGO[a.codigo] || a).puesto || ''; }
 
 /* ============================================================
    NAVEGACIÓN
@@ -2169,7 +2172,7 @@ function renderHistorial(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </td>
-      <td class="name-cell"><div class="nm">${a.nombre}</div><div class="cd">${a.puesto}</div></td>
+      <td class="name-cell"><div class="nm">${a.nombre}</div><div class="cd">${puestoActual(a)}</div></td>
       <td>#${a.codigo}</td>
       <td>${a.depto}</td>
       <td>${a.supervisor}</td>
@@ -2318,7 +2321,7 @@ async function exportarExcel(){
   const rows = datos.map(a=>({
     'No. Empleado': a.codigo,
     'Nombre': a.nombre,
-    'Puesto': a.puesto,
+    'Puesto': puestoActual(a),
     'Departamento': a.depto,
     'Supervisor': a.supervisor,
     'Fecha de falta': a.fecha,
@@ -3317,7 +3320,7 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
     ...filas(porSup, (sem, sup, v)=>{ const n = aCargo[sup] ? aCargo[sup].size : 0; return [sem, sup, v.faltas, n, porc(v.faltas, n*dias)]; })], [44,32,10,26,20]);
 
   hoja('Ausencias', [['Numero_Empleado','Nombre','Planta','Puesto','Supervisor','Fecha_Falta','Motivo','Carta_Compromiso','Fecha_Firma_Carta','Notas'],
-    ...c.ausenciasPeriodo.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha)).map(a=> [a.codigo, a.nombre, a.depto, a.puesto||'', a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||''])], [14,30,18,26,26,14,20,16,16,34]);
+    ...c.ausenciasPeriodo.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha)).map(a=> [a.codigo, a.nombre, a.depto, puestoActual(a), a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||''])], [14,30,18,26,26,14,20,16,16,34]);
 
   hoja('Metodología', [
     ['Selección: ' + seleccion],
