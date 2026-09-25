@@ -1297,6 +1297,59 @@ async function guardarAusencia(registro){
   throw ultimoError;
 }
 
+/* Cola de envíos: registrar, editar y eliminar faltas se ven al instante y se suben a
+   Google Sheets en segundo plano, en orden. Si falla la conexión se reintenta solo, y la
+   cola se guarda en el navegador para no perder nada si se cierra la página.
+   (Es seguro reintentar: el Apps Script ignora una falta con id repetido.) */
+const CLAVE_PENDIENTES = 'mmx_pendientes';
+let PENDIENTES = [];
+try{ PENDIENTES = JSON.parse(localStorage.getItem(CLAVE_PENDIENTES)) || []; }catch(e){}
+function guardarPendientes(){ try{ localStorage.setItem(CLAVE_PENDIENTES, JSON.stringify(PENDIENTES)); }catch(e){} }
+
+// Refleja un envío en los datos de pantalla (también se usa al recargar, para los que siguen pendientes).
+function aplicarLocal(p){
+  if(p.action==='add' && !AUSENCIAS.some(a=>a.id===p.registro.id)) AUSENCIAS.push({ ...p.registro });
+  if(p.action==='update'){ const a = AUSENCIAS.find(x=>x.id===p.id); if(a) Object.assign(a, p.campos); }
+  if(p.action==='delete') AUSENCIAS = AUSENCIAS.filter(a=>a.id!==p.id);
+}
+function encolar(p){
+  aplicarLocal(p);
+  PENDIENTES.push(p);
+  guardarPendientes();
+  procesarPendientes();
+}
+let procesandoPendientes = false;
+async function procesarPendientes(){
+  if(procesandoPendientes || !PENDIENTES.length || !getScriptUrl()) return;
+  procesandoPendientes = true;
+  try{
+    while(PENDIENTES.length){
+      const p = PENDIENTES[0];
+      try{
+        if(p.action==='add') await guardarAusencia(p.registro); else await apiPost(p);
+      }catch(err){
+        if(!/Ya existe/.test(err.message)){
+          // Sin conexión: se deja en la cola y se reintenta en 30 s.
+          actualizarEstadoConexion('aviso', `${PENDIENTES.length} cambio(s) pendiente(s) de subir a Google Sheets — se reintentará automáticamente`);
+          setTimeout(procesarPendientes, 30000);
+          return;
+        }
+        // Otra computadora ya registró esa falta: se quita de pantalla y se avisa.
+        AUSENCIAS = AUSENCIAS.filter(a=>a.id!==p.registro.id);
+        mostrarToast(err.message.replace(/^Error:\s*/,'') + '. No se guardó de nuevo.', true);
+        renderVista(document.querySelector('.view:not(.hidden)').id.slice(5));
+      }
+      PENDIENTES.shift();
+      guardarPendientes();
+    }
+    actualizarEstadoConexion(true, 'Conectado — los datos se sincronizan con tu Google Sheet');
+  }finally{
+    procesandoPendientes = false;
+  }
+}
+window.addEventListener('online', procesarPendientes);
+window.addEventListener('beforeunload', (e)=>{ if(PENDIENTES.length){ e.preventDefault(); e.returnValue = ''; } });
+
 async function apiGet(action){
   const url = getScriptUrl();
   if(!url) throw new Error('sin-configurar');
@@ -1394,6 +1447,7 @@ function aplicarDatos(datos){
   fusionarEmpleadosNuevos(datos.empleados);
   aplicarCambiosEmpleados(datos.cambiosEmpleados);
   FELICITADOS = Array.isArray(datos.felicitados) ? datos.felicitados : [];
+  PENDIENTES.forEach(aplicarLocal); // lo que aún no llega a Google no debe desaparecer de pantalla
   ausenciasConDatosDelDirectorio();
 }
 
@@ -1658,30 +1712,20 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
     supervisor, fecha, motivo, carta, fechaCarta, notas,
     creado: new Date().toISOString()
   };
-  const btnGuardar = document.querySelector('#form-ausencia button[type=submit]');
-  btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...';
-  try{
-    await guardarAusencia(registro);
-    AUSENCIAS.push(registro);
-    const lista = SUPERVISORES[empSeleccionado.depto] || Array(10).fill('');
-    const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === supervisor.toLowerCase());
-    if(!yaCapturado){
-      const idxLibre = lista.findIndex(n => !n || !n.trim());
-      if(idxLibre > -1){
-        lista[idxLibre] = supervisor;
-        SUPERVISORES[empSeleccionado.depto] = lista;
-        await guardarSupervisores();
-      }
+  encolar({action:'add', registro}); // se ve al instante; sube a Google en segundo plano
+  const lista = SUPERVISORES[empSeleccionado.depto] || Array(10).fill('');
+  const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === supervisor.toLowerCase());
+  if(!yaCapturado){
+    const idxLibre = lista.findIndex(n => !n || !n.trim());
+    if(idxLibre > -1){
+      lista[idxLibre] = supervisor;
+      SUPERVISORES[empSeleccionado.depto] = lista;
+      encolar({action:'saveSup', supervisores: JSON.parse(JSON.stringify(SUPERVISORES))});
     }
-    mostrarToast(`Ausencia registrada para ${empSeleccionado.nombre.split(' ')[0]} ${empSeleccionado.nombre.split(' ')[1]||''}`);
-    resetForm();
-    goTo('historial');
-  }catch(err){
-    mostrarToast(/Ya existe/.test(err.message) ? err.message.replace(/^Error:\s*/,'') + '. Revisa el Historial.' : 'No se pudo guardar en Google Sheets. Revisa tu conexión.', true);
-  }finally{
-    btnGuardar.disabled = false;
-    btnGuardar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Guardar ausencia';
   }
+  mostrarToast(`Ausencia registrada para ${empSeleccionado.nombre.split(' ')[0]} ${empSeleccionado.nombre.split(' ')[1]||''}`);
+  resetForm();
+  goTo('historial');
 });
 
 function resetForm(){
@@ -2283,41 +2327,19 @@ document.getElementById('btn-guardar-edicion').addEventListener('click', async (
   }
 
   const campos = { supervisor, fecha, motivo, carta, fechaCarta, notas };
-  const btn = document.getElementById('btn-guardar-edicion');
-  btn.disabled = true; btn.textContent = 'Guardando...';
-  try{
-    try{
-      await apiPost({action:'update', id: editandoId, campos});
-    }catch(err){
-      // La respuesta pudo perderse aunque Google sí guardó el cambio: se revisa en la hoja.
-      const lista = await apiGet('list').catch(()=>null);
-      const enHoja = Array.isArray(lista) && lista.find(a=>String(a.id)===String(editandoId));
-      if(!enHoja || enHoja.motivo!==motivo || enHoja.fecha!==fecha || String(enHoja.supervisor||'')!==supervisor) throw err;
-    }
-    const idx = AUSENCIAS.findIndex(a=>a.id===editandoId);
-    if(idx>-1) AUSENCIAS[idx] = { ...AUSENCIAS[idx], ...campos };
-    mostrarToast('Ausencia actualizada correctamente');
-    cerrarModalEditar();
-    renderHistorial();
-    renderDashboard();
-  }catch(err){
-    mostrarToast('No se pudo guardar el cambio. Revisa tu conexión.', true);
-  }finally{
-    btn.disabled = false; btn.textContent = 'Guardar cambios';
-  }
+  encolar({action:'update', id: editandoId, campos}); // se ve al instante; sube en segundo plano
+  mostrarToast('Ausencia actualizada correctamente');
+  cerrarModalEditar();
+  renderHistorial();
+  renderDashboard();
 });
 
-async function eliminarAusencia(id){
+function eliminarAusencia(id){
   if(!confirm('¿Eliminar este registro de ausencia? Esta acción no se puede deshacer.')) return;
-  try{
-    await apiPost({action:'delete', id});
-    AUSENCIAS = AUSENCIAS.filter(a=>a.id!==id);
-    mostrarToast('Registro eliminado de Google Sheets');
-    renderHistorial();
-    renderDashboard();
-  }catch(err){
-    mostrarToast('No se pudo eliminar. Revisa tu conexión.', true);
-  }
+  encolar({action:'delete', id});
+  mostrarToast('Registro eliminado');
+  renderHistorial();
+  renderDashboard();
 }
 
 ['f-buscar','f-depto','f-supervisor','f-motivo','f-carta','f-mes','f-acumuladas'].forEach(id=>{
@@ -3436,6 +3458,7 @@ document.getElementById('btn-probar-conexion').addEventListener('click', async (
     renderDashboard();
   }
   await cargarDatos(copia);
+  procesarPendientes(); // cambios que quedaron sin subir la vez anterior
   // Se vuelve a dibujar la vista abierta con los datos nuevos (Supervisores no,
   // para no borrar cambios que se estén capturando en ese momento).
   const vista = copia ? document.querySelector('.view:not(.hidden)').id.slice(5) : 'dashboard';
