@@ -1266,10 +1266,31 @@ let empSeleccionado = null;
 function getScriptUrl(){ return localStorage.getItem('mmx_script_url') || ''; }
 function setScriptUrl(url){ localStorage.setItem('mmx_script_url', url); }
 
+// Si Google no responde en este tiempo se deja de esperar (antes el botón se quedaba en "Guardando...").
+const LIMITE_ESPERA_MS = 60000;
+
+// Guarda una falta sin duplicarla. Si la respuesta de Google no llega, la falta pudo
+// guardarse de todos modos: se revisa en la hoja antes de reintentar o marcar error.
+// (El Apps Script además ignora un id repetido y rechaza otra falta del mismo día.)
+async function guardarAusencia(registro){
+  let ultimoError;
+  for(let intento=1; intento<=3; intento++){
+    try{ await apiPost({action:'add', registro}); return; }
+    catch(err){
+      ultimoError = err;
+      if(/Ya existe/.test(err.message)) throw err; // duplicado real: no reintentar
+      const lista = await apiGet('list').catch(()=>null);
+      if(Array.isArray(lista) && lista.some(a=>String(a.id)===String(registro.id))) return;
+      if(intento<3) await new Promise(r=>setTimeout(r, 800*intento));
+    }
+  }
+  throw ultimoError;
+}
+
 async function apiGet(action){
   const url = getScriptUrl();
   if(!url) throw new Error('sin-configurar');
-  const r = await fetch(`${url}?action=${action}`, {method:'GET'});
+  const r = await fetch(`${url}?action=${action}`, {method:'GET', signal: AbortSignal.timeout?.(LIMITE_ESPERA_MS)});
   if(!r.ok) throw new Error('http-'+r.status);
   return r.json();
 }
@@ -1279,7 +1300,8 @@ async function apiPost(payload){
   const r = await fetch(url, {
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout?.(LIMITE_ESPERA_MS)
   });
   if(!r.ok) throw new Error('http-'+r.status);
   const data = await r.json();
@@ -1631,7 +1653,7 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
   const btnGuardar = document.querySelector('#form-ausencia button[type=submit]');
   btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...';
   try{
-    await apiPost({action:'add', registro});
+    await guardarAusencia(registro);
     AUSENCIAS.push(registro);
     const lista = SUPERVISORES[empSeleccionado.depto] || Array(10).fill('');
     const yaCapturado = lista.some(n => n && n.trim().toLowerCase() === supervisor.toLowerCase());
@@ -1647,7 +1669,7 @@ document.getElementById('form-ausencia').addEventListener('submit', async (e)=>{
     resetForm();
     goTo('historial');
   }catch(err){
-    mostrarToast('No se pudo guardar en Google Sheets. Revisa tu conexión.', true);
+    mostrarToast(/Ya existe/.test(err.message) ? err.message.replace(/^Error:\s*/,'') + '. Revisa el Historial.' : 'No se pudo guardar en Google Sheets. Revisa tu conexión.', true);
   }finally{
     btnGuardar.disabled = false;
     btnGuardar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Guardar ausencia';
@@ -1780,16 +1802,11 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
     for(const registro of validas){
       let guardado = false;
       let ultimoError = null;
-      // Reintenta hasta 3 veces con una pequeña pausa: Google a veces rechaza
-      // peticiones momentáneamente si se suben muchas filas muy seguido.
-      for(let intento=1; intento<=3 && !guardado; intento++){
-        try{
-          await apiPost({action:'add', registro});
-          guardado = true;
-        }catch(err){
-          ultimoError = err;
-          if(intento<3) await new Promise(r=>setTimeout(r, 800*intento));
-        }
+      try{
+        await guardarAusencia(registro); // reintenta sin duplicar
+        guardado = true;
+      }catch(err){
+        ultimoError = err;
       }
       if(guardado){
         AUSENCIAS.push(registro);
@@ -2261,7 +2278,14 @@ document.getElementById('btn-guardar-edicion').addEventListener('click', async (
   const btn = document.getElementById('btn-guardar-edicion');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await apiPost({action:'update', id: editandoId, campos});
+    try{
+      await apiPost({action:'update', id: editandoId, campos});
+    }catch(err){
+      // La respuesta pudo perderse aunque Google sí guardó el cambio: se revisa en la hoja.
+      const lista = await apiGet('list').catch(()=>null);
+      const enHoja = Array.isArray(lista) && lista.find(a=>String(a.id)===String(editandoId));
+      if(!enHoja || enHoja.motivo!==motivo || enHoja.fecha!==fecha || String(enHoja.supervisor||'')!==supervisor) throw err;
+    }
     const idx = AUSENCIAS.findIndex(a=>a.id===editandoId);
     if(idx>-1) AUSENCIAS[idx] = { ...AUSENCIAS[idx], ...campos };
     mostrarToast('Ausencia actualizada correctamente');
