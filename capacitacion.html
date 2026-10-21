@@ -6,34 +6,33 @@
 <title>Capacitación · Metelmex</title>
 <style>
   :root{
-    --p1:#E5D7F5; /* lavanda claro */
-    --p2:#DD8FF2; /* orquídea */
-    --p3:#A94FE0; /* púrpura medio */
-    --p4:#8B0FE0; /* púrpura vivo (acento) */
-    --p5:#4A0468; /* morado oscuro (texto/fondo fuerte) */
-    --bg:#faf7fd;
+    /* Misma paleta que el dashboard de Control de Ausentismo */
+    --p1:#E7EDF3; /* azul muy claro (fondos suaves) */
+    --p2:#D9AF57; /* dorado claro */
+    --p3:#254D74; /* azul medio */
+    --p4:#1A3A5C; /* azul marino (acento) */
+    --p5:#122E4A; /* azul marino oscuro (texto/fondo fuerte) */
+    --gold:#C89B3C;
+    --bg:#F4F6F8;
     --card:#ffffff;
-    --ink:#2c1338;
-    --ink-soft:#6b5a78;
-    --line:#e9def5;
-    --ok:#2e9e5b;
-    --warn:#c8850a;
-    --danger:#c8354a;
-    --radius:14px;
-    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    --ink:#101826;
+    --ink-soft:#6B7B8C;
+    --line:#DCE3EA;
+    --ok:#2E7D4F;
+    --warn:#B8892B;
+    --danger:#B2432E;
+    --radius:10px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
-    background:
-      radial-gradient(1100px 500px at 100% -10%, rgba(139,15,224,.10), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgba(221,143,242,.16), transparent 60%),
-      var(--bg);
+    background:var(--bg);
     color:var(--ink);
     min-height:100vh;
   }
   header{
-    background:linear-gradient(120deg,var(--p5) 0%,var(--p4) 55%,var(--p3) 100%);
+    background:linear-gradient(120deg,#0B1F33 0%,var(--p5) 55%,var(--p4) 100%);
     color:#fff;
     padding:22px clamp(16px,4vw,40px);
     display:flex;
@@ -41,7 +40,7 @@
     justify-content:space-between;
     flex-wrap:wrap;
     gap:12px;
-    box-shadow:0 6px 24px rgba(74,4,104,.25);
+    box-shadow:0 6px 24px rgba(11,31,51,.25);
   }
   header .brand{display:flex;flex-direction:column;gap:2px;}
   header .brand small{
@@ -73,12 +72,12 @@
   nav button.active{
     color:var(--p5);
     background:var(--card);
-    border-bottom-color:var(--p4);
+    border-bottom-color:var(--gold);
   }
 
   main{padding:0 clamp(16px,4vw,40px) 60px;max-width:1280px;margin:0 auto;}
   .view{display:none;background:var(--card);border-radius:0 var(--radius) var(--radius) var(--radius);
-    padding:26px;box-shadow:0 10px 30px rgba(74,4,104,.06);border:1px solid var(--line);}
+    padding:26px;box-shadow:0 1px 2px rgba(11,31,51,.06), 0 6px 20px -8px rgba(11,31,51,.18);border:1px solid var(--line);}
   .view.active{display:block;}
 
   .alert-banner{
@@ -93,7 +92,7 @@
 
   .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;}
   .kpi{
-    background:linear-gradient(160deg,#fff,#f8f1fd);
+    background:#fff;
     border:1px solid var(--line);border-radius:var(--radius);
     padding:18px 20px;
   }
@@ -109,7 +108,7 @@
   label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:14px 0 6px;}
   input[type=text],input[type=password],input[type=number],input[type=date],select,textarea{
     width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;
-    font-size:14px;background:#fdfbfe;color:var(--ink);
+    font-size:14px;background:#fff;color:var(--ink);
   }
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--p3);}
   .row{display:flex;gap:14px;flex-wrap:wrap;}
@@ -124,14 +123,15 @@
   }
   .btn:active{transform:scale(.97);}
   .btn:disabled{opacity:.55;cursor:wait;}
-  .btn-primary{background:linear-gradient(120deg,var(--p4),var(--p3));color:#fff;}
-  .btn-ghost{background:#f3e9fb;color:var(--p5);}
+  .btn-primary{background:var(--p4);color:#fff;}
+  .btn-primary:hover{background:var(--p3);}
+  .btn-ghost{background:#fff;color:var(--p4);box-shadow:inset 0 0 0 1px var(--line);}
   .btn-danger{background:#fdeaec;color:var(--danger);}
   .btn-sm{padding:6px 12px;font-size:12.5px;border-radius:7px;}
 
   .emp-picker{
     border:1.5px solid var(--line);border-radius:10px;padding:10px;
-    max-height:230px;overflow-y:auto;background:#fdfbfe;
+    max-height:230px;overflow-y:auto;background:#fff;
   }
   .emp-picker input[type=text]{margin-bottom:8px;}
   .emp-opt{display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:6px;font-size:13.5px;}
@@ -147,14 +147,14 @@
   th:first-child{border-radius:8px 0 0 0;}
   th:last-child{border-radius:0 8px 0 0;}
   td{padding:10px 12px;border-bottom:1px solid var(--line);}
-  tr:hover td{background:#faf3fe;}
+  tr:hover td{background:var(--bg);}
   .table-wrap{overflow-x:auto;max-height:480px;overflow-y:auto;border-radius:10px;border:1px solid var(--line);}
 
   .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;}
   .badge-ok{background:#e3f7ea;color:var(--ok);}
   .badge-warn{background:#fff2dc;color:var(--warn);}
   .badge-danger{background:#fde5e8;color:var(--danger);}
-  .badge-neutral{background:#eee3f7;color:var(--p5);}
+  .badge-neutral{background:var(--p1);color:var(--p5);}
 
   .muted{color:var(--ink-soft);}
   .toast{
@@ -166,20 +166,20 @@
   .toast.error{background:var(--danger);}
 
   .config-box{
-    background:#f7f0fc;border:1px dashed var(--p3);border-radius:10px;padding:14px 16px;margin-bottom:18px;
+    background:var(--bg);border:1px dashed var(--p3);border-radius:10px;padding:14px 16px;margin-bottom:18px;
     font-size:13px;color:var(--p5);
   }
   .config-box code{background:#fff;padding:2px 6px;border-radius:5px;}
   .empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);}
 
   .config-overlay{
-    position:fixed;inset:0;background:rgba(42,10,60,.45);
+    position:fixed;inset:0;background:rgba(11,31,51,.45);
     display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;
   }
   .config-overlay.hidden{display:none;}
   .config-modal{
     background:#fff;border-radius:16px;padding:26px;max-width:560px;width:100%;
-    box-shadow:0 20px 60px rgba(42,10,60,.35);max-height:88vh;overflow-y:auto;
+    box-shadow:0 20px 60px rgba(11,31,51,.35);max-height:88vh;overflow-y:auto;
   }
   .upload-box{
     display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
@@ -187,7 +187,7 @@
   }
   .filter-bar{
     display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;
-    background:#faf5fe;border:1px solid var(--line);border-radius:12px;
+    background:var(--bg);border:1px solid var(--line);border-radius:12px;
     padding:14px 16px;margin-bottom:16px;
   }
   .filter-bar > div{min-width:170px;flex:1;}
@@ -960,7 +960,7 @@
     <h2 style="margin-top:0">✏️ Editar empleado</h2>
 
     <label>N° de empleado</label>
-    <input type="text" id="editEmpIdDisplay" disabled style="background:#f3ecf9">
+    <input type="text" id="editEmpIdDisplay" disabled style="background:#EEF2F6">
 
     <label>Nombre completo</label>
     <input type="text" id="editEmpNombre">
@@ -1757,7 +1757,7 @@ function renderCursos(){
         `</div>`
       : '<span class="muted">Sin participantes registrados</span>');
 
-    return filaPrincipal + `<tr><td colspan="7" style="background:#faf5fe;padding:14px 18px">${detalle}</td></tr>`;
+    return filaPrincipal + `<tr><td colspan="7" style="background:var(--bg);padding:14px 18px">${detalle}</td></tr>`;
   }).join('');
 }
 
@@ -3229,7 +3229,7 @@ document.getElementById('btnGuardarEmpleado').addEventListener('click', async ()
   }
   
   msg.style.color = 'var(--p5)';
-  msg.style.backgroundColor = 'rgba(74, 4, 104, 0.1)';
+  msg.style.backgroundColor = 'rgba(18, 46, 74, 0.1)';
   msg.textContent = 'Guardando…';
   msg.style.display = 'block';
   
