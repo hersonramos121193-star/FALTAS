@@ -2679,6 +2679,12 @@ function fechaCatalogo(valor){
   const d = new Date(iso+'T00:00:00Z');
   return (d.toISOString().slice(0,10)===iso && iso>='1900-01-01' && iso<='2100-12-31') ? iso : '';
 }
+// Fechas "vacías" que dejan otros sistemas al exportar: 00/01/1900, 01/01/1900, 31/12/9999 y, en ingreso/baja, 01/01/1960.
+function fechaEnBlanco(valor, aceptar1960){
+  if(!normTxt(valor) || (typeof valor === 'number' && (valor < 2 || valor >= 2958101))) return true; // 2958101 = 31/12/9999
+  const iso = fechaCatalogo(valor);
+  return iso === '1900-01-01' || (!aceptar1960 && iso === '1960-01-01');
+}
 
 async function descargarPlantillaCatalogo(){
   if(!(await cargarXLSX())) return;
@@ -2755,7 +2761,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
   try{
     if(!await cargarXLSX()) return;
     const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+    const wb = XLSX.read(buffer, { type: 'array' }); // fechas como número de Excel: sin desfase por zona horaria
     const hoja = wb.Sheets[wb.SheetNames.includes('Catalogo') ? 'Catalogo' : wb.SheetNames[0]];
     const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
     if(filas.length === 0){ mostrarToast('El archivo no tiene registros.', true); return; }
@@ -2780,6 +2786,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     }
     const plantasExistentes = new Set(DEPARTAMENTOS.map(d=>normTxt(d).toUpperCase()));
     const plantasNuevas = new Set();
+    const bajaAntesDeIngreso = [];
 
     // Se procesa con un Map para que, si el archivo trae el mismo número de
     // empleado repetido, se quede con la ÚLTIMA fila (no se duplica).
@@ -2795,23 +2802,28 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       const empExistente = EMP_BY_CODIGO[codigo];
       const texto = col=> normTxt(fila[col]).toUpperCase();
       const estatus = texto(colEstatus);
-      const nombre = texto(colNombre), depto = texto(colDepto), puesto = texto(colPuesto), tipoEmpleado = texto(colTipoEmpleado);
-      const fechaIngreso = fechaCatalogo(fila[colFechaIngreso]);
-      const fechaBaja = fechaCatalogo(fila[colFechaBaja]);
-      const fechaNacimiento = fechaCatalogo(fila[colFechaNacimiento]);
+      const nombre = texto(colNombre), depto = texto(colDepto), puesto = texto(colPuesto);
+      const tipoEmpleado = texto(colTipoEmpleado).normalize('NFD').replace(/[̀-ͯ]/g,''); // "Técnicos" = TECNICOS
+      const esBaja = estatus==='BAJA';
+      const crudo = { Fecha_Ingreso: fila[colFechaIngreso], Fecha_Baja: fila[colFechaBaja], Fecha_Nacimiento: fila[colFechaNacimiento] };
+      const vacia = { Fecha_Ingreso: fechaEnBlanco(crudo.Fecha_Ingreso), Fecha_Baja: !esBaja || fechaEnBlanco(crudo.Fecha_Baja), Fecha_Nacimiento: fechaEnBlanco(crudo.Fecha_Nacimiento, true) };
+      const fechaIngreso = vacia.Fecha_Ingreso ? '' : fechaCatalogo(crudo.Fecha_Ingreso);
+      const fechaBaja = vacia.Fecha_Baja ? '' : fechaCatalogo(crudo.Fecha_Baja);
+      const fechaNacimiento = vacia.Fecha_Nacimiento ? '' : fechaCatalogo(crudo.Fecha_Nacimiento);
 
+      // Activos: todo obligatorio. Bajas (ex empleados): basta con su Fecha_Baja; ingreso y nacimiento son opcionales.
       const problemas = [];
-      const falta = [['Nombre',nombre],['Planta',depto],['Puesto',puesto],['Estatus',estatus],['Fecha_Ingreso',fila[colFechaIngreso]],
-        ['Fecha_Nacimiento',fila[colFechaNacimiento]],['Tipo_Empleado',tipoEmpleado]].filter(([,v])=>!normTxt(v)).map(([n])=>n);
-      if(estatus==='BAJA' && !normTxt(fila[colFechaBaja])) falta.push('Fecha_Baja (obligatoria si el estatus es BAJA)');
+      const falta = [['Nombre',nombre],['Planta',depto],['Puesto',puesto],['Estatus',estatus],['Tipo_Empleado',tipoEmpleado]].filter(([,v])=>!v).map(([n])=>n);
+      if(!esBaja) ['Fecha_Ingreso','Fecha_Nacimiento'].forEach(n=>{ if(vacia[n]) falta.push(n); });
+      if(esBaja && vacia.Fecha_Baja) falta.push('Fecha_Baja (obligatoria si el estatus es BAJA)');
       if(falta.length) problemas.push('falta ' + falta.join(', '));
-      if(estatus && estatus!=='ALTA' && estatus!=='BAJA') problemas.push(`Estatus "${estatus}" no válido (ALTA o BAJA)`);
+      if(estatus && estatus!=='ALTA' && !esBaja) problemas.push(`Estatus "${estatus}" no válido (ALTA o BAJA)`);
       if(tipoEmpleado && !TIPOS_EMPLEADO.includes(tipoEmpleado)) problemas.push(`Tipo_Empleado "${tipoEmpleado}" no válido (${TIPOS_EMPLEADO.join(', ')})`);
-      [['Fecha_Ingreso',colFechaIngreso,fechaIngreso],['Fecha_Nacimiento',colFechaNacimiento,fechaNacimiento],['Fecha_Baja',colFechaBaja,fechaBaja]].forEach(([n,col,v])=>{
-        if(normTxt(fila[col]) && !v) problemas.push(`${n} "${normTxt(fila[col])}" no es una fecha válida (usa DD/MM/AAAA)`);
+      [['Fecha_Ingreso',fechaIngreso],['Fecha_Nacimiento',fechaNacimiento],['Fecha_Baja',fechaBaja]].forEach(([n,v])=>{
+        if(!vacia[n] && !v) problemas.push(`${n} "${normTxt(crudo[n])}" no es una fecha válida (usa DD/MM/AAAA)`);
       });
       if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso) problemas.push('Fecha_Nacimiento es posterior a Fecha_Ingreso');
-      if(estatus==='BAJA' && fechaBaja && fechaIngreso && fechaBaja < fechaIngreso) problemas.push('Fecha_Baja es anterior a Fecha_Ingreso');
+      if(esBaja && fechaBaja && fechaIngreso && fechaBaja < fechaIngreso) bajaAntesDeIngreso.push(codigo); // posible reingreso: se sube y solo se avisa
       if(problemas.length){
         errores.push(`Fila ${numFila} (#${codigo}): ${problemas.join('; ')}. No se subió; ${empExistente ? 'el empleado conserva sus datos actuales' : 'no se dio de alta'}.`);
         return;
@@ -2861,6 +2873,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const sub = document.getElementById('emp-pagesub');
     if(sub) sub.textContent = `Búsqueda por nombre o número de empleado — ${EMPLEADOS.length} registros`;
     if(duplicados>0) errores.unshift(`Se encontraron ${duplicados} número(s) de empleado repetidos dentro del mismo archivo — se usó la última fila de cada uno.`);
+    if(bajaAntesDeIngreso.length) errores.unshift(`${bajaAntesDeIngreso.length} empleado(s) en BAJA tienen Fecha_Baja anterior a Fecha_Ingreso (posible reingreso). Sí se subieron; revisa si las fechas son correctas: #${bajaAntesDeIngreso.slice(0,15).join(', #')}${bajaAntesDeIngreso.length>15?'…':''}`);
     if(plantasNuevas.size) errores.unshift(`Se crearon plantas nuevas: <b>${[...plantasNuevas].join(', ')}</b>. Si alguna es un error de escritura, corrígela y vuelve a subir.`);
     mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores);
   }catch(err){
