@@ -507,7 +507,7 @@ tbody tr:hover{background:var(--paper);}
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Empleados con más ausencias</div>
-          <span class="small-muted">Top 8 del periodo</span>
+          <span class="small-muted">Top 8 del periodo · solo activos</span>
         </div>
         <div class="panel-body" style="padding:0;">
           <div class="table-wrap">
@@ -803,10 +803,10 @@ tbody tr:hover{background:var(--paper);}
           <div class="pagesub" id="emp-pagesub">Búsqueda por nombre o número de empleado — 488 registros</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <a class="btn btn-ghost" href="plantilla_catalogo_empleados.xlsx" download style="text-decoration:none;" title="Descarga el catálogo actual precargado para corregirlo y volver a subirlo">
+          <button class="btn btn-ghost" onclick="descargarPlantillaCatalogo()" title="Descarga el catálogo actual precargado con todas las columnas obligatorias para corregirlo y volver a subirlo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
             Descargar plantilla
-          </a>
+          </button>
           <button class="btn btn-ghost solo-edicion" id="btn-actualizar-catalogo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
             Subir plantilla
@@ -1730,6 +1730,7 @@ function excelFechaATexto(valor){
   if(valor instanceof Date){
     return valor.toISOString().slice(0,10);
   }
+  if(typeof valor === 'string' && /^\d{5}(\.\d+)?$/.test(valor.trim())) valor = Number(valor); // serial de Excel guardado como texto (ej. "44160")
   if(typeof valor === 'number'){
     // Fecha serial de Excel (días desde 1899-12-30)
     const ms = Math.round((valor - 25569) * 86400 * 1000);
@@ -2248,8 +2249,8 @@ function renderDashboard(){
     }).join('');
   }
 
-  // top ausentes del periodo
-  const top = contar(a=>a.codigo).slice(0,8);
+  // top ausentes del periodo: solo empleados activos (los de BAJA no aparecen)
+  const top = contar(a=>a.codigo).filter(([cod])=> (EMP_BY_CODIGO[cod]?.estatus||'ALTA') !== 'BAJA').slice(0,8);
   const topEl = document.getElementById('top-ausentes');
   const filasTop = top.map(([cod,n])=>{
     const emp = EMP_BY_CODIGO[cod] || {nombre:'(No encontrado)', depto:'—'};
@@ -2615,6 +2616,67 @@ function renderEmpleados(){
    ACTUALIZAR CATÁLOGO DE EMPLEADOS DESDE EXCEL
    (fecha de ingreso, fecha de baja, estatus — carga masiva)
    ============================================================ */
+const TIPOS_EMPLEADO = ['ADMINISTRATIVO','OPERATIVO','SINDICALIZADO','SERVICIOS','TECNICOS'];
+const COLS_CATALOGO = ['Numero_Empleado','Nombre','Planta','Puesto','Estatus','Fecha_Ingreso','Fecha_Baja','Fecha_Nacimiento','Tipo_Empleado'];
+
+// Fecha del catálogo -> 'AAAA-MM-DD' o '' si no es válida. El texto DD/MM/AAAA se lee con el día primero (formato México).
+function fechaCatalogo(valor){
+  const s = normTxt(valor);
+  const dmy = s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+  const iso = dmy ? `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}` : excelFechaATexto(valor);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const d = new Date(iso+'T00:00:00Z');
+  return (d.toISOString().slice(0,10)===iso && iso>='1900-01-01' && iso<='2100-12-31') ? iso : '';
+}
+
+async function descargarPlantillaCatalogo(){
+  if(!(await cargarXLSX())) return;
+  const aFecha = v=>{ const iso = fechaCatalogo(v); if(!iso) return ''; const [y,m,d] = iso.split('-').map(Number); return new Date(y, m-1, d); };
+  const filas = EMPLEADOS.slice().sort((a,b)=> String(a.codigo).localeCompare(String(b.codigo), undefined, {numeric:true})).map(e=>{
+    const fila = [e.codigo, e.nombre||'', e.depto||'', e.puesto||'', e.estatus||'ALTA', aFecha(e.fechaIngreso),
+      e.estatus==='BAJA' ? aFecha(e.fechaBaja) : '', aFecha(e.fechaNacimiento), (e.tipoEmpleado||'').toUpperCase()];
+    const falta = COLS_CATALOGO.filter((c,i)=> c!=='Fecha_Baja' && fila[i]==='').concat(e.estatus==='BAJA' && fila[6]==='' ? ['Fecha_Baja'] : []);
+    return [...fila, falta.join(', ')];
+  });
+  const incompletos = filas.filter(f=>f[9]).length;
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([[...COLS_CATALOGO, 'FALTAN_DATOS (no se sube, solo referencia)'], ...filas], { cellDates:true, dateNF:'dd/mm/yyyy' });
+  ws['!cols'] = [14,34,20,28,9,13,13,16,16,40].map(wch=>({wch}));
+  ws['!autofilter'] = { ref: `A1:J${filas.length+1}` };
+  XLSX.utils.book_append_sheet(wb, ws, 'Catalogo');
+  const inst = XLSX.utils.aoa_to_sheet([
+    ['CÓMO LLENAR LA PLANTILLA DEL CATÁLOGO DE EMPLEADOS'], [],
+    ['1. Llena la hoja "Catalogo". No cambies los nombres de las columnas.'],
+    ['2. Una fila por empleado. Si el número de empleado ya existe, se actualiza; si no existe, se da de alta.'],
+    ['3. TODAS las columnas son obligatorias. Fecha_Baja solo es obligatoria si Estatus = BAJA (si es ALTA, déjala vacía).'],
+    ['4. Las filas incompletas o con datos no válidos NO se suben: ese empleado conserva sus datos actuales y la app te dice qué corregir.'],
+    ['5. Fechas en formato DD/MM/AAAA (ej. 07/10/1996 = 7 de octubre de 1996).'],
+    ['6. La columna FALTAN_DATOS te dice qué le falta hoy a cada empleado; no se sube.'],
+    ['7. Los empleados que no vengan en el archivo NO se modifican ni se dan de baja.'],
+    ['8. El historial de faltas no se toca al subir el catálogo.'], [],
+    [`Empleados en el catálogo: ${filas.length} · con datos incompletos hoy: ${incompletos}`], [],
+    ['Columna','Obligatoria','Formato / valores válidos'],
+    ['Numero_Empleado','Sí','Número de empleado (sin repetir)'],
+    ['Nombre','Sí','Nombre completo'],
+    ['Planta','Sí','Ver hoja Valores_validos (escribir una nueva crea otra planta)'],
+    ['Puesto','Sí','Texto'],
+    ['Estatus','Sí','ALTA o BAJA'],
+    ['Fecha_Ingreso','Sí','DD/MM/AAAA'],
+    ['Fecha_Baja','Solo si BAJA','DD/MM/AAAA, no anterior a Fecha_Ingreso'],
+    ['Fecha_Nacimiento','Sí','DD/MM/AAAA, anterior a Fecha_Ingreso'],
+    ['Tipo_Empleado','Sí', TIPOS_EMPLEADO.join(', ')],
+  ]);
+  inst['!cols'] = [{wch:20},{wch:14},{wch:90}];
+  XLSX.utils.book_append_sheet(wb, inst, 'Instrucciones');
+  const n = Math.max(DEPARTAMENTOS.length, TIPOS_EMPLEADO.length);
+  const val = XLSX.utils.aoa_to_sheet([['Estatus','Tipo_Empleado','Planta'],
+    ...Array.from({length:n}, (_,i)=> [['ALTA','BAJA'][i]||'', TIPOS_EMPLEADO[i]||'', DEPARTAMENTOS[i]||''])]);
+  val['!cols'] = [{wch:10},{wch:18},{wch:30}];
+  XLSX.utils.book_append_sheet(wb, val, 'Valores_validos');
+  XLSX.writeFile(wb, `plantilla_catalogo_empleados_${hoyISO()}.xlsx`);
+  mostrarToast(incompletos ? `Plantilla descargada. ${incompletos} empleado(s) tienen datos incompletos: revisa la columna FALTAN_DATOS.` : 'Plantilla descargada.');
+}
+
 function buscarColGenerico(headersReales, candidatos){
   const normalizados = headersReales.map(h=>({h, n: String(h).replace(/\s+/g,' ').trim().toLowerCase()}));
   for(const c of candidatos){
@@ -2643,7 +2705,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     if(!await cargarXLSX()) return;
     const buffer = await file.arrayBuffer();
     const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
-    const hoja = wb.Sheets[wb.SheetNames[0]];
+    const hoja = wb.Sheets[wb.SheetNames.includes('Catalogo') ? 'Catalogo' : wb.SheetNames[0]];
     const filas = XLSX.utils.sheet_to_json(hoja, { defval: '' });
     if(filas.length === 0){ mostrarToast('El archivo no tiene registros.', true); return; }
 
@@ -2658,10 +2720,15 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const colFechaNacimiento = buscarColGenerico(headersReales, ['fecha_nacimiento','fecha de nacimiento','fecha nacimiento','cumpleanos','cumpleaños','fecha_nac']);
     const colTipoEmpleado = buscarColGenerico(headersReales, ['tipo_empleado','tipo de empleado','tipo empleado','tipo']);
 
-    if(!colCodigo){
-      mostrarToast('No encontré una columna de número de empleado (Numero_Empleado). Verifica los encabezados del archivo.', true);
+    const faltanCols = [['Numero_Empleado',colCodigo],['Nombre',colNombre],['Planta',colDepto],['Puesto',colPuesto],['Estatus',colEstatus],
+      ['Fecha_Ingreso',colFechaIngreso],['Fecha_Baja',colFechaBaja],['Fecha_Nacimiento',colFechaNacimiento],['Tipo_Empleado',colTipoEmpleado]]
+      .filter(([,c])=>!c).map(([n])=>n);
+    if(faltanCols.length){
+      mostrarResultadoCatalogo(0, 0, [`Al archivo le faltan columnas obligatorias: <b>${faltanCols.join(', ')}</b>. No se subió nada. Descarga la plantilla desde "Descargar plantilla" y usa sus encabezados.`]);
       return;
     }
+    const plantasExistentes = new Set(DEPARTAMENTOS.map(d=>normTxt(d).toUpperCase()));
+    const plantasNuevas = new Set();
 
     // Se procesa con un Map para que, si el archivo trae el mismo número de
     // empleado repetido, se quede con la ÚLTIMA fila (no se duplica).
@@ -2675,24 +2742,30 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       if(porCodigo.has(codigo)) duplicados++;
 
       const empExistente = EMP_BY_CODIGO[codigo];
-      let estatus = empExistente ? (empExistente.estatus || 'ALTA') : 'ALTA';
-      if(colEstatus && String(fila[colEstatus]||'').trim()){
-        const val = String(fila[colEstatus]).trim().toUpperCase();
-        if(val==='ALTA' || val==='BAJA') estatus = val;
-        else errores.push(`Fila ${numFila}: el estatus "${fila[colEstatus]}" no es válido (debe ser ALTA o BAJA). Se dejó el estatus actual.`);
-      }
-      const nombre = colNombre ? String(fila[colNombre]||'').trim().toUpperCase() : '';
-      const depto = colDepto ? String(fila[colDepto]||'').trim().toUpperCase() : '';
-      const puesto = colPuesto ? String(fila[colPuesto]||'').trim().toUpperCase() : '';
-      const fechaIngreso = colFechaIngreso ? excelFechaATexto(fila[colFechaIngreso]) : '';
-      const fechaBaja = colFechaBaja ? excelFechaATexto(fila[colFechaBaja]) : '';
-      const fechaNacimiento = colFechaNacimiento ? excelFechaATexto(fila[colFechaNacimiento]) : '';
-      const tipoEmpleado = colTipoEmpleado ? String(fila[colTipoEmpleado]||'').trim().toUpperCase() : '';
+      const texto = col=> normTxt(fila[col]).toUpperCase();
+      const estatus = texto(colEstatus);
+      const nombre = texto(colNombre), depto = texto(colDepto), puesto = texto(colPuesto), tipoEmpleado = texto(colTipoEmpleado);
+      const fechaIngreso = fechaCatalogo(fila[colFechaIngreso]);
+      const fechaBaja = fechaCatalogo(fila[colFechaBaja]);
+      const fechaNacimiento = fechaCatalogo(fila[colFechaNacimiento]);
 
-      if(!empExistente && (!nombre || !depto)){
-        errores.push(`Fila ${numFila}: el empleado #${codigo} no existe en el directorio y la fila no trae Nombre/Planta para darlo de alta, se omitió.`);
+      const problemas = [];
+      const falta = [['Nombre',nombre],['Planta',depto],['Puesto',puesto],['Estatus',estatus],['Fecha_Ingreso',fila[colFechaIngreso]],
+        ['Fecha_Nacimiento',fila[colFechaNacimiento]],['Tipo_Empleado',tipoEmpleado]].filter(([,v])=>!normTxt(v)).map(([n])=>n);
+      if(estatus==='BAJA' && !normTxt(fila[colFechaBaja])) falta.push('Fecha_Baja (obligatoria si el estatus es BAJA)');
+      if(falta.length) problemas.push('falta ' + falta.join(', '));
+      if(estatus && estatus!=='ALTA' && estatus!=='BAJA') problemas.push(`Estatus "${estatus}" no válido (ALTA o BAJA)`);
+      if(tipoEmpleado && !TIPOS_EMPLEADO.includes(tipoEmpleado)) problemas.push(`Tipo_Empleado "${tipoEmpleado}" no válido (${TIPOS_EMPLEADO.join(', ')})`);
+      [['Fecha_Ingreso',colFechaIngreso,fechaIngreso],['Fecha_Nacimiento',colFechaNacimiento,fechaNacimiento],['Fecha_Baja',colFechaBaja,fechaBaja]].forEach(([n,col,v])=>{
+        if(normTxt(fila[col]) && !v) problemas.push(`${n} "${normTxt(fila[col])}" no es una fecha válida (usa DD/MM/AAAA)`);
+      });
+      if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso) problemas.push('Fecha_Nacimiento es posterior a Fecha_Ingreso');
+      if(estatus==='BAJA' && fechaBaja && fechaIngreso && fechaBaja < fechaIngreso) problemas.push('Fecha_Baja es anterior a Fecha_Ingreso');
+      if(problemas.length){
+        errores.push(`Fila ${numFila} (#${codigo}): ${problemas.join('; ')}. No se subió; ${empExistente ? 'el empleado conserva sus datos actuales' : 'no se dio de alta'}.`);
         return;
       }
+      if(!plantasExistentes.has(depto)) plantasNuevas.add(depto);
 
       porCodigo.set(codigo, {
         codigo, nombre: nombre || (empExistente?empExistente.nombre:''), depto: depto || (empExistente?empExistente.depto:''),
@@ -2737,6 +2810,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const sub = document.getElementById('emp-pagesub');
     if(sub) sub.textContent = `Búsqueda por nombre o número de empleado — ${EMPLEADOS.length} registros`;
     if(duplicados>0) errores.unshift(`Se encontraron ${duplicados} número(s) de empleado repetidos dentro del mismo archivo — se usó la última fila de cada uno.`);
+    if(plantasNuevas.size) errores.unshift(`Se crearon plantas nuevas: <b>${[...plantasNuevas].join(', ')}</b>. Si alguna es un error de escritura, corrígela y vuelve a subir.`);
     mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores);
   }catch(err){
     mostrarToast('No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
