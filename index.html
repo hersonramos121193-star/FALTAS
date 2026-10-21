@@ -242,6 +242,23 @@ tbody tr:hover{background:var(--paper);}
   .form-grid{grid-template-columns:1fr;}
 }
 .hidden{display:none !important;}
+/* ---------- DASHBOARD: comparativo, barras con clic, impresión ---------- */
+.kpi-delta{font-size:11px;color:var(--ink-500);margin-top:5px;}
+.delta-up{color:var(--bad);font-weight:700;}
+.delta-down{color:var(--ok);font-weight:700;}
+.delta-eq{color:var(--ink-500);}
+.dash-bar{margin-bottom:12px;}
+.dash-bar[onclick]{cursor:pointer;}
+.dash-bar[onclick]:hover span:first-child{color:var(--navy-800);text-decoration:underline;}
+.dash-pt{cursor:pointer;}
+@media print{
+  .sidebar,.no-print,#dash-conn-banner,.toast{display:none !important;}
+  .main{padding:0;}
+  body{background:#fff;}
+  .panel,.kpi{box-shadow:none;break-inside:avoid;}
+  .two-col{grid-template-columns:1fr 1fr;}
+}
+
 .small-muted{font-size:11.5px;color:var(--ink-500);}
 ::-webkit-scrollbar{width:9px;height:9px;}
 ::-webkit-scrollbar-thumb{background:#C6D0DA;border-radius:99px;}
@@ -315,32 +332,78 @@ tbody tr:hover{background:var(--paper);}
       <div class="topbar">
         <div>
           <div class="pagetitle">Dashboard Ausentismo</div>
-          <div class="pagesub">Resumen general de faltas registradas</div>
+          <div class="pagesub" id="dash-pagesub">Resumen general de faltas registradas</div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
+          <button class="btn btn-ghost" onclick="exportarDashboardExcel()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
+            Excel
+          </button>
+          <button class="btn btn-ghost" onclick="imprimirDashboard()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9V3h12v6M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v7H6z"/></svg>
+            PDF
+          </button>
           <button class="btn btn-primary solo-edicion" id="btn-goto-registro" onclick="goTo('registro')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
             Registrar ausencia
           </button>
         </div>
       </div>
-
       <div id="dash-conn-banner" class="hidden" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:9px;background:var(--warn-bg);border:1px solid #F0DFC4;margin-bottom:18px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--warn);flex-shrink:0;"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
         <span style="font-size:12.5px;color:var(--ink-900);"><b>Aún no conectas esta app con Google Sheets.</b> Los datos no se están guardando en la nube. Configúralo en "Conexión".</span>
         <button class="btn btn-gold btn-sm" style="margin-left:auto;" onclick="goTo('conexion')">Configurar ahora</button>
       </div>
 
+      <div class="panel" style="margin-bottom:18px;">
+        <div class="panel-body">
+          <div class="filters no-print" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+            <div class="field" style="max-width:220px;flex:1;min-width:170px;">
+              <label>Periodo</label>
+              <select id="d-periodo"></select>
+            </div>
+            <div class="field hidden d-custom" style="max-width:170px;flex:1;min-width:140px;">
+              <label>Desde</label>
+              <input type="date" id="d-desde">
+            </div>
+            <div class="field hidden d-custom" style="max-width:170px;flex:1;min-width:140px;">
+              <label>Hasta</label>
+              <input type="date" id="d-hasta">
+            </div>
+            <div class="field" style="max-width:220px;flex:1;min-width:170px;">
+              <label>Planta / Depto.</label>
+              <select id="d-planta"></select>
+            </div>
+            <div class="field" style="max-width:240px;flex:1;min-width:170px;">
+              <label>Supervisor</label>
+              <select id="d-supervisor"></select>
+            </div>
+            <div class="field" style="justify-content:flex-end;">
+              <button class="btn btn-ghost" onclick="limpiarFiltrosDashboard()">Limpiar</button>
+            </div>
+          </div>
+          <div class="small-muted" id="d-rango-txt" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label">Ausencias registradas</div>
           <div class="kpi-value" id="kpi-total">0</div>
-          <div class="kpi-sub">Histórico completo</div>
+          <div class="kpi-sub" id="kpi-total-sub">Histórico completo</div>
+          <div class="kpi-delta" id="kpi-total-delta"></div>
         </div>
         <div class="kpi gold">
           <div class="kpi-label">Empleados con faltas</div>
           <div class="kpi-value" id="kpi-empleados">0</div>
-          <div class="kpi-sub" id="kpi-empleados-sub">de 488 activos</div>
+          <div class="kpi-sub" id="kpi-empleados-sub">—</div>
+          <div class="kpi-delta" id="kpi-empleados-delta"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">% Ausentismo</div>
+          <div class="kpi-value" id="kpi-pct">0%</div>
+          <div class="kpi-sub" id="kpi-pct-sub">—</div>
+          <div class="kpi-delta" id="kpi-pct-delta"></div>
         </div>
         <div class="kpi ok">
           <div class="kpi-label">Con carta compromiso</div>
@@ -351,6 +414,7 @@ tbody tr:hover{background:var(--paper);}
           <div class="kpi-label">Sin carta compromiso</div>
           <div class="kpi-value" id="kpi-carta-no">0</div>
           <div class="kpi-sub">pendientes de firmar</div>
+          <div class="kpi-delta" id="kpi-carta-no-delta"></div>
         </div>
       </div>
 
@@ -358,6 +422,7 @@ tbody tr:hover{background:var(--paper);}
         <div class="panel">
           <div class="panel-head">
             <div class="panel-title">Ausencias por motivo</div>
+            <span class="small-muted no-print">Clic en una barra para ver el detalle</span>
           </div>
           <div class="panel-body">
             <div id="motivo-bars"></div>
@@ -382,28 +447,44 @@ tbody tr:hover{background:var(--paper);}
         </div>
       </div>
 
+      <div class="two-col">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Ausencias por supervisor</div>
+            <span class="small-muted">Faltas de la gente a cargo de cada supervisor</span>
+          </div>
+          <div class="panel-body">
+            <div id="supervisor-bars"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">Faltas por día de la semana</div>
+          </div>
+          <div class="panel-body">
+            <div id="dia-bars"></div>
+          </div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Ausencias por supervisor</div>
-          <span class="small-muted">Total de faltas acumuladas de la gente a cargo de cada supervisor</span>
+          <div class="panel-title">Tendencia <span>— últimos 12 meses</span></div>
+          <span class="small-muted">Respeta planta y supervisor; clic en un punto para ver ese mes</span>
         </div>
         <div class="panel-body">
-          <div id="supervisor-bars"></div>
+          <div id="mes-tendencia"></div>
         </div>
       </div>
 
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Faltas por mes</div>
-          <span class="small-muted">General, por planta/departamento y por motivo</span>
+          <span class="small-muted">Meses del periodo seleccionado, por planta/departamento y por motivo</span>
         </div>
-        <div class="panel-body" style="padding-top:6px;">
-          <div style="margin-bottom:18px;">
-            <div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:10px;">Total general por mes</div>
-            <div id="mes-general-bars"></div>
-          </div>
-          <div style="margin-bottom:18px;">
-            <div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:10px;">Desglose por planta / departamento</div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:22px;">
+          <div>
+            <div class="small-muted" style="margin-bottom:8px;font-weight:600;">Desglose por planta / departamento</div>
             <div class="table-wrap">
               <table>
                 <thead><tr id="mes-depto-head"></tr></thead>
@@ -412,7 +493,7 @@ tbody tr:hover{background:var(--paper);}
             </div>
           </div>
           <div>
-            <div class="small-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11px;margin-bottom:10px;">Desglose por motivo de falta</div>
+            <div class="small-muted" style="margin-bottom:8px;font-weight:600;">Desglose por motivo de falta</div>
             <div class="table-wrap">
               <table>
                 <thead><tr id="mes-motivo-head"></tr></thead>
@@ -425,10 +506,10 @@ tbody tr:hover{background:var(--paper);}
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Empleados con más ausencias acumuladas</div>
-          <span class="small-muted">Top 8</span>
+          <div class="panel-title">Empleados con más ausencias</div>
+          <span class="small-muted">Top 8 del periodo</span>
         </div>
-        <div class="panel-body" style="padding-top:6px;">
+        <div class="panel-body" style="padding:0;">
           <div class="table-wrap">
             <table>
               <thead><tr><th>Empleado</th><th>No.</th><th>Depto.</th><th>Supervisor</th><th>Ausencias</th><th>Carta compromiso</th></tr></thead>
@@ -650,7 +731,7 @@ tbody tr:hover{background:var(--paper);}
       <div class="topbar">
         <div>
           <div class="pagetitle">Historial de ausencias</div>
-          <div class="pagesub"><span id="hist-count">0</span> registros encontrados</div>
+          <div class="pagesub"><span id="hist-count">0</span> registros encontrados<span id="hist-rango"></span></div>
         </div>
         <button class="btn btn-gold" onclick="exportarExcel()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"/></svg>
@@ -1832,74 +1913,219 @@ function lunesDeLaSemana(fechaStr){
 }
 const DIAS_LABORABLES_SEMANA = 6; // lunes a sábado — ajustable si tu operación trabaja distinto
 
+/* ---------- Filtros del Dashboard: periodo, planta y supervisor ---------- */
+const DIAS_SEMANA = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+function hoyISO(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function sumarDias(iso, n){ const d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+function difDias(desde, hasta){ return Math.round((new Date(hasta+'T00:00:00Z') - new Date(desde+'T00:00:00Z'))/86400000); }
+function finDeMes(ym){ const [y,m] = ym.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).toISOString().slice(0,10); }
+function mesAnterior(ym){ const [y,m] = ym.split('-').map(Number); return m===1 ? `${y-1}-12` : `${y}-${String(m-1).padStart(2,'0')}`; }
+function etiquetaMes(ym){ const [y,m] = ym.split('-'); return `${NOMBRES_MES[parseInt(m,10)-1]} ${y}`; }
+// Días laborables (lunes=0 ... según DIAS_LABORABLES_SEMANA) entre dos fechas, ambas incluidas.
+function diasLaborables(desde, hasta){
+  let n = 0;
+  for(let f = desde; f <= hasta; f = sumarDias(f,1)){
+    if((new Date(f+'T00:00:00Z').getUTCDay()+6)%7 < DIAS_LABORABLES_SEMANA) n++;
+  }
+  return n;
+}
+
+function poblarFiltrosDashboard(){
+  const conservar = (sel, html)=>{ const v = sel.value; sel.innerHTML = html; if([...sel.options].some(o=>o.value===v)) sel.value = v; };
+  const meses = [...new Set(AUSENCIAS.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  const selPeriodo = document.getElementById('d-periodo'), sinElegir = !selPeriodo.value;
+  conservar(selPeriodo,
+    '<option value="todo">Todo el histórico</option><option value="anio">Año en curso</option>' +
+    '<option value="mes">Mes actual</option><option value="mesant">Mes anterior</option>' +
+    meses.map(m=>`<option value="m:${m}">${etiquetaMes(m)}</option>`).join('') +
+    '<option value="custom">Rango personalizado…</option>');
+  if(sinElegir) selPeriodo.value = 'mes'; // al abrir y al limpiar, el Dashboard arranca en el mes actual
+  conservar(document.getElementById('d-planta'),
+    '<option value="">Todas las plantas</option>' + DEPARTAMENTOS.map(d=>`<option value="${normTxt(d)}">${d}</option>`).join(''));
+  const sups = [...new Set(AUSENCIAS.map(a=>normTxt(a.supervisor)))].filter(Boolean).sort();
+  conservar(document.getElementById('d-supervisor'),
+    '<option value="">Todos los supervisores</option>' + sups.map(s=>`<option value="${s}">${s}</option>`).join(''));
+}
+
+// Devuelve el rango elegido {desde, hasta, etiqueta} y el periodo anterior con el que se compara (o null).
+function rangoDashboard(){
+  const hoy = hoyISO();
+  const periodo = document.getElementById('d-periodo').value || 'todo';
+  document.querySelectorAll('.d-custom').forEach(el=> el.classList.toggle('hidden', periodo!=='custom'));
+  const primera = AUSENCIAS.reduce((min,a)=> a.fecha && a.fecha < min ? a.fecha : min, hoy);
+  const deMes = ym=>{
+    const desde = ym+'-01', hasta = finDeMes(ym);
+    // Mes cerrado: contra el mes anterior completo. Mes en curso: contra los mismos días del mes anterior.
+    const pm = mesAnterior(ym);
+    const pHasta = hasta < hoy ? finDeMes(pm) : sumarDias(pm+'-01', difDias(desde, hoy));
+    return { desde, hasta, etiqueta: etiquetaMes(ym),
+      prev: { desde: pm+'-01', hasta: pHasta < finDeMes(pm) ? pHasta : finDeMes(pm), etiqueta: etiquetaMes(pm) } };
+  };
+  if(periodo==='anio'){
+    const y = Number(hoy.slice(0,4));
+    return { desde: `${y}-01-01`, hasta: `${y}-12-31`, etiqueta: `Año ${y}`,
+      prev: { desde: `${y-1}-01-01`, hasta: `${y-1}${hoy.slice(4)}`, etiqueta: `mismo lapso de ${y-1}` } };
+  }
+  if(periodo==='mes') return deMes(hoy.slice(0,7));
+  if(periodo==='mesant') return deMes(mesAnterior(hoy.slice(0,7)));
+  if(periodo.startsWith('m:')) return deMes(periodo.slice(2));
+  if(periodo==='custom'){
+    let desde = document.getElementById('d-desde').value || primera;
+    let hasta = document.getElementById('d-hasta').value || hoy;
+    if(desde > hasta) [desde, hasta] = [hasta, desde];
+    const n = difDias(desde, hasta < hoy ? hasta : hoy) + 1;
+    return { desde, hasta, etiqueta: `${fmtFecha(desde)} al ${fmtFecha(hasta)}`,
+      prev: n>0 ? { desde: sumarDias(desde, -n), hasta: sumarDias(desde, -1), etiqueta: `${n} días anteriores` } : null };
+  }
+  return { desde: primera, hasta: hoy, etiqueta: 'Todo el histórico', prev: null };
+}
+
+function limpiarFiltrosDashboard(){
+  ['d-periodo','d-planta','d-supervisor','d-desde','d-hasta'].forEach(id=> document.getElementById(id).value = '');
+  renderDashboard();
+}
+
+// Abre el Historial con los filtros del Dashboard más los del elemento al que se dio clic.
+function verEnHistorial(extra){
+  const c = dashCache;
+  poblarFiltrosHistorial(); // crea las opciones antes de asignar valores
+  ['f-buscar','f-depto','f-supervisor','f-motivo','f-carta','f-mes','f-acumuladas'].forEach(id=> document.getElementById(id).value = '');
+  document.getElementById('f-depto').value = extra.buscar ? '' : c.planta;
+  document.getElementById('f-supervisor').value = extra.supervisor ?? c.sup;
+  if(extra.motivo) document.getElementById('f-motivo').value = extra.motivo;
+  if(extra.buscar) document.getElementById('f-buscar').value = extra.buscar;
+  histRango = extra.mes ? { desde: extra.mes+'-01', hasta: finDeMes(extra.mes) }
+            : extra.buscar ? null
+            : (c.periodo==='todo' ? null : { desde: c.rango.desde, hasta: c.rango.hasta });
+  goTo('historial');
+}
+
+function barraHTML(etiqueta, n, max, color, onclick){
+  return `<div class="dash-bar" ${onclick ? `onclick="${onclick}" title="Ver detalle en Historial"` : ''}>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+          <span style="font-weight:600;color:var(--ink-700);">${etiqueta}</span>
+          <span style="color:var(--ink-500);">${n}</span>
+        </div>
+        <div style="background:var(--paper);border-radius:99px;height:8px;overflow:hidden;">
+          <div style="width:${(n/Math.max(1,max))*100}%;background:${color};height:100%;border-radius:99px;"></div>
+        </div>
+      </div>`;
+}
+// Escapa comillas para meter un texto dentro de onclick="...('texto')".
+const jsArg = s=> String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+
+// Flecha de cambio contra el periodo anterior. En faltas, subir es malo (rojo).
+function deltaHTML(actual, previo, esPct){
+  if(previo===null || previo===undefined) return '';
+  const dif = Math.round((actual-previo)*10)/10;
+  if(dif===0) return `<span class="delta-eq">= igual que el periodo anterior</span>`;
+  const txt = esPct ? `${Math.abs(dif)} pts` : (previo>0 ? `${Math.round(Math.abs(dif)/previo*100)}%` : `+${dif}`);
+  return `<span class="${dif>0?'delta-up':'delta-down'}">${dif>0?'▲':'▼'} ${txt}</span> vs anterior (${esPct ? previo+'%' : previo})`;
+}
+
+// Línea de faltas por mes (SVG, sin librerías).
+function tendenciaSVG(meses, valores){
+  const W = 760, H = 220, pl = 36, pr = 16, pt = 18, pb = 34;
+  const max = Math.max(1, ...valores);
+  const x = i=> pl + (meses.length===1 ? 0 : i*(W-pl-pr)/(meses.length-1));
+  const y = v=> pt + (H-pt-pb) * (1 - v/max);
+  const guias = [0, .5, 1].map(f=>{ const v = Math.round(max*f), yy = y(v);
+    return `<line x1="${pl}" x2="${W-pr}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${pl-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="var(--ink-500)">${v}</text>`; }).join('');
+  const linea = valores.map((v,i)=> `${i?'L':'M'}${x(i)},${y(v)}`).join(' ');
+  const puntos = valores.map((v,i)=> `<g class="dash-pt" onclick="verEnHistorial({mes:'${meses[i]}'})"><title>${etiquetaMes(meses[i])}: ${v} faltas</title>
+      <circle cx="${x(i)}" cy="${y(v)}" r="10" fill="transparent"/><circle cx="${x(i)}" cy="${y(v)}" r="4" fill="var(--gold-500)" stroke="#fff" stroke-width="1.5"/>
+      <text x="${x(i)}" y="${y(v)-9}" text-anchor="middle" font-size="10.5" font-weight="700" fill="var(--navy-900)">${v}</text>
+      <text x="${x(i)}" y="${H-12}" text-anchor="middle" font-size="10" fill="var(--ink-500)">${NOMBRES_MES[parseInt(meses[i].slice(5),10)-1].slice(0,3)} ${meses[i].slice(2,4)}</text></g>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;" role="img" aria-label="Faltas por mes, últimos 12 meses">
+    ${guias}<path d="${linea}" fill="none" stroke="var(--navy-800)" stroke-width="2.2"/>${puntos}</svg>`;
+}
+
+let dashCache = null;
 function renderDashboard(){
-  const total = AUSENCIAS.length;
+  poblarFiltrosDashboard();
+  const periodo = document.getElementById('d-periodo').value || 'todo';
+  const planta = document.getElementById('d-planta').value;
+  const sup = document.getElementById('d-supervisor').value;
+  const rango = rangoDashboard();
+  const hoy = hoyISO();
+
+  // BASE = planta + supervisor (sin periodo). LISTA = BASE dentro del periodo.
+  const BASE = AUSENCIAS.filter(a=> (!planta || normTxt(a.depto)===planta) && (!sup || normTxt(a.supervisor)===sup));
+  const enRango = (a, r)=> a.fecha && a.fecha >= r.desde && a.fecha <= r.hasta;
+  const LISTA = BASE.filter(a=> enRango(a, rango));
+  const PREV = rango.prev ? BASE.filter(a=> enRango(a, rango.prev)) : null;
+
+  // Plantilla de referencia para el % de ausentismo: activos de hoy en la planta;
+  // con supervisor es aproximado (empleados distintos que alguna vez faltaron con él).
+  const activosPlanta = EMPLEADOS.filter(e=> (e.estatus||'ALTA')==='ALTA' && (!planta || normTxt(e.depto)===planta)).length;
+  const plantilla = sup ? new Set(BASE.map(a=>a.codigo)).size : activosPlanta;
+  const pctDe = (lista, r)=>{ const dias = diasLaborables(r.desde, r.hasta < hoy ? r.hasta : hoy);
+    return plantilla*dias>0 ? Math.round(lista.length/(plantilla*dias)*1000)/10 : 0; };
+  const diasRango = diasLaborables(rango.desde, rango.hasta < hoy ? rango.hasta : hoy);
+
+  const total = LISTA.length;
+  const codigosUnicos = [...new Set(LISTA.map(a=>a.codigo))];
+  const conCarta = LISTA.filter(a=>a.carta).length;
+  const pctAus = pctDe(LISTA, rango);
+  const filtrosTxt = [planta && `Planta: ${planta}`, sup && `Supervisor: ${sup}`].filter(Boolean).join(' · ');
+  document.getElementById('dash-pagesub').textContent = `${rango.etiqueta}${filtrosTxt ? ' · '+filtrosTxt : ''}`;
+  document.getElementById('d-rango-txt').textContent = periodo==='todo'
+    ? `Mostrando todo el histórico (${fmtFecha(rango.desde)} a hoy). Elige un periodo para comparar contra el anterior.`
+    : `Del ${fmtFecha(rango.desde)} al ${fmtFecha(rango.hasta)}` + (rango.prev ? ` · se compara contra ${rango.prev.etiqueta} (${fmtFecha(rango.prev.desde)} al ${fmtFecha(rango.prev.hasta)})` : '');
+
   document.getElementById('kpi-total').textContent = total;
-
-  const codigosUnicos = [...new Set(AUSENCIAS.map(a=>a.codigo))];
+  document.getElementById('kpi-total-sub').textContent = periodo==='todo' ? 'Histórico completo' : rango.etiqueta;
   document.getElementById('kpi-empleados').textContent = codigosUnicos.length;
-  const totalActivos = EMPLEADOS.filter(e=>(e.estatus||'ALTA')==='ALTA').length;
-  document.getElementById('kpi-empleados-sub').textContent = `de ${totalActivos} activos`;
-
-  const conCarta = AUSENCIAS.filter(a=>a.carta).length;
+  const deBaja = codigosUnicos.filter(c=> EMP_BY_CODIGO[c] && EMP_BY_CODIGO[c].estatus==='BAJA').length;
+  document.getElementById('kpi-empleados-sub').textContent = `de ${activosPlanta} activos hoy` + (deBaja ? ` (${deBaja} ya dados de baja)` : '');
+  document.getElementById('kpi-pct').textContent = pctAus + '%';
+  document.getElementById('kpi-pct-sub').textContent = `${total} faltas / (${plantilla} empleados${sup?' aprox.':''} × ${diasRango} días lab.)`;
   const pct = total ? Math.round((conCarta/total)*100) : 0;
   document.getElementById('kpi-carta-si').textContent = pct + '%';
   document.getElementById('kpi-carta-si-sub').textContent = `${conCarta} de ${total} registros`;
   document.getElementById('kpi-carta-no').textContent = total - conCarta;
+  const prevStats = PREV && { total: PREV.length, empleados: new Set(PREV.map(a=>a.codigo)).size, pct: pctDe(PREV, rango.prev), sinCarta: PREV.filter(a=>!a.carta).length };
+  document.getElementById('kpi-total-delta').innerHTML = deltaHTML(total, prevStats && prevStats.total);
+  document.getElementById('kpi-empleados-delta').innerHTML = deltaHTML(codigosUnicos.length, prevStats && prevStats.empleados);
+  document.getElementById('kpi-pct-delta').innerHTML = deltaHTML(pctAus, prevStats && prevStats.pct, true);
+  document.getElementById('kpi-carta-no-delta').innerHTML = deltaHTML(total - conCarta, prevStats && prevStats.sinCarta);
+
+  const sinDatos = '<div class="small-muted">No hay ausencias con estos filtros.</div>';
+  const contar = clave=>{ const m = {}; LISTA.forEach(a=>{ const k = clave(a); m[k] = (m[k]||0)+1; }); return Object.entries(m).sort((a,b)=>b[1]-a[1]); };
 
   // motivos
-  const motivos = {};
-  AUSENCIAS.forEach(a=> motivos[a.motivo] = (motivos[a.motivo]||0)+1);
-  const maxM = Math.max(1, ...Object.values(motivos));
-  const motivoOrder = Object.entries(motivos).sort((a,b)=>b[1]-a[1]);
-  const barsEl = document.getElementById('motivo-bars');
-  if(motivoOrder.length===0){
-    barsEl.innerHTML = '<div class="small-muted">Aún no hay ausencias registradas.</div>';
-  } else {
-    barsEl.innerHTML = motivoOrder.map(([m,c])=>`
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-          <span style="font-weight:600;color:var(--ink-700);">${m}</span>
-          <span style="color:var(--ink-500);">${c}</span>
-        </div>
-        <div style="background:var(--paper);border-radius:99px;height:8px;overflow:hidden;">
-          <div style="width:${(c/maxM)*100}%;background:var(--navy-800);height:100%;border-radius:99px;"></div>
-        </div>
-      </div>`).join('');
-  }
+  const motivoOrder = contar(a=>a.motivo);
+  const maxM = Math.max(1, ...motivoOrder.map(([,c])=>c));
+  document.getElementById('motivo-bars').innerHTML = motivoOrder.length===0 ? sinDatos
+    : motivoOrder.map(([m,c])=> barraHTML(m, c, maxM, 'var(--navy-800)', `verEnHistorial({motivo:'${jsArg(m)}'})`)).join('');
 
   // ausencias por supervisor
-  const porSupervisor = {};
-  AUSENCIAS.forEach(a=>{
-    const sup = (a.supervisor || '').trim() || 'Sin supervisor asignado';
-    porSupervisor[sup] = (porSupervisor[sup]||0)+1;
-  });
-  const supervisorOrder = Object.entries(porSupervisor).sort((a,b)=>b[1]-a[1]);
+  const supervisorOrder = contar(a=> normTxt(a.supervisor) || 'Sin supervisor asignado');
   const maxSup = Math.max(1, ...supervisorOrder.map(([,c])=>c));
   const supBarsEl = document.getElementById('supervisor-bars');
   if(supervisorOrder.length===0){
-    supBarsEl.innerHTML = '<div class="small-muted">Aún no hay ausencias registradas.</div>';
+    supBarsEl.innerHTML = sinDatos;
   } else {
-    const visibles = supervisorOrder.slice(0,15);
-    supBarsEl.innerHTML = visibles.map(([s,c])=>`
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-          <span style="font-weight:600;color:var(--ink-700);">${s}</span>
-          <span style="color:var(--ink-500);">${c}</span>
-        </div>
-        <div style="background:var(--paper);border-radius:99px;height:8px;overflow:hidden;">
-          <div style="width:${(c/maxSup)*100}%;background:var(--navy-800);height:100%;border-radius:99px;"></div>
-        </div>
-      </div>`).join('');
+    supBarsEl.innerHTML = supervisorOrder.slice(0,15).map(([s,c])=> barraHTML(s, c, maxSup, 'var(--navy-800)',
+      s==='Sin supervisor asignado' ? '' : `verEnHistorial({supervisor:'${jsArg(s)}'})`)).join('');
     if(supervisorOrder.length>15){
       supBarsEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${supervisorOrder.length-15} supervisores más con faltas registradas</div>`;
     }
   }
 
-  // alertas: 2 o más faltas INJUSTIFICADAS en la MISMA semana
+  // faltas por día de la semana (lunes primero)
+  const porDia = DIAS_SEMANA.map(()=>0);
+  LISTA.forEach(a=>{ if(a.fecha) porDia[(new Date(a.fecha.slice(0,10)+'T00:00:00Z').getUTCDay()+6)%7]++; });
+  const maxDia = Math.max(1, ...porDia);
+  document.getElementById('dia-bars').innerHTML = total===0 ? sinDatos
+    : DIAS_SEMANA.map((d,i)=> (i < DIAS_LABORABLES_SEMANA || porDia[i]) ? barraHTML(`${d} <span style="font-weight:400;color:var(--ink-500);">(${total ? Math.round(porDia[i]/total*100) : 0}%)</span>`, porDia[i], maxDia, porDia[i]===maxDia ? 'var(--bad)' : 'var(--gold-500)') : '').join('');
+
+  // alertas: 2 o más faltas INJUSTIFICADAS en la MISMA semana (todo el historial, respetando planta/supervisor)
+  const codigosBase = [...new Set(BASE.map(a=>a.codigo))];
+  const verEmp = cod=> `<span class="go no-print" onclick="verEnHistorial({buscar:'${jsArg(cod)}', supervisor:''})">Ver</span>`;
   const alertEl = document.getElementById('alert-list');
   const pendientes = [];
-  codigosUnicos.forEach(cod=>{
+  codigosBase.forEach(cod=>{
     const empDeAlerta = EMP_BY_CODIGO[cod];
     if(empDeAlerta && (empDeAlerta.estatus||'ALTA') === 'BAJA') return; // ya no está activo, no genera alerta
     const todasSusFaltas = ausenciasDe(cod);
@@ -1927,7 +2153,7 @@ function renderDashboard(){
       <div class="alert-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
         <span><b>${p.ultima.nombre}</b> — #${p.ultima.codigo} · ${p.cantidad} faltas injustificadas en la misma semana (última: ${fmtFecha(p.ultima.fecha)})</span>
-        <span class="go" onclick="goTo('historial')">Ver</span>
+        ${verEmp(p.cod)}
       </div>`).join('');
     if(pendientes.length>8){
       alertEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${pendientes.length-8} pendientes más</div>`;
@@ -1938,7 +2164,7 @@ function renderDashboard(){
   // sus faltas) y vuelve a faltar de manera INJUSTIFICADA después de esa firma
   const alertReincidenciaEl = document.getElementById('alert-list-reincidencia');
   const reincidencias = [];
-  codigosUnicos.forEach(cod=>{
+  codigosBase.forEach(cod=>{
     const empDeAlerta = EMP_BY_CODIGO[cod];
     if(empDeAlerta && (empDeAlerta.estatus||'ALTA') === 'BAJA') return; // ya no está activo, no genera alerta
     const todasSusFaltas = ausenciasDe(cod);
@@ -1960,36 +2186,24 @@ function renderDashboard(){
       <div class="alert-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
         <span><b>${p.ultima.nombre}</b> — #${p.ultima.codigo} · ${p.cantidad} falta(s) injustificada(s) después de firmar carta compromiso (firmada: ${fmtFecha(p.fechaUltimaCarta)}, última falta: ${fmtFecha(p.ultima.fecha)})</span>
-        <span class="go" onclick="goTo('historial')">Ver</span>
+        ${verEmp(p.cod)}
       </div>`).join('');
     if(reincidencias.length>8){
       alertReincidenciaEl.innerHTML += `<div class="small-muted" style="text-align:center;padding-top:4px;">+${reincidencias.length-8} pendientes más</div>`;
     }
   }
 
-  // faltas por mes: general y por depto/planta — todo el año en curso (desde enero)
-  const clavesMes = [...new Set(AUSENCIAS.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort();
-  const anioActual = new Date().getFullYear();
-  const ultimosMeses = clavesMes.filter(m => m.startsWith(String(anioActual)));
-  const labelMes = (m)=>{ const [y,mm]=m.split('-'); return `${NOMBRES_MES[parseInt(mm)-1].slice(0,3)} ${y}`; };
+  // tendencia: 12 meses que terminan en el mes final del periodo (o el actual)
+  const mesFin = (rango.hasta < hoy ? rango.hasta : hoy).slice(0,7);
+  const meses12 = [mesFin];
+  while(meses12.length<12) meses12.unshift(mesAnterior(meses12[0]));
+  const valores12 = meses12.map(m=> BASE.filter(a=>(a.fecha||'').slice(0,7)===m).length);
+  document.getElementById('mes-tendencia').innerHTML = tendenciaSVG(meses12, valores12);
 
-  const generalPorMes = ultimosMeses.map(m=> AUSENCIAS.filter(a=>(a.fecha||'').slice(0,7)===m).length);
-  const maxGeneral = Math.max(1, ...generalPorMes);
-  const mesGeneralEl = document.getElementById('mes-general-bars');
-  if(ultimosMeses.length===0){
-    mesGeneralEl.innerHTML = '<div class="small-muted">Aún no hay ausencias registradas.</div>';
-  } else {
-    mesGeneralEl.innerHTML = ultimosMeses.map((m,i)=>`
-      <div style="margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
-          <span style="font-weight:600;color:var(--ink-700);">${labelMes(m)}</span>
-          <span style="color:var(--ink-500);">${generalPorMes[i]}</span>
-        </div>
-        <div style="background:var(--paper);border-radius:99px;height:8px;overflow:hidden;">
-          <div style="width:${(generalPorMes[i]/maxGeneral)*100}%;background:var(--gold-500);height:100%;border-radius:99px;"></div>
-        </div>
-      </div>`).join('');
-  }
+  // tablas por mes: los meses del periodo que tienen faltas
+  const ultimosMeses = [...new Set(LISTA.map(a=>(a.fecha||'').slice(0,7)).filter(Boolean))].sort();
+  const labelMes = (m)=>{ const [y,mm]=m.split('-'); return `${NOMBRES_MES[parseInt(mm)-1].slice(0,3)} ${y}`; };
+  const celdaMes = n=> `<td style="text-align:center;">${n>0 ? `<span class="count-pill ${n>=4?'warn':''}">${n}</span>` : '<span class="small-muted">0</span>'}</td>`;
 
   // tabla desglosada por planta/depto x mes
   const headEl = document.getElementById('mes-depto-head');
@@ -1999,12 +2213,12 @@ function renderDashboard(){
     bodyEl.innerHTML = `<tr><td class="small-muted" style="text-align:center;padding:20px;">Sin datos aún</td></tr>`;
   } else {
     headEl.innerHTML = '<th>Planta / Depto.</th>' + ultimosMeses.map(m=>`<th style="text-align:center;">${labelMes(m)}</th>`).join('') + '<th style="text-align:center;">Total</th>';
-    bodyEl.innerHTML = DEPARTAMENTOS.map(dep=>{
-      const porMes = ultimosMeses.map(m=> AUSENCIAS.filter(a=>a.depto===dep && (a.fecha||'').slice(0,7)===m).length);
+    bodyEl.innerHTML = DEPARTAMENTOS.filter(dep=> !planta || normTxt(dep)===planta).map(dep=>{
+      const porMes = ultimosMeses.map(m=> LISTA.filter(a=>a.depto===dep && (a.fecha||'').slice(0,7)===m).length);
       const totalDep = porMes.reduce((s,n)=>s+n,0);
       return `<tr>
         <td class="name-cell"><div class="nm">${dep}</div></td>
-        ${porMes.map(n=>`<td style="text-align:center;">${n>0 ? `<span class="count-pill ${n>=4?'warn':''}">${n}</span>` : '<span class="small-muted">0</span>'}</td>`).join('')}
+        ${porMes.map(celdaMes).join('')}
         <td style="text-align:center;font-weight:700;color:var(--navy-800);">${totalDep}</td>
       </tr>`;
     }).join('');
@@ -2020,44 +2234,87 @@ function renderDashboard(){
   } else {
     headMotivoEl.innerHTML = '<th>Motivo</th>' + ultimosMeses.map(m=>`<th style="text-align:center;">${labelMes(m)}</th>`).join('') + '<th style="text-align:center;">Total</th>';
     // incluye también motivos "viejos" que ya no están en el catálogo actual pero siguen en el historial
-    const motivosPresentes = [...new Set(AUSENCIAS.map(a=>a.motivo).filter(Boolean))];
+    const motivosPresentes = [...new Set(LISTA.map(a=>a.motivo).filter(Boolean))];
     const motivosOrdenados = [...MOTIVOS_DASH, ...motivosPresentes.filter(m=>!MOTIVOS_DASH.includes(m)).sort()];
     bodyMotivoEl.innerHTML = motivosOrdenados.map(mot=>{
-      const porMes = ultimosMeses.map(m=> AUSENCIAS.filter(a=>a.motivo===mot && (a.fecha||'').slice(0,7)===m).length);
+      const porMes = ultimosMeses.map(m=> LISTA.filter(a=>a.motivo===mot && (a.fecha||'').slice(0,7)===m).length);
       const totalMot = porMes.reduce((s,n)=>s+n,0);
       if(totalMot===0 && !MOTIVOS_DASH.includes(mot)) return ''; // oculta motivos viejos sin datos en el rango visible
       return `<tr>
         <td><span class="badge badge-neutral">${mot}</span></td>
-        ${porMes.map(n=>`<td style="text-align:center;">${n>0 ? `<span class="count-pill ${n>=4?'warn':''}">${n}</span>` : '<span class="small-muted">0</span>'}</td>`).join('')}
+        ${porMes.map(celdaMes).join('')}
         <td style="text-align:center;font-weight:700;color:var(--navy-800);">${totalMot}</td>
       </tr>`;
     }).join('');
   }
 
-  // top ausentes
-  const conteo = {};
-  AUSENCIAS.forEach(a=> conteo[a.codigo] = (conteo[a.codigo]||0)+1);
-  const top = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  // top ausentes del periodo
+  const top = contar(a=>a.codigo).slice(0,8);
   const topEl = document.getElementById('top-ausentes');
-  if(top.length===0){
-    topEl.innerHTML = `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:24px;">Sin datos aún</td></tr>`;
-  } else {
-    topEl.innerHTML = top.map(([cod,n])=>{
-      const emp = EMP_BY_CODIGO[cod] || {nombre:'(No encontrado)', depto:'—'};
-      const hist = ausenciasDe(cod);
-      const sup = hist[0] ? hist[0].supervisor : '—';
-      const carta = hist[0] ? hist[0].carta : false;
-      return `<tr>
-        <td class="name-cell"><div class="nm">${emp.nombre}</div></td>
-        <td>#${cod}</td>
-        <td>${emp.depto}</td>
-        <td>${sup}</td>
-        <td><span class="count-pill ${n>=4?'warn':''}">${n}</span></td>
-        <td>${badgeCarta(carta)}</td>
-      </tr>`;
-    }).join('');
-  }
+  const filasTop = top.map(([cod,n])=>{
+    const emp = EMP_BY_CODIGO[cod] || {nombre:'(No encontrado)', depto:'—'};
+    const hist = ausenciasDe(cod);
+    return { cod, n, emp, sup: hist[0] ? hist[0].supervisor : '—', carta: hist[0] ? hist[0].carta : false };
+  });
+  topEl.innerHTML = filasTop.length===0
+    ? `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:24px;">Sin datos con estos filtros</td></tr>`
+    : filasTop.map(t=>`<tr>
+        <td class="name-cell"><div class="nm">${t.emp.nombre}</div></td>
+        <td>#${t.cod}</td>
+        <td>${t.emp.depto}</td>
+        <td>${t.sup}</td>
+        <td><span class="count-pill ${t.n>=4?'warn':''}">${t.n}</span></td>
+        <td>${badgeCarta(t.carta)}</td>
+      </tr>`).join('');
+
+  dashCache = { periodo, planta, sup, rango, LISTA, total, empleados: codigosUnicos.length, pctAus, plantilla, diasRango,
+    conCarta, prevStats, motivoOrder, supervisorOrder, porDia, meses12, valores12, filasTop, filtrosTxt };
 }
+
+['d-periodo','d-planta','d-supervisor','d-desde','d-hasta'].forEach(id=>
+  document.getElementById(id).addEventListener('change', renderDashboard));
+
+function imprimirDashboard(){
+  mostrarToast('En la ventana de impresión elige "Guardar como PDF".');
+  setTimeout(()=> window.print(), 300);
+}
+
+async function exportarDashboardExcel(){
+  if(!(await cargarXLSX())) return;
+  const c = dashCache;
+  if(!c){ mostrarToast('Espera a que cargue el Dashboard.', true); return; }
+  const wb = XLSX.utils.book_new();
+  const hoja = (nombre, datos, anchos)=>{
+    const ws = XLSX.utils.aoa_to_sheet(datos);
+    ws['!cols'] = anchos.map(wch=>({wch}));
+    XLSX.utils.book_append_sheet(wb, ws, nombre);
+  };
+  const p = c.prevStats;
+  hoja('Resumen', [
+    ['Dashboard Ausentismo — Grupo Metelmex'],
+    ['Periodo', c.rango.etiqueta + ` (${fmtFecha(c.rango.desde)} al ${fmtFecha(c.rango.hasta)})`],
+    ['Filtros', c.filtrosTxt || 'Sin filtros de planta ni supervisor'],
+    ['Exportado', fmtFecha(hoyISO())], [],
+    ['Indicador', 'Periodo', p ? 'Periodo anterior' : ''],
+    ['Ausencias registradas', c.total, p ? p.total : ''],
+    ['Empleados con faltas', c.empleados, p ? p.empleados : ''],
+    ['% Ausentismo', c.pctAus + '%', p ? p.pct + '%' : ''],
+    ['Faltas con carta compromiso', c.conCarta, ''],
+    ['Faltas sin carta compromiso', c.total - c.conCarta, p ? p.sinCarta : ''], [],
+    [`% Ausentismo = Faltas / (${c.plantilla} empleados × ${c.diasRango} días laborables) × 100` + (c.sup ? ' — con supervisor la plantilla es aproximada' : '')],
+  ], [34, 40, 18]);
+  hoja('Por_Motivo', [['Motivo','Faltas'], ...c.motivoOrder], [24,10]);
+  hoja('Por_Supervisor', [['Supervisor','Faltas'], ...c.supervisorOrder], [34,10]);
+  hoja('Por_Dia', [['Día','Faltas'], ...DIAS_SEMANA.map((d,i)=>[d, c.porDia[i]])], [14,10]);
+  hoja('Tendencia_12_meses', [['Mes','Faltas'], ...c.meses12.map((m,i)=>[etiquetaMes(m), c.valores12[i]])], [18,10]);
+  hoja('Top_8', [['No. Empleado','Nombre','Depto.','Supervisor','Ausencias','Carta compromiso'],
+    ...c.filasTop.map(t=>[t.cod, t.emp.nombre, t.emp.depto, t.sup, t.n, t.carta?'SI':'NO'])], [14,30,20,30,10,16]);
+  hoja('Ausencias', [['Numero_Empleado','Nombre','Planta','Puesto','Supervisor','Fecha_Falta','Motivo','Carta_Compromiso','Fecha_Firma_Carta','Notas'],
+    ...c.LISTA.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha)).map(a=> [a.codigo, a.nombre, a.depto, a.puesto||'', a.supervisor, a.fecha, a.motivo, a.carta?'SI':'NO', a.fechaCarta||'', a.notas||''])], [14,30,18,26,26,14,20,16,16,34]);
+  XLSX.writeFile(wb, `dashboard_ausentismo_${c.rango.desde}_a_${c.rango.hasta}.xlsx`);
+  mostrarToast('Excel del Dashboard descargado.');
+}
+
 function badgeCarta(carta){
   return carta
     ? `<span class="badge badge-ok"><span class="dot"></span>Firmada</span>`
@@ -2092,6 +2349,7 @@ function poblarFiltrosHistorial(){
   mSel.value = mesSeleccionado;
 }
 let expandido = null;
+let histRango = null; // {desde, hasta} cuando se llega desde un clic del Dashboard
 function obtenerAusenciasFiltradas(){
   const q = document.getElementById('f-buscar').value.trim().toLowerCase();
   const depto = document.getElementById('f-depto').value;
@@ -2109,6 +2367,7 @@ function obtenerAusenciasFiltradas(){
     if(carta === 'si' && !a.carta) return false;
     if(carta === 'no' && a.carta) return false;
     if(mes && (a.fecha||'').slice(0,7) !== mes) return false;
+    if(histRango && !(a.fecha >= histRango.desde && a.fecha <= histRango.hasta)) return false;
     if(acumuladas){
       const total = ausenciasDe(a.codigo).length;
       if(acumuladas === '4+' ? total < 4 : total !== parseInt(acumuladas)) return false;
@@ -2121,6 +2380,7 @@ function renderHistorial(){
   let filtradas = obtenerAusenciasFiltradas();
 
   document.getElementById('hist-count').textContent = filtradas.length;
+  document.getElementById('hist-rango').innerHTML = histRango ? ` · del ${fmtFecha(histRango.desde)} al ${fmtFecha(histRango.hasta)} <a href="#" onclick="histRango=null;renderHistorial();return false;">quitar rango</a>` : '';
   const tbody = document.getElementById('tbody-historial');
   const emptyEl = document.getElementById('historial-empty');
 
@@ -2253,6 +2513,7 @@ function limpiarFiltros(){
   document.getElementById('f-carta').value='';
   document.getElementById('f-mes').value='';
   document.getElementById('f-acumuladas').value='';
+  histRango = null;
   renderHistorial();
 }
 
@@ -2270,7 +2531,7 @@ async function exportarExcel(){
   const hayFiltros = document.getElementById('f-buscar').value.trim() ||
     document.getElementById('f-depto').value || document.getElementById('f-supervisor').value ||
     document.getElementById('f-motivo').value || document.getElementById('f-carta').value ||
-    document.getElementById('f-mes').value || document.getElementById('f-acumuladas').value;
+    document.getElementById('f-mes').value || document.getElementById('f-acumuladas').value || histRango;
   const rows = datos.map(a=>({
     'No. Empleado': a.codigo,
     'Nombre': a.nombre,
