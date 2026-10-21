@@ -6,7 +6,7 @@
 <title>Capacitación · Metelmex</title>
 <style>
   :root{
-    /* Misma paleta que el dashboard de Control de Ausentismo */
+    /* Misma paleta que el dashboard de Recursos Humanos */
     --p1:#E7EDF3; /* azul muy claro (fondos suaves) */
     --p2:#D9AF57; /* dorado claro */
     --p3:#254D74; /* azul medio */
@@ -308,7 +308,7 @@
 <div id="configOverlay" class="config-overlay hidden">
   <div class="config-modal">
     <h2 style="margin-top:0">⚙️ Configuración</h2>
-    <p class="section-sub" style="margin-top:-4px">La conexión viene del dashboard de Control de Ausentismo: se usa tu sesión, sin URL ni clave.</p>
+    <p class="section-sub" style="margin-top:-4px">La conexión viene del dashboard de Recursos Humanos: se usa tu sesión, sin URL ni clave.</p>
     <label>Usuario (se anota solo en el historial de cambios)</label>
     <input type="text" id="inputUsuario" readonly>
 
@@ -1312,7 +1312,7 @@ function dashboard(){
   try{ if(window.parent !== window && typeof parent.apiPost === 'function') return parent; }catch(e){}
   return null;
 }
-const SIN_DASHBOARD = 'Abre Capacitación desde el dashboard de Control de Ausentismo';
+const SIN_DASHBOARD = 'Abre Capacitación desde el dashboard de Recursos Humanos';
 const getUsuario = () => { try{ const s = dashboard() && dashboard().sesionParaCapacitacion(); return s ? s.nombre : ''; }catch(e){ return ''; } };
 
 async function apiGet(){
@@ -1800,7 +1800,7 @@ function renderEmpleadosTabla(){
       <td>
         <button class="btn btn-primary btn-sm" onclick="abrirExpediente(${jsArg(e.ID)})">Expediente</button>
         <button class="btn btn-ghost btn-sm" onclick="abrirEditarEmpleado(${jsArg(e.ID)})">Editar</button>
-        <button class="btn btn-danger btn-sm" onclick="eliminarEmpleado(${jsArg(e.ID)})">Eliminar</button>
+        ${e.Estatus === 'BAJA' ? '' : `<button class="btn btn-danger btn-sm" onclick="eliminarEmpleado(${jsArg(e.ID)})">Dar de baja</button>`}
       </td>
     </tr>`;
   }).join('');
@@ -2794,10 +2794,11 @@ async function eliminarCurso(id){
   }
   catch(err){ toast('Error al eliminar: ' + err.message, true); }
 }
+// Ya no borra: el catálogo es compartido con ausentismo. Pone estatus BAJA y conserva cursos y faltas.
 async function eliminarEmpleado(id){
-  if(!confirm('¿Eliminar este empleado del catálogo? (No borra su historial de participaciones)')) return;
-  try{ await apiPost({action:'deleteEmpleado', id}); toast('Empleado eliminado'); await cargarDatos(); }
-  catch(err){ toast('Error al eliminar: ' + err.message, true); }
+  if(!confirm('¿Dar de baja a este empleado? Quedará con estatus BAJA en todo el dashboard (también en ausentismo). No se borra su historial de cursos ni de faltas.')) return;
+  try{ await apiPost({action:'deleteEmpleado', id}); toast('Empleado dado de baja'); await cargarDatos(); }
+  catch(err){ toast('Error al dar de baja: ' + err.message, true); }
 }
 
 // ---------- carga de catálogo (xlsx/csv) ----------
@@ -2976,7 +2977,8 @@ function renderPreviewTabla(){
   const listaFinal = getListaCargaFinal();
   document.getElementById('uploadSummary').innerHTML =
     `Archivo leído: <b>${total}</b> filas · <b>${altas}</b> con estatus ALTA. Se cargarán <b>${listaFinal.length}</b> empleados` +
-    ` (<b>${listaFinal.filter(e => e.FechaAlta).length}</b> con fecha de alta).`;
+    ` (<b>${listaFinal.filter(e => e.FechaAlta).length}</b> con fecha de alta).` +
+    (STATE.catalogoUnico ? '<br><span class="muted">En empleados que ya existen solo se guardan CURP, escolaridad y datos SIRCE; nombre, puesto, planta, estatus y fecha de alta se toman del directorio de ausentismo.</span>' : '');
   const body = document.getElementById('uploadPreviewBody');
   const muestra = listaFinal.slice(0, 50);
   body.innerHTML = muestra.map(e => `<tr>
@@ -3069,7 +3071,16 @@ function abrirEditarEmpleado(id){
   const ocDesc = emp.OcupacionClave ? (SC.ocupaciones.find(o => o[0] === String(emp.OcupacionClave)) || [])[1] : '';
   document.getElementById('editEmpOcupacion').value = emp.OcupacionClave ? (emp.OcupacionClave + ' - ' + (ocDesc || '')) : '';
 
-  document.getElementById('editEmpMsg').textContent = '';
+  // Catálogo único: nombre, puesto, planta, estatus y fecha de alta los manda el directorio de ausentismo
+  const soloLectura = !!STATE.catalogoUnico;
+  ['editEmpNombre','editEmpPuesto','editEmpDepto','editEmpEstatus','editEmpFechaAlta'].forEach(id => {
+    const el = document.getElementById(id);
+    el.disabled = soloLectura;
+    el.title = soloLectura ? 'Se cambia en Empleados (dashboard de ausentismo)' : '';
+  });
+  const msgEmp = document.getElementById('editEmpMsg');
+  msgEmp.style.color = 'var(--ink-soft)';
+  msgEmp.textContent = soloLectura ? 'Nombre, puesto, planta, estatus y fecha de alta se cambian en Empleados (dashboard de ausentismo).' : '';
   editEmpleadoOverlay.classList.remove('hidden');
 }
 
