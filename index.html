@@ -132,6 +132,20 @@ body{
 .panel-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .panel-title{font-size:14.5px;font-weight:700;color:var(--navy-900);}
 .panel-title span{font-weight:500;color:var(--ink-500);font-size:12px;}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+/* Alertas desplegables: clic en el encabezado abre/cierra; cerradas muestran solo el total */
+.plegable>.panel-head{cursor:pointer;user-select:none;}
+.plegable>.panel-head::after{content:"";width:8px;height:8px;border-right:2px solid var(--ink-500);border-bottom:2px solid var(--ink-500);transform:rotate(45deg);margin:0 4px 4px auto;transition:transform .2s;}
+.plegable.plegado>.panel-head::after{transform:rotate(-45deg);margin-bottom:0;}
+.plegable.plegado>.panel-head{border-bottom:none;}
+.plegable.plegado>.panel-body{display:none;}
+.panel-title .cuenta-alerta{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;background:var(--warn-bg);color:var(--navy-900);font-weight:700;font-size:11.5px;}
+/* Casilla "Felicitado" con forma de pastel: gris sin felicitar, a color ya felicitado */
+.chk-felicitado{appearance:none;-webkit-appearance:none;width:28px;height:28px;margin:0;cursor:pointer;vertical-align:middle;border-radius:6px;
+  background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23A7B1BC' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M16 4v5'/%3E%3Cpath d='M5 15h22v12H5z'/%3E%3Cpath d='M5 19c2.5 2 5 2 7.3 0s4.7-2 7.4 0 5 2 7.3 0'/%3E%3Cpath d='M9 15v-3h14v3'/%3E%3C/svg%3E");transition:transform .15s;}
+.chk-felicitado:checked{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2c1.6 1.8 1.6 3.4 0 4.6-1.6-1.2-1.6-2.8 0-4.6z' fill='%23E8743B'/%3E%3Crect x='15' y='6.5' width='2' height='5.5' fill='%23C89B3C'/%3E%3Crect x='9' y='11.5' width='14' height='4' rx='1' fill='%23F3B6C6'/%3E%3Crect x='5' y='15' width='22' height='12' rx='1.5' fill='%23C89B3C'/%3E%3Cpath d='M5 16.5h22v2.5c-2.5 2-5 2-7.3 0s-4.7-2-7.4 0-5 2-7.3 0z' fill='%23F3B6C6'/%3E%3C/svg%3E");}
+.chk-felicitado:hover{transform:scale(1.12);}
+.chk-felicitado:focus-visible{outline:2px solid var(--gold-400);outline-offset:2px;}
 .panel-body{padding:20px;}
 
 /* ---------- FORM ---------- */
@@ -386,7 +400,7 @@ body:not(.sin-sesion) .login{display:none;}
     </button>
 
     <div class="navlabel">Configuración</div>
-    <button class="navbtn" data-view="supervisores">
+    <button class="navbtn" data-view="supervisores" style="display:none;"><!-- oculto a pedido de RH; la vista y los datos siguen intactos -->
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span>Supervisores</span>
     </button>
@@ -509,9 +523,9 @@ body:not(.sin-sesion) .login{display:none;}
             <div id="motivo-bars"></div>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-head">
-            <div class="panel-title">Alertas <span>— 2 o más faltas injustificadas en la misma semana</span></div>
+        <div class="panel plegable plegado">
+          <div class="panel-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="panel-title">Alertas <span>— 2 o más faltas injustificadas en la misma semana</span><b class="cuenta-alerta" id="cuenta-alerta-semana">0</b></div>
           </div>
           <div class="panel-body">
             <div id="alert-list" class="alert-list"></div>
@@ -519,9 +533,9 @@ body:not(.sin-sesion) .login{display:none;}
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">⚠ Alerta <span>— reincidencia con carta compromiso firmada</span></div>
+      <div class="panel plegable plegado">
+        <div class="panel-head" role="button" tabindex="0" aria-expanded="false">
+          <div class="panel-title">⚠ Alerta <span>— reincidencia con carta compromiso firmada</span><b class="cuenta-alerta" id="cuenta-alerta-reincidencia">0</b></div>
         </div>
         <div class="panel-body">
           <div id="alert-list-reincidencia" class="alert-list"></div>
@@ -682,16 +696,16 @@ body:not(.sin-sesion) .login{display:none;}
         </div>
       </div>
 
-      <div class="panel" id="panel-alerta-admin-cumple" style="display:none;">
-        <div class="panel-head">
-          <div class="panel-title">⚠ Alerta <span>— empleados ADMINISTRATIVOS que cumplen años</span></div>
+      <div class="panel plegable plegado" id="panel-alerta-admin-cumple" style="display:none;">
+        <div class="panel-head" role="button" tabindex="0" aria-expanded="false">
+          <div class="panel-title">⚠ Alerta <span>— empleados ADMINISTRATIVOS que cumplen años</span><b class="cuenta-alerta" id="cuenta-alerta-admin">0</b></div>
         </div>
         <div class="panel-body" id="cumple-alerta-admin-body"></div>
       </div>
 
-      <div class="panel" id="panel-alerta-60" style="display:none;">
-        <div class="panel-head">
-          <div class="panel-title">⚠ Alerta <span>— empleados activos a un año o menos de cumplir 60 años (todo el directorio, sin importar el filtro de mes)</span></div>
+      <div class="panel plegable plegado" id="panel-alerta-60" style="display:none;">
+        <div class="panel-head" role="button" tabindex="0" aria-expanded="false">
+          <div class="panel-title">⚠ Alerta <span>— empleados activos a un año o menos de cumplir 60 años (todo el directorio, sin importar el filtro de mes)</span><b class="cuenta-alerta" id="cuenta-alerta-60">0</b></div>
         </div>
         <div class="panel-body" id="cumple-alerta-60-body"></div>
       </div>
@@ -1251,7 +1265,7 @@ body:not(.sin-sesion) .login{display:none;}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.21-v43";
+const APP_VERSION = "2026.10.21-v44";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1676,6 +1690,16 @@ function sesionParaCapacitacion(){ return SESION ? { nombre: SESION.nombre, rol:
 function catalogoParaRevisionNomina(){ return EMPLEADOS.map(e=>({ codigo: e.codigo, estatus: e.estatus || 'ALTA' })); }
 document.querySelectorAll('.navbtn').forEach(b=>{
   b.addEventListener('click', ()=>goTo(b.dataset.view));
+});
+
+// Alertas desplegables (clic o Enter/Espacio en el encabezado)
+function alternarAlerta(head){
+  const plegado = head.parentElement.classList.toggle('plegado');
+  head.setAttribute('aria-expanded', String(!plegado));
+}
+document.querySelectorAll('.plegable>.panel-head').forEach(h=>{
+  h.addEventListener('click', ()=>alternarAlerta(h));
+  h.addEventListener('keydown', e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); alternarAlerta(h); } });
 });
 
 /* ============================================================
@@ -2283,6 +2307,7 @@ function renderDashboard(){
     });
   });
   pendientes.sort((a,b)=> b.ultima.fecha.localeCompare(a.ultima.fecha));
+  document.getElementById('cuenta-alerta-semana').textContent = pendientes.length;
 
   if(pendientes.length===0){
     alertEl.innerHTML = '<div class="small-muted">No hay empleados con 2 o más faltas injustificadas en la misma semana. 👍</div>';
@@ -2316,6 +2341,7 @@ function renderDashboard(){
     }
   });
   reincidencias.sort((a,b)=> b.ultima.fecha.localeCompare(a.ultima.fecha));
+  document.getElementById('cuenta-alerta-reincidencia').textContent = reincidencias.length;
 
   if(reincidencias.length===0){
     alertReincidenciaEl.innerHTML = '<div class="small-muted">No hay empleados con carta compromiso firmada que hayan vuelto a faltar de forma injustificada. 👍</div>';
@@ -3271,6 +3297,7 @@ function renderCumple(){
   const panelAlerta = document.getElementById('panel-alerta-admin-cumple');
   if(admins.length > 0){
     panelAlerta.style.display = 'block';
+    document.getElementById('cuenta-alerta-admin').textContent = admins.length;
     document.getElementById('cumple-alerta-admin-body').innerHTML = admins.map(e=>`
       <div class="alert-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>
@@ -3305,6 +3332,7 @@ function renderCumple(){
   const panelAlerta60 = document.getElementById('panel-alerta-60');
   if(proximos60.length > 0){
     panelAlerta60.style.display = 'block';
+    document.getElementById('cuenta-alerta-60').textContent = proximos60.length;
     document.getElementById('cumple-alerta-60-body').innerHTML = proximos60.map(e=>{
       const meses = Math.floor(e._diasFaltantes/30);
       const faltaTexto = e._diasFaltantes <= 0 ? 'cumple 60 hoy' : (meses >= 1 ? `en ~${meses} mes(es)` : `en ${e._diasFaltantes} día(s)`);
@@ -3335,7 +3363,7 @@ function renderCumple(){
         <td>${e.tipoEmpleado || 'Sin especificar'}</td>
         <td>${e._edad || '—'}</td>
         <td style="text-align:center;">
-          <input type="checkbox" class="chk-felicitado" data-codigo="${e.codigo}" data-anio="${anio}" ${felicitado?'checked':''} style="width:18px;height:18px;cursor:pointer;">
+          <input type="checkbox" class="chk-felicitado" data-codigo="${e.codigo}" data-anio="${anio}" ${felicitado?'checked':''} title="Felicitado" aria-label="Felicitado">
         </td>
       </tr>`;
     }).join('');
