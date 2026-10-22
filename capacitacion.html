@@ -2522,8 +2522,6 @@ function htmlExpediente(e, paraImprimir){
     .sort((a, b) => String(b.c.FechaImparticion || b.p.FechaImparticion).localeCompare(String(a.c.FechaImparticion || a.p.FechaImparticion)));
   const tomados = parts.filter(x => asistio(x.p));
   const horas = tomados.reduce((s, x) => s + (Number(x.p.DuracionHoras) || 0), 0);
-  const oblig = cumplimientoEmpleado(e);
-  const estado = (r) => paraImprimir ? ESTADOS_OBLIGATORIO[r.estado].texto : insigniaEstado(r);
   const resultado = (x) => {
     const t = resultadoParticipacion(x.p);
     return paraImprimir ? t : `<span class="badge ${t === 'Aprobó' ? 'badge-ok' : t === 'Faltó' ? 'badge-warn' : 'badge-danger'}">${t}</span>`;
@@ -2542,15 +2540,8 @@ function htmlExpediente(e, paraImprimir){
     <div class="exp-datos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px">
       ${dato('Cursos tomados', String(tomados.length))}${dato('Horas de capacitación', horas.toFixed(1).replace(/\.0$/, ''))}
       ${dato('Faltas', String(parts.length - tomados.length))}${dato('No aprobó', String(tomados.filter(x => x.p.Aprobado === 'NO').length))}
-      ${dato('Cumplimiento de obligatorios', porcentaje(oblig.filter(cuentaComoCumplido).length, oblig.length))}
     </div>
-    <h3 style="font-size:14px;margin:10px 0 6px">Cursos obligatorios de su puesto</h3>
-    <table><thead><tr><th>Curso</th><th>Estado</th><th>Última vez</th><th>Vence</th></tr></thead><tbody>
-      ${oblig.map(r => `<tr><td>${escapeHtml(r.cc.Nombre)}</td><td>${estado(r)}</td>
-          <td>${r.c ? fmtPeriodo(r.c) : '—'}</td><td>${r.c && r.c.TieneVencimiento === 'SI' ? fmtDate(r.c.FechaVencimiento) : '—'}</td></tr>`).join('')
-        || '<tr><td colspan="4">Su puesto no tiene cursos obligatorios definidos.</td></tr>'}
-    </tbody></table>
-    <h3 style="font-size:14px;margin:14px 0 6px">Historial de cursos</h3>
+    <h3 style="font-size:14px;margin:10px 0 6px">Historial de cursos</h3>
     <table><thead><tr><th>Periodo</th><th>Curso</th><th>Horas</th><th>Resultado</th><th>Vence</th>${paraImprimir ? '' : '<th></th>'}</tr></thead><tbody>
       ${parts.map(x => `<tr>
           <td style="white-space:nowrap">${x.c.ID != null ? fmtPeriodo(x.c) : fmtDate(x.p.FechaImparticion)}</td>
