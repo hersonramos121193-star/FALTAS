@@ -2534,6 +2534,7 @@ function htmlExpediente(e, paraImprimir){
       <div class="mx-banda"><div class="n">Rejilla Industrial</div><div class="g">Galvanizado</div><div class="t">Estructura</div></div>`
                    : `<h2 style="margin-top:0">📁 Expediente de ${escapeHtml(e.Nombre)}</h2>`}
     <div class="exp-datos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px">
+      ${paraImprimir ? `<div style="grid-column:1/-1">${dato('Nombre del trabajador', e.Nombre)}</div>` : ''}
       ${dato('N° de empleado', e.ID)}${dato('Puesto', e.Puesto)}${dato('Planta / Departamento', e.Departamento)}${dato('Estatus', e.Estatus)}
       ${dato('Fecha de alta', e.FechaAlta ? fmtDate(e.FechaAlta) : '')}${dato('CURP', e.CURP)}${dato('Escolaridad', e.Escolaridad)}
     </div>
