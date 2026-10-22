@@ -1,7 +1,7 @@
 {
-  "name": "Control de Ausentismo - Grupo Metelmex",
-  "short_name": "Ausentismo MMX",
-  "description": "Control de ausentismo, supervisores y carta compromiso - Grupo Metelmex",
+  "name": "Recursos Humanos - Grupo Metelmex",
+  "short_name": "RH Metelmex",
+  "description": "Recursos Humanos: ausentismo, capacitación y revisión de nómina - Grupo Metelmex",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
