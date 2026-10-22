@@ -154,6 +154,11 @@
   .badge-ok{background:#e3f7ea;color:var(--ok);}
   .badge-warn{background:#fff2dc;color:var(--warn);}
   .badge-danger{background:#fde5e8;color:var(--danger);}
+  /* Casilla de cada formato del primer mes: roja pendiente, verde con check */
+  .chk-formato{display:inline-flex;align-items:center;gap:6px;margin:0 6px 4px 0;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;background:#fde5e8;color:var(--danger);user-select:none;}
+  .chk-formato.hecho{background:#e3f7ea;color:var(--ok);}
+  .chk-formato input{width:15px;height:15px;margin:0;cursor:pointer;accent-color:var(--ok);}
+  .chk-formato input:disabled{cursor:default;}
   .badge-neutral{background:var(--p1);color:var(--p5);}
 
   .muted{color:var(--ink-soft);}
@@ -380,11 +385,11 @@
     </div>
 
     <h2>⚠️ Nuevos ingresos: Seguimiento 30 días</h2>
-    <p class="section-sub">Empleados ±5 días alrededor de cumplir su primer mes (antes o después). Se requiere completar "Entrenamiento en el trabajo" y "Evaluación de adaptación": cada uno se marca hecho al registrar un curso con ese nombre en el que participe el empleado.</p>
+    <p class="section-sub">Empleados desde 5 días antes de cumplir su primer mes. Marca la casilla de "Entrenamiento en el trabajo" y de "Evaluación de adaptación" al entregarlos (también cuentan si registras un curso con ese nombre). El empleado sigue en la lista hasta que los 2 formatos tengan su check.</p>
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>Empleado</th><th>Puesto</th><th>Planta</th><th>Días restantes</th><th>Formatos pendientes</th><th></th>
+          <th>Empleado</th><th>Puesto</th><th>Planta</th><th>Días restantes</th><th>Formatos (marca al entregar)</th><th></th>
         </tr></thead>
         <tbody id="tblNuevosIngresos"><tr><td colspan="6" class="empty-state">Sin alertas de nuevos ingresos</td></tr></tbody>
       </table>
@@ -1647,20 +1652,54 @@ const FORMATOS_NUEVO_INGRESO = [
   { label: 'Entrenamiento en el trabajo', palabras: ['ENTRENAMIENTO', 'TRABAJO'] },
   { label: 'Evaluación de adaptación', palabras: ['EVALUACION', 'ADAPTACION'] }
 ];
-function formatosPendientes(empleadoId){
-  const tomados = cursosDe(empleadoId).map(p => normTxt(p.CursoNombre));
-  return FORMATOS_NUEVO_INGRESO.filter(f => !tomados.some(n => f.palabras.every(w => n.includes(w))));
+// Check manual guardado en la pestaña Cap_FormatosIngreso (fila del empleado y formato), o null
+function checkFormato(empleadoId, formato){
+  return (STATE.formatosIngreso || []).find(r => idKey(r.EmpleadoID) === idKey(empleadoId) && r.Formato === formato.label) || null;
 }
+function formatoPorCurso(empleadoId, formato){
+  return cursosDe(empleadoId).some(p => { const n = normTxt(p.CursoNombre); return formato.palabras.every(w => n.includes(w)); });
+}
+function formatosPendientes(empleadoId){
+  return FORMATOS_NUEVO_INGRESO.filter(f => !checkFormato(empleadoId, f) && !formatoPorCurso(empleadoId, f));
+}
+
+async function marcarFormato(empleadoId, idx, input){
+  const f = FORMATOS_NUEVO_INGRESO[idx];
+  const emp = STATE.empleados.find(e => idKey(e.ID) === idKey(empleadoId));
+  input.disabled = true;
+  try{
+    const reg = checkFormato(empleadoId, f);
+    if(input.checked && !reg){
+      await apiPost({ action:'upsertCatalogo', hoja:'FormatosIngreso',
+        registro:{ Nombre: emp ? emp.Nombre : String(empleadoId), EmpleadoID: String(empleadoId), Formato: f.label, Fecha: hoyISO() } });
+    } else if(!input.checked && reg){
+      await apiPost({ action:'deleteCatalogo', hoja:'FormatosIngreso', id: reg.ID });
+    }
+    toast(input.checked ? `✓ ${f.label} marcado` : `${f.label} desmarcado`);
+    await cargarDatos();
+  }catch(err){
+    input.checked = !input.checked; // no se guardó: regresa la casilla como estaba
+    input.disabled = false;
+    toast('Error al guardar: ' + err.message, true);
+  }
+}
+
+// El seguimiento persistente empezó con esta versión: quien cumplió su mes antes de esta fecha
+// solo aparece en su ventana de ±5 días, para no llenar la lista con toda la plantilla vieja.
+const SEGUIMIENTO_FORMATOS_DESDE = new Date(2026, 9, 16);
 
 // FUNCIÓN: Calcular alertas de nuevos ingresos
 function calcularAlertasNuevosIngresos(){
   const tbody = document.getElementById('tblNuevosIngresos');
 
-  // Ventana de alerta: desde 5 días antes hasta 5 días después de cumplir 30 días
+  // Aparece desde 5 días antes de cumplir 30 días y sigue hasta que sus 2 formatos estén marcados
   const nuevoIngresos = STATE.empleados.filter(e => {
     if(!e.FechaAlta || String(e.Estatus).toUpperCase() !== 'ALTA') return false;
     const d = diasParaUnMes(e);
-    return d !== null && d >= -5 && d <= 5;
+    if(d === null || d > 5 || !formatosPendientes(e.ID).length) return false;
+    if(d >= -5) return true;
+    const cumplioMes = new Date(); cumplioMes.setHours(0,0,0,0); cumplioMes.setDate(cumplioMes.getDate() + d);
+    return cumplioMes >= SEGUIMIENTO_FORMATOS_DESDE;
   }).sort((a,b) => diasParaUnMes(a) - diasParaUnMes(b));
 
   if(!nuevoIngresos.length){
@@ -1675,16 +1714,18 @@ function calcularAlertasNuevosIngresos(){
                   : diasRestantes === 0 ? 'Cumple hoy'
                   : `Cumplió hace ${Math.abs(diasRestantes)} día${diasRestantes!==-1?'s':''}`;
 
-    const pendientes = formatosPendientes(e.ID);
-    const formatos = pendientes.length
-      ? pendientes.map(f => `<span class="badge badge-danger" style="margin:0 4px 4px 0">${f.label}</span>`).join('')
-      : '<span class="badge badge-ok">✓ Completos</span>';
+    const formatos = FORMATOS_NUEVO_INGRESO.map((f, i) => {
+      const porCurso = formatoPorCurso(e.ID, f);
+      const hecho = porCurso || !!checkFormato(e.ID, f);
+      return `<label class="chk-formato${hecho ? ' hecho' : ''}"${porCurso ? ' title="Hecho: tiene registrado un curso con este nombre"' : ''}>
+        <input type="checkbox"${hecho ? ' checked' : ''}${porCurso ? ' disabled' : ''} onchange="marcarFormato(${jsArg(e.ID)}, ${i}, this)">${f.label}</label>`;
+    }).join('');
 
     return `<tr>
       <td><b>${escapeHtml(e.Nombre)}</b></td>
       <td>${escapeHtml(e.Puesto||'—')}</td>
       <td>${escapeHtml(e.Departamento||'—')}</td>
-      <td><span class="badge ${pendientes.length ? badgeClass : 'badge-ok'}">${txtDias}</span></td>
+      <td><span class="badge ${badgeClass}">${txtDias}</span></td>
       <td>${formatos}</td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="abrirEditarEmpleado(${jsArg(e.ID)})">Editar</button>
