@@ -998,9 +998,17 @@ conectarDrop('dropSol','fSol','stSol',rows=>{ const all=CORE.leerSolicitudes(row
   return n('te')+' de hora extra, '+n('festivo')+' de festivo trabajado, '+n('vac')+' de vacaciones, '+n('pase')+' pases de salida, '+n('incap')+' incapacidades, '+n('falta')+' faltas, '+n('permiso')+' permisos y '+n('descanso')+' de descanso trabajado'+(otros?' ('+otros+' de otros tipos no se usan)':''); });
 conectarDrop('dropChe','fChe','stChe',rows=>{ const c=CORE.leerChecadas(rows); ST.che=c;
   return c.length+' checadas de '+new Set(c.map(x=>x.num)).size+' colaboradores'; });
-conectarDrop('dropCat','fCat','stCat',rows=>{ const m=CORE.leerCatalogo(rows); ST.cat=m;
-  const adm=Object.values(m).filter(x=>/administrativ/.test(x.tipo)).length;
-  return Object.keys(m).length+' empleados, '+adm+' administrativos'; });
+const resumenCat=m=>Object.keys(m).length+' empleados, '+Object.values(m).filter(x=>/administrativ/.test(x.tipo)).length+' administrativos';
+conectarDrop('dropCat','fCat','stCat',rows=>{ const m=CORE.leerCatalogo(rows); ST.cat=m; return resumenCat(m); });
+// Sin Excel, el tipo de empleado sale del catálogo "Empleados" del dashboard; un Excel subido lo reemplaza.
+function catDashboard(){
+  try{ const cat=window.parent!==window && parent.catalogoParaRevisionNomina && parent.catalogoParaRevisionNomina();
+    if(!cat || !cat.length) return null;
+    const m={}; cat.forEach(x=>{ m[String(x.codigo).trim()]={nombre:x.nombre||'', tipo:CORE.norm(x.tipoEmpleado)}; });
+    return m; }catch(e){ console.error(e); return null; }
+}
+const catVigente=()=>ST.cat||catDashboard();
+(()=>{ const m=catDashboard(); if(m){ $('dropCat').className='drop ok'; $('stCat').textContent='Catálogo del dashboard: '+resumenCat(m)+'. Se usa en automático; subir un Excel lo reemplaza.'; } })();
 $('btnPlantilla').addEventListener('click',ev=>{
   ev.preventDefault(); ev.stopPropagation();
   const wb=XLSX.utils.book_new();
@@ -1035,7 +1043,7 @@ function iniciar(){
 }
 function recalcular(){
   try{
-    ST.R=CORE.procesar(ST.sol, ST.che||[], ST.cat, $('selSemana').value, $('sel0830').value, ST.ajustes);
+    ST.R=CORE.procesar(ST.sol, ST.che||[], catVigente(), $('selSemana').value, $('sel0830').value, ST.ajustes);
   }catch(err){ console.error(err); toast('Error al calcular: '+err.message,true); return; }
   const pl=$('selPlanta'), prev=pl.value;
   // Solo con solicitudes (pestaña Faltas) las plantas son Planta 1, 2 y 3
@@ -1076,7 +1084,7 @@ function render(){
   if(!ST.R) return;
   const ex=ST.R.excluidos.filter(pasaPlanta);
   $('exclTxt').hidden=false;
-  $('exclTxt').innerHTML=`Fuera del análisis: <b>${ex.length}</b> colaboradores (Fletes Borja, turno administrativo, dispositivos externos sin solicitud${ST.cat?', administrativos del catálogo':''}). <button id="verExcl">Ver quiénes</button>`;
+  $('exclTxt').innerHTML=`Fuera del análisis: <b>${ex.length}</b> colaboradores (Fletes Borja, turno administrativo, dispositivos externos sin solicitud${catVigente()?', administrativos del catálogo':''}). <button id="verExcl">Ver quiénes</button>`;
   $('verExcl').onclick=()=>{ ST.tab='excluidos'; render(); };
   const tabs=ST.che?[...TABS]:TABS.filter(([k])=>k==='faltas'); if(ST.tab==='excluidos') tabs.push(['excluidos','Excluidos']);
   $('tabs').innerHTML=tabs.map(([k,l])=>`<button role="tab" aria-selected="${ST.tab===k}" data-t="${k}">${l}<span class="c">${datosTab(k).length}</span></button>`).join('');
