@@ -608,16 +608,16 @@
 
     <div class="upload-box">
       <div>
-        <b>Carga masiva de empleados</b>
+        <b>Carga masiva de cursos</b>
         <div class="muted" style="font-size:12.5px;margin-top:2px">
-          Descarga la plantilla, llénala, y súbela. Actualiza empleados existentes (por código)
-          y agrega los nuevos — no borra el historial de horas.
+          Descarga la plantilla, llena los cursos y sus participantes, y súbela. Solo registra cursos:
+          no da de alta ni cambia empleados (no afecta ausentismo).
         </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-ghost btn-sm" id="btnDescargarPlantilla">📥 Descargar plantilla</button>
-        <input type="file" id="fileCatalogo" accept=".xlsx,.xls,.csv" style="display:none">
-        <button class="btn btn-primary btn-sm" id="btnAbrirCatalogo">📤 Subir catálogo</button>
+        <button class="btn btn-ghost btn-sm" id="btnPlantillaCursos">📥 Descargar plantilla de cursos</button>
+        <input type="file" id="fileCursos" accept=".xlsx,.xls" style="display:none">
+        <button class="btn btn-primary btn-sm" id="btnSubirCursos">📤 Subir cursos</button>
       </div>
     </div>
 
@@ -860,6 +860,21 @@
 
   <!-- CATÁLOGOS -->
   <section id="view-catalogos" class="view">
+    <div class="upload-box">
+      <div>
+        <b>Datos SIRCE de empleados (carga masiva)</b>
+        <div class="muted" style="font-size:12.5px;margin-top:2px">
+          Actualiza nombre separado, CURP, escolaridad, ciudad, estado y claves SIRCE de empleados que ya existen.
+          No da de alta empleados: las altas, la CURP y la escolaridad también se capturan en Empleados (ausentismo).
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" id="btnDescargarPlantilla">📥 Descargar plantilla</button>
+        <input type="file" id="fileCatalogo" accept=".xlsx,.xls,.csv" style="display:none">
+        <button class="btn btn-primary btn-sm" id="btnAbrirCatalogo">📤 Subir datos SIRCE</button>
+      </div>
+    </div>
+
     <h2>Agentes capacitadores</h2>
     <p class="section-sub">Instructores internos o empresas capacitadoras. Al elegirlos en "Registrar curso" se llenan solos el tipo de agente, el RFC y el instructor.</p>
     <div class="filter-bar">
@@ -956,6 +971,24 @@
       <button class="btn btn-ghost" id="btnCancelarCarga">Cancelar</button>
     </div>
     <div id="uploadMsg" style="margin-top:12px;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="cursosOverlay" class="config-overlay hidden">
+  <div class="config-modal" style="max-width:980px">
+    <h2 style="margin-top:0">📤 Vista previa de cursos</h2>
+    <div id="cursosSummary" class="section-sub" style="margin-top:-4px"></div>
+    <div class="table-wrap" style="max-height:340px;margin-top:14px">
+      <table>
+        <thead><tr><th>Clave</th><th>Curso</th><th>Fechas</th><th>Horas</th><th>Participantes</th><th>Resultado</th></tr></thead>
+        <tbody id="cursosPreviewBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="btnConfirmarCursos">Guardar cursos</button>
+      <button class="btn btn-ghost" id="btnCancelarCursos">Cerrar</button>
+    </div>
+    <div id="cursosMsg" style="margin-top:12px;font-size:13px"></div>
   </div>
 </div>
 
@@ -2968,20 +3001,10 @@ function filtrarPorEstatus(){
   return soloAlta ? catalogoParaCargar.filter(e => e.Estatus === 'ALTA') : catalogoParaCargar;
 }
 
-function getModoCarga(){
-  const el = document.querySelector('input[name="modoCarga"]:checked');
-  return el ? el.value : 'actualizar';
-}
-
-// Lista final que se va a enviar, aplicando el filtro de estatus y,
-// si el usuario eligió "solo agregar los nuevos", excluyendo duplicados.
+// Lista final que se va a enviar: solo empleados que ya existen (las altas se hacen en Empleados de ausentismo)
 function getListaCargaFinal(){
-  const lista = filtrarPorEstatus();
-  if(getModoCarga() === 'soloNuevos'){
-    const idsExistentes = new Set(STATE.empleados.map(e => idKey(e.ID)));
-    return lista.filter(e => !idsExistentes.has(idKey(e.ID)));
-  }
-  return lista;
+  const idsExistentes = new Set(STATE.empleados.map(e => idKey(e.ID)));
+  return filtrarPorEstatus().filter(e => idsExistentes.has(idKey(e.ID)));
 }
 
 function mostrarPreviewCarga(){
@@ -2996,22 +3019,13 @@ function renderPreviewTabla(){
   const total = catalogoParaCargar.length;
   const altas = catalogoParaCargar.filter(e => e.Estatus === 'ALTA').length;
 
-  const idsExistentes = new Set(STATE.empleados.map(e => idKey(e.ID)));
-  const duplicados = lista.filter(e => idsExistentes.has(idKey(e.ID)));
-  const wrap = document.getElementById('duplicadosWrap');
-  if(duplicados.length){
-    wrap.style.display = 'block';
-    document.getElementById('duplicadosMsg').innerHTML =
-      `⚠️ <b>${duplicados.length}</b> de estos empleados ya existen en el catálogo (mismo número de empleado). Elige qué hacer con ellos:`;
-  } else {
-    wrap.style.display = 'none';
-  }
-
+  document.getElementById('duplicadosWrap').style.display = 'none';
   const listaFinal = getListaCargaFinal();
+  const noExisten = lista.length - listaFinal.length;
   document.getElementById('uploadSummary').innerHTML =
-    `Archivo leído: <b>${total}</b> filas · <b>${altas}</b> con estatus ALTA. Se cargarán <b>${listaFinal.length}</b> empleados` +
-    ` (<b>${listaFinal.filter(e => e.FechaAlta).length}</b> con fecha de alta).` +
-    (STATE.catalogoUnico ? '<br><span class="muted">En empleados que ya existen solo se guardan CURP, escolaridad y datos SIRCE; nombre, puesto, planta, estatus y fecha de alta se toman del directorio de ausentismo.</span>' : '');
+    `Archivo leído: <b>${total}</b> filas · <b>${altas}</b> con estatus ALTA. Se actualizarán <b>${listaFinal.length}</b> empleados.` +
+    (noExisten ? `<br><span style="color:var(--danger)"><b>${noExisten}</b> número(s) de empleado no existen en el catálogo y no se suben: primero dalos de alta en Empleados (ausentismo).</span>` : '') +
+    '<br><span class="muted">Solo se guardan nombre separado, CURP, escolaridad, ciudad, estado y claves SIRCE; nombre, puesto, planta, estatus y fecha de alta se toman del directorio de ausentismo.</span>';
   const body = document.getElementById('uploadPreviewBody');
   const muestra = listaFinal.slice(0, 50);
   body.innerHTML = muestra.map(e => `<tr>
@@ -3063,6 +3077,201 @@ document.getElementById('btnConfirmarCarga').addEventListener('click', async ()=
   }finally{
     btn.disabled = false;
   }
+});
+
+// ---------- carga masiva de cursos (solo escribe cursos y participaciones) ----------
+const COLS_CURSOS_MASIVO = ['CLAVE','NOMBRE_CURSO','FECHA_INICIO','FECHA_TERMINO','DURACION_HORAS','APLICA_SIRCE','AREA_TEMATICA',
+  'MODALIDAD','OBJETIVO','TIPO_AGENTE','AGENTE','RFC_AGENTE','INSTRUCTOR','VIGENCIA_MESES','EVIDENCIA_URL'];
+const COLS_PARTICIPANTES_MASIVO = ['CLAVE','NUMERO_EMPLEADO','ASISTIO','APROBO'];
+// Catálogo SIRCE de cada columna con clave
+const CLAVES_CURSO_MASIVO = { AREA_TEMATICA:['AreaTematicaClave','areasTematicas'], MODALIDAD:['ModalidadClave','modalidades'],
+  OBJETIVO:['ObjetivoClave','objetivos'], TIPO_AGENTE:['TipoAgenteClave','tiposAgente'] };
+let cursosParaCargar = [];
+
+document.getElementById('btnPlantillaCursos').addEventListener('click', ()=>{
+  const wb = XLSX.utils.book_new();
+  const hoja = (filas, anchos, nombre) => { const ws = XLSX.utils.aoa_to_sheet(filas); ws['!cols'] = anchos.map(wch => ({wch})); XLSX.utils.book_append_sheet(wb, ws, nombre); };
+  const primera = (cat) => (SC[cat][0] || [''])[0];
+  hoja([COLS_CURSOS_MASIVO, ['C1','Seguridad industrial','06/10/2026','06/10/2026',4,'SI',primera('areasTematicas'),primera('modalidades'),
+    primera('objetivos'),primera('tiposAgente'),'','','',12,'']],
+    [8,34,13,13,10,10,14,10,10,11,26,15,24,10,30], 'Cursos');
+  hoja([COLS_PARTICIPANTES_MASIVO, ['C1','10040','SI','SI'], ['C1','10041','NO','']], [8,16,9,9], 'Participantes');
+  const listas = [['AREA_TEMATICA', SC.areasTematicas], ['MODALIDAD', SC.modalidades], ['OBJETIVO', SC.objetivos], ['TIPO_AGENTE', SC.tiposAgente],
+    ['CURSOS DEL CATÁLOGO', (STATE.catalogoCursos || []).map(c => ['', c.Nombre])], ['AGENTES DEL CATÁLOGO', (STATE.agentes || []).map(a => ['', a.Nombre])]];
+  const n = Math.max(...listas.map(([, l]) => l.length));
+  hoja([listas.map(([t]) => t), ...Array.from({length:n}, (_, i) => listas.map(([, l]) => l[i] ? (l[i][0] ? `${l[i][0]} - ${l[i][1]}` : l[i][1]) : ''))],
+    listas.map(() => 34), 'Valores_validos');
+  hoja([['CÓMO LLENAR LA PLANTILLA DE CURSOS'], [],
+    ['1. Hoja "Cursos": una fila por curso. CLAVE es cualquier texto corto (C1, C2…) para unirlo con sus participantes.'],
+    ['2. Hoja "Participantes": una fila por persona y curso, con la CLAVE del curso y el número de empleado.'],
+    ['3. Obligatorios: CLAVE, NOMBRE_CURSO, FECHA_INICIO y DURACION_HORAS (si el curso está en el catálogo, la duración se toma de ahí).'],
+    ['4. Fechas en DD/MM/AAAA. FECHA_TERMINO vacía = mismo día.'],
+    ['5. Si NOMBRE_CURSO es igual a un curso del catálogo, las columnas vacías se llenan con sus datos (área, modalidad, objetivo, agente, vigencia).'],
+    ['6. Si AGENTE es igual a un agente del catálogo, se llenan solos su tipo, RFC e instructor.'],
+    ['7. AREA_TEMATICA, MODALIDAD, OBJETIVO y TIPO_AGENTE: escribe la clave (o copia "clave - descripción") de la hoja Valores_validos.'],
+    ['8. APLICA_SIRCE: SI o NO (vacío = SI). VIGENCIA_MESES: número de meses; vacío o 0 = no vence.'],
+    ['9. ASISTIO y APROBO: SI o NO (vacío = SI). Quien no asistió queda registrado con 0 horas.'],
+    ['10. Todos los participantes deben existir en el catálogo de empleados: aquí no se dan de alta empleados.'],
+    ['11. Un curso con el mismo nombre y fecha de inicio que uno ya registrado no se vuelve a guardar.'],
+    ['12. Borra las filas de ejemplo antes de subir.']], [120], 'Instrucciones');
+  XLSX.writeFile(wb, 'Plantilla_Cursos.xlsx');
+});
+
+document.getElementById('btnSubirCursos').addEventListener('click', ()=> document.getElementById('fileCursos').click());
+
+// "6000 - SEGURIDAD" o "6000" -> "6000"; '' si no existe en el catálogo SIRCE
+function claveSirceDeCelda(cat, v){
+  const clave = String(v ?? '').split(' - ')[0].trim();
+  if(!clave || !SC[cat].length) return clave;
+  return SC[cat].some(x => String(x[0]) === clave) ? clave : null;
+}
+
+// Lee el libro y arma cada curso con sus participantes y sus errores (no envía nada)
+function leerCursosMasivos(wb){
+  const filasDe = (nombre) => {
+    if(!wb.Sheets[nombre]) throw new Error(`Al archivo le falta la hoja "${nombre}". Usa "Descargar plantilla de cursos".`);
+    const grid = XLSX.utils.sheet_to_json(wb.Sheets[nombre], {header:1, defval:''});
+    const enc = (grid[0] || []).map(h => normTxt(h).replace(/\s+/g,'_'));
+    return grid.slice(1).filter(r => r.some(v => String(v).trim() !== ''))
+      .map((r, i) => { const o = { _fila: i + 2 }; enc.forEach((h, j) => { o[h] = typeof r[j] === 'string' ? r[j].trim() : r[j]; }); return o; });
+  };
+  const filasCursos = filasDe('Cursos'), filasPart = filasDe('Participantes');
+  const faltan = COLS_CURSOS_MASIVO.slice(0, 5).filter(c => filasCursos.length && !(c in filasCursos[0]));
+  if(faltan.length) throw new Error('A la hoja Cursos le faltan columnas: ' + faltan.join(', '));
+  const siNo = (v) => normTxt(v) === 'NO' ? 'NO' : 'SI';
+  const ya = new Set(STATE.cursos.map(c => normTxt(c.Nombre) + '|' + String(c.FechaImparticion).slice(0, 10)));
+  const porClave = new Map();
+
+  filasCursos.forEach(f => {
+    const clave = normTxt(f.CLAVE);
+    const errores = [];
+    if(!clave) errores.push('falta CLAVE');
+    else if(porClave.has(clave)) errores.push(`CLAVE ${clave} repetida en la hoja Cursos`);
+    const cc = (STATE.catalogoCursos || []).find(c => normTxt(c.Nombre) === normTxt(f.NOMBRE_CURSO));
+    const ag = agentePorNombre(String(f.AGENTE || '')) || (cc && agentePorId(cc.AgenteID)) || null;
+    const inicio = fechaDeCelda(f.FECHA_INICIO), termino = fechaDeCelda(f.FECHA_TERMINO) || inicio;
+    const curso = {
+      Nombre: String(f.NOMBRE_CURSO || (cc && cc.Nombre) || '').trim(), FechaImparticion: inicio, FechaTermino: termino,
+      DuracionHoras: Number(f.DURACION_HORAS) || Number(cc && cc.DuracionHoras) || 0,
+      AplicaSIRCE: f.APLICA_SIRCE !== '' && f.APLICA_SIRCE != null ? siNo(f.APLICA_SIRCE) : (cc && cc.AplicaSIRCE === 'NO' ? 'NO' : 'SI'),
+      AgenteNombre: String(f.AGENTE || (ag && ag.Nombre) || '').trim(),
+      RFCAgente: String(f.RFC_AGENTE || (ag && ag.RFCAgente) || '').trim().toUpperCase(),
+      Instructor: String(f.INSTRUCTOR || (ag && ag.Instructor) || '').trim(),
+      EvidenciaURL: String(f.EVIDENCIA_URL || '').trim(), CatalogoCursoID: cc ? String(cc.ID) : '',
+      ClaveCompetencia: '', FechaEmisionCertificado: ''
+    };
+    const respaldo = { AreaTematicaClave: cc && cc.AreaTematicaClave, ModalidadClave: cc && cc.ModalidadClave,
+      ObjetivoClave: cc && cc.ObjetivoClave, TipoAgenteClave: ag && ag.TipoAgenteClave };
+    Object.entries(CLAVES_CURSO_MASIVO).forEach(([col, [campo, cat]]) => {
+      const k = claveSirceDeCelda(cat, f[col]);
+      if(k === null) errores.push(`${col} "${f[col]}" no está en el catálogo SIRCE`);
+      curso[campo] = k || String(respaldo[campo] || '');
+    });
+    const meses = f.VIGENCIA_MESES !== '' && f.VIGENCIA_MESES != null ? Number(f.VIGENCIA_MESES) : Number(cc && cc.VigenciaMeses) || 0;
+    if(!(meses >= 0)) errores.push('VIGENCIA_MESES no es un número');
+    curso.TieneVencimiento = meses > 0;
+    curso.FechaVencimiento = meses > 0 ? sumarMeses(termino, meses) : '';
+    if(!curso.Nombre) errores.push('falta NOMBRE_CURSO');
+    if(!inicio) errores.push(`FECHA_INICIO "${f.FECHA_INICIO}" no es una fecha (DD/MM/AAAA)`);
+    if(String(f.FECHA_TERMINO ?? '').trim() && !fechaDeCelda(f.FECHA_TERMINO)) errores.push(`FECHA_TERMINO "${f.FECHA_TERMINO}" no es una fecha`);
+    if(inicio && termino < inicio) errores.push('FECHA_TERMINO es anterior a FECHA_INICIO');
+    if(!(curso.DuracionHoras > 0)) errores.push('falta DURACION_HORAS');
+    if(curso.RFCAgente && !rfcValido(curso.RFCAgente)) errores.push('RFC_AGENTE no tiene formato válido');
+    if(curso.EvidenciaURL && !esEnlaceWeb(curso.EvidenciaURL)) errores.push('EVIDENCIA_URL debe empezar con https://');
+    const llave = normTxt(curso.Nombre) + '|' + inicio;
+    const repetido = !!(curso.Nombre && inicio && ya.has(llave));
+    if(curso.Nombre && inicio) ya.add(llave); // el mismo curso dos veces en el archivo tampoco se duplica
+    const reg = { clave: clave || `(fila ${f._fila})`, curso, empleadoIds: [], faltaronIds: [], noAprobadosIds: [], errores, repetido, estado: '' };
+    if(clave && !porClave.has(clave)) porClave.set(clave, reg);
+    else cursosParaCargarExtra.push(reg);
+  });
+
+  filasPart.forEach(f => {
+    const reg = porClave.get(normTxt(f.CLAVE));
+    const num = String(f.NUMERO_EMPLEADO ?? '').trim();
+    if(!reg){ if(num) sinCurso.push(`fila ${f._fila} (CLAVE "${f.CLAVE}")`); return; }
+    const emp = num && empleadoPorId(num);
+    if(!emp){ reg.errores.push(`empleado ${num || '(vacío)'} no existe en el catálogo (Participantes fila ${f._fila})`); return; }
+    const id = String(emp.ID);
+    if(reg.empleadoIds.includes(id)) return; // repetido en el mismo curso
+    reg.empleadoIds.push(id);
+    if(siNo(f.ASISTIO) === 'NO') reg.faltaronIds.push(id);
+    else if(siNo(f.APROBO) === 'NO') reg.noAprobadosIds.push(id);
+  });
+  porClave.forEach(reg => { if(!reg.empleadoIds.length && !reg.errores.length) reg.errores.push('sin participantes'); });
+  return [...porClave.values()];
+}
+let cursosParaCargarExtra = [], sinCurso = [];
+
+document.getElementById('fileCursos').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file) return;
+  try{
+    cursosParaCargarExtra = []; sinCurso = [];
+    const wb = XLSX.read(await file.arrayBuffer(), {type:'array'});
+    cursosParaCargar = leerCursosMasivos(wb).concat(cursosParaCargarExtra);
+    if(!cursosParaCargar.length) return toast('La hoja Cursos no tiene cursos', true);
+    document.getElementById('cursosMsg').textContent = '';
+    renderPreviewCursos();
+    document.getElementById('cursosOverlay').classList.remove('hidden');
+  }catch(err){ toast('No se pudo leer el archivo: ' + err.message, true); }
+});
+
+const cursosListos = () => cursosParaCargar.filter(r => !r.errores.length && !r.repetido && r.estado !== 'ok');
+function renderPreviewCursos(){
+  const listos = cursosListos().length;
+  const conError = cursosParaCargar.filter(r => r.errores.length).length;
+  const repetidos = cursosParaCargar.filter(r => r.repetido && !r.errores.length).length;
+  document.getElementById('cursosSummary').innerHTML =
+    `<b>${cursosParaCargar.length}</b> curso(s) en el archivo · <b style="color:var(--ok)">${listos}</b> listos para guardar` +
+    (conError ? ` · <b style="color:var(--danger)">${conError}</b> con errores (no se guardan)` : '') +
+    (repetidos ? ` · <b>${repetidos}</b> ya registrados (no se repiten)` : '') +
+    (sinCurso.length ? `<br><span style="color:var(--danger)">Participantes con una CLAVE que no está en la hoja Cursos: ${escapeHtml(sinCurso.slice(0, 10).join(', '))}${sinCurso.length > 10 ? '…' : ''}</span>` : '');
+  document.getElementById('cursosPreviewBody').innerHTML = cursosParaCargar.map(r => {
+    const c = r.curso;
+    const resultado = r.estado === 'ok' ? '<span class="badge badge-ok">Guardado</span>'
+      : r.estado ? `<span style="color:var(--danger)">${escapeHtml(r.estado)}</span>`
+      : r.errores.length ? `<span style="color:var(--danger)">${escapeHtml(r.errores.join('; '))}</span>`
+      : r.repetido ? '<span class="badge badge-neutral">Ya registrado</span>' : 'Se guardará';
+    return `<tr><td>${escapeHtml(r.clave)}</td><td>${escapeHtml(c.Nombre)}</td>
+      <td>${c.FechaImparticion ? fmtDate(c.FechaImparticion) + (c.FechaTermino !== c.FechaImparticion ? ' – ' + fmtDate(c.FechaTermino) : '') : '—'}</td>
+      <td>${escapeHtml(c.DuracionHoras || '—')}</td>
+      <td>${r.empleadoIds.length}${r.faltaronIds.length ? ` (${r.faltaronIds.length} faltó)` : ''}${r.noAprobadosIds.length ? ` (${r.noAprobadosIds.length} no aprobó)` : ''}</td>
+      <td style="font-size:12.5px">${resultado}</td></tr>`;
+  }).join('');
+  document.getElementById('btnConfirmarCursos').disabled = !listos;
+}
+
+document.getElementById('btnCancelarCursos').addEventListener('click', ()=>{
+  document.getElementById('cursosOverlay').classList.add('hidden');
+  cursosParaCargar = [];
+});
+
+document.getElementById('btnConfirmarCursos').addEventListener('click', async ()=>{
+  const lista = cursosListos();
+  const msg = document.getElementById('cursosMsg'), btn = document.getElementById('btnConfirmarCursos');
+  if(!lista.length) return;
+  btn.disabled = true;
+  let ok = 0;
+  // Uno por uno con la misma acción que "Registrar curso": si uno falla, los demás siguen
+  for(let i = 0; i < lista.length; i++){
+    const r = lista[i];
+    msg.style.color = 'var(--p5)';
+    msg.textContent = `Guardando ${i + 1} de ${lista.length}: ${r.curso.Nombre}…`;
+    try{
+      await apiPost({ action:'addCurso', curso: r.curso, empleadoIds: r.empleadoIds, faltaronIds: r.faltaronIds, noAprobadosIds: r.noAprobadosIds });
+      r.estado = 'ok'; ok++;
+    }catch(err){ r.estado = 'Error al guardar: ' + err.message; }
+    renderPreviewCursos();
+  }
+  msg.textContent = 'Actualizando el dashboard…';
+  await cargarDatos();
+  const fallas = lista.length - ok;
+  msg.style.color = fallas ? 'var(--danger)' : 'var(--ok)';
+  msg.textContent = `✔ ${ok} curso(s) guardado(s)` + (fallas ? `; ${fallas} con error (ver la tabla). Puedes volver a subir el mismo archivo: los ya guardados no se repiten.` : '.');
+  if(ok) toast(`${ok} curso(s) registrados`);
+  btn.disabled = !cursosListos().length;
 });
 
 // ---------- editar empleado ----------

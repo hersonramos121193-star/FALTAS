@@ -1176,6 +1176,16 @@ body:not(.sin-sesion) .login{display:none;}
             <option value="TECNICOS">TECNICOS</option>
           </select>
         </div>
+        <div class="field">
+          <label>Escolaridad</label>
+          <input type="text" id="edit-emp-escolaridad" placeholder="Ej. SECUNDARIA, PREPARATORIA, LICENCIATURA">
+          <span class="help">También se ve en Capacitación.</span>
+        </div>
+        <div class="field" id="wrap-edit-emp-curp">
+          <label>CURP</label>
+          <input type="text" id="edit-emp-curp" maxlength="18" autocomplete="off" style="text-transform:uppercase">
+          <span class="help">18 caracteres. Vacía conserva la que ya tenía.</span>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1270,7 +1280,7 @@ body:not(.sin-sesion) .login{display:none;}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.22-v46";
+const APP_VERSION = "2026.10.22-v47";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1539,7 +1549,8 @@ function cargarEmpleadosBase(lista){
     if(!e || !e.codigo) return;
     const emp = { codigo: String(e.codigo), nombre: e.nombre||'', depto: e.depto||'', puesto: e.puesto||'',
       fechaIngreso: e.fechaIngreso||'', estatus: e.estatus||'ALTA', fechaNacimiento: e.fechaNacimiento||'', tipoEmpleado: e.tipoEmpleado||'',
-      fechaBaja: e.fechaBaja||'' }; // con catálogo único la fecha de baja ya viene aquí
+      fechaBaja: e.fechaBaja||'', // con catálogo único la fecha de baja ya viene aquí
+      escolaridad: e.escolaridad||'', curp: e.curp||'' }; // la CURP solo llega a quien tiene el módulo capacitacion
     EMPLEADOS.push(emp);
     EMP_BY_CODIGO[emp.codigo] = emp;
   });
@@ -1566,7 +1577,9 @@ function leerCacheDatos(){
 }
 function guardarCacheDatos(datos){
   // ponytail: localStorage (~5MB). Si las hojas crecen más, se omite la copia; pasar a IndexedDB si pasa seguido.
-  try{ localStorage.setItem(CLAVE_CACHE_DATOS, JSON.stringify({ url: getScriptUrl(), guardado: new Date().toISOString(), datos })); }
+  // La CURP no se guarda en el navegador: llega de nuevo en cada carga desde Google Sheets.
+  const sinCurp = Object.assign({}, datos, { base: (datos.base||[]).map(e=>{ const { curp, ...resto } = e || {}; return resto; }) });
+  try{ localStorage.setItem(CLAVE_CACHE_DATOS, JSON.stringify({ url: getScriptUrl(), guardado: new Date().toISOString(), datos: sinCurp })); }
   catch(e){ try{ localStorage.removeItem(CLAVE_CACHE_DATOS); }catch(_){} }
 }
 
@@ -2786,6 +2799,10 @@ function renderEmpleados(){
    ============================================================ */
 const TIPOS_EMPLEADO = ['ADMINISTRATIVO','OPERATIVO','SINDICALIZADO','SERVICIOS','TECNICOS'];
 const COLS_CATALOGO = ['Numero_Empleado','Nombre','Planta','Puesto','Estatus','Fecha_Ingreso','Fecha_Baja','Fecha_Nacimiento','Tipo_Empleado'];
+// Opcionales (no cuentan en FALTAN_DATOS). La CURP solo la ve y guarda quien tiene el módulo capacitacion.
+const CURP_VALIDA = /^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z\d]\d$/;
+const veCurp = () => moduloPermitido('capacitacion');
+const colsOpcionalesCatalogo = () => veCurp() ? ['Escolaridad','CURP'] : ['Escolaridad'];
 
 // Algunos archivos de RH traen la Ñ y las comillas como código HTML ("MU&#209;OZ", "&quot;"): se leen como texto normal.
 function sinEntidades(s){
@@ -2817,13 +2834,15 @@ async function descargarPlantillaCatalogo(){
     const fila = [e.codigo, e.nombre||'', e.depto||'', e.puesto||'', e.estatus||'ALTA', aFecha(e.fechaIngreso),
       e.estatus==='BAJA' ? aFecha(e.fechaBaja) : '', aFecha(e.fechaNacimiento), (e.tipoEmpleado||'').toUpperCase()];
     const falta = COLS_CATALOGO.filter((c,i)=> c!=='Fecha_Baja' && fila[i]==='').concat(e.estatus==='BAJA' && fila[6]==='' ? ['Fecha_Baja'] : []);
-    return [...fila, falta.join(', ')];
+    const opcionales = [e.escolaridad||''].concat(veCurp() ? [e.curp||''] : []);
+    return [...fila, ...opcionales, falta.join(', ')];
   });
-  const incompletos = filas.filter(f=>f[9]).length;
+  const incompletos = filas.filter(f=>f[f.length-1]).length;
+  const encabezados = [...COLS_CATALOGO, ...colsOpcionalesCatalogo(), 'FALTAN_DATOS (no se sube, solo referencia)'];
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([[...COLS_CATALOGO, 'FALTAN_DATOS (no se sube, solo referencia)'], ...filas], { cellDates:true, dateNF:'dd/mm/yyyy' });
-  ws['!cols'] = [14,34,20,28,9,13,13,16,16,40].map(wch=>({wch}));
-  ws['!autofilter'] = { ref: `A1:J${filas.length+1}` };
+  const ws = XLSX.utils.aoa_to_sheet([encabezados, ...filas], { cellDates:true, dateNF:'dd/mm/yyyy' });
+  ws['!cols'] = [14,34,20,28,9,13,13,16,16, ...colsOpcionalesCatalogo().map(()=>20), 40].map(wch=>({wch}));
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:filas.length, c:encabezados.length-1}}) };
   XLSX.utils.book_append_sheet(wb, ws, 'Catalogo');
   const inst = XLSX.utils.aoa_to_sheet([
     ['CÓMO LLENAR LA PLANTILLA DEL CATÁLOGO DE EMPLEADOS'], [],
@@ -2846,6 +2865,8 @@ async function descargarPlantillaCatalogo(){
     ['Fecha_Baja','Solo si BAJA','DD/MM/AAAA, no anterior a Fecha_Ingreso'],
     ['Fecha_Nacimiento','Sí','DD/MM/AAAA, anterior a Fecha_Ingreso'],
     ['Tipo_Empleado','Sí', TIPOS_EMPLEADO.join(', ')],
+    ['Escolaridad','No','Texto, ej. PRIMARIA, SECUNDARIA, PREPARATORIA, LICENCIATURA. Vacía conserva la actual. También se ve en Capacitación.'],
+    ...(veCurp() ? [['CURP','No','18 caracteres. Vacía conserva la actual. Una CURP con formato no válido hace que esa fila no se suba.']] : []),
   ]);
   inst['!cols'] = [{wch:20},{wch:14},{wch:90}];
   XLSX.utils.book_append_sheet(wb, inst, 'Instrucciones');
@@ -2900,6 +2921,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const colEstatus = buscarColGenerico(headersReales, ['estatus','status']);
     const colFechaNacimiento = buscarColGenerico(headersReales, ['fecha_nacimiento','fecha de nacimiento','fecha nacimiento','cumpleanos','cumpleaños','fecha_nac']);
     const colTipoEmpleado = buscarColGenerico(headersReales, ['tipo_empleado','tipo de empleado','tipo empleado','tipo']);
+    const colEscolaridad = buscarColGenerico(headersReales, ['escolaridad']);
+    const colCurp = veCurp() ? buscarColGenerico(headersReales, ['curp']) : null;
 
     const faltanCols = [['Numero_Empleado',colCodigo],['Nombre',colNombre],['Planta',colDepto],['Puesto',colPuesto],['Estatus',colEstatus],
       ['Fecha_Ingreso',colFechaIngreso],['Fecha_Baja',colFechaBaja],['Fecha_Nacimiento',colFechaNacimiento],['Tipo_Empleado',colTipoEmpleado]]
@@ -2934,6 +2957,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       const fechaIngreso = vacia.Fecha_Ingreso ? '' : fechaCatalogo(crudo.Fecha_Ingreso);
       const fechaBaja = vacia.Fecha_Baja ? '' : fechaCatalogo(crudo.Fecha_Baja);
       const fechaNacimiento = vacia.Fecha_Nacimiento ? '' : fechaCatalogo(crudo.Fecha_Nacimiento);
+      const escolaridad = colEscolaridad ? texto(colEscolaridad) : '';
+      const curp = colCurp ? texto(colCurp).replace(/\s/g,'') : '';
 
       // Activos: todo obligatorio. Bajas (ex empleados): basta con su Fecha_Baja; ingreso y nacimiento son opcionales.
       const problemas = [];
@@ -2947,6 +2972,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
         if(!vacia[n] && !v) problemas.push(`${n} "${normTxt(crudo[n])}" no es una fecha válida (usa DD/MM/AAAA)`);
       });
       if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso) problemas.push('Fecha_Nacimiento es posterior a Fecha_Ingreso');
+      if(curp && !CURP_VALIDA.test(curp)) problemas.push(`CURP "${curp}" no tiene formato válido (18 caracteres)`);
       if(esBaja && fechaBaja && fechaIngreso && fechaBaja < fechaIngreso) bajaAntesDeIngreso.push(codigo); // posible reingreso: se sube y solo se avisa
       if(problemas.length){
         errores.push(`Fila ${numFila} (#${codigo}): ${problemas.join('; ')}. No se subió; ${empExistente ? 'el empleado conserva sus datos actuales' : 'no se dio de alta'}.`);
@@ -2957,7 +2983,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       porCodigo.set(codigo, {
         codigo, nombre: nombre || (empExistente?empExistente.nombre:''), depto: depto || (empExistente?empExistente.depto:''),
         puesto: puesto || (empExistente?empExistente.puesto:''), estatus, fechaBaja, fechaIngreso, fechaNacimiento, tipoEmpleado,
-        _esNuevo: !empExistente
+        escolaridad, curp, _esNuevo: !empExistente
       });
     });
 
@@ -2977,7 +3003,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     nuevos.forEach(r=>{
       if(EMP_BY_CODIGO[r.codigo]) return; // por si acaso ya existía
       const emp = { codigo:r.codigo, nombre:r.nombre, depto:r.depto, puesto:r.puesto, estatus:r.estatus,
-        fechaIngreso:r.fechaIngreso, fechaBaja: r.estatus==='BAJA'?r.fechaBaja:'', fechaNacimiento:r.fechaNacimiento, tipoEmpleado:r.tipoEmpleado };
+        fechaIngreso:r.fechaIngreso, fechaBaja: r.estatus==='BAJA'?r.fechaBaja:'', fechaNacimiento:r.fechaNacimiento, tipoEmpleado:r.tipoEmpleado,
+        escolaridad:r.escolaridad, curp:r.curp };
       EMPLEADOS.push(emp);
       EMP_BY_CODIGO[r.codigo] = emp;
     });
@@ -2989,6 +3016,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       if(r.fechaIngreso) emp.fechaIngreso = r.fechaIngreso;
       if(r.fechaNacimiento) emp.fechaNacimiento = r.fechaNacimiento;
       if(r.tipoEmpleado) emp.tipoEmpleado = r.tipoEmpleado;
+      if(r.escolaridad) emp.escolaridad = r.escolaridad;
+      if(r.curp) emp.curp = r.curp;
     });
 
     recalcularDepartamentos();
@@ -3052,6 +3081,9 @@ function abrirEditarEmpleado(codigo){
   document.getElementById('wrap-edit-emp-fecha-baja').style.display = (e.estatus==='BAJA') ? 'block' : 'none';
   document.getElementById('edit-emp-fecha-nacimiento').value = excelFechaATexto(e.fechaNacimiento) || '';
   document.getElementById('edit-emp-tipo').value = e.tipoEmpleado || '';
+  document.getElementById('edit-emp-escolaridad').value = e.escolaridad || '';
+  document.getElementById('edit-emp-curp').value = e.curp || '';
+  document.getElementById('wrap-edit-emp-curp').style.display = veCurp() ? '' : 'none';
   document.getElementById('modal-editar-emp-bg').showModal();
 }
 document.getElementById('edit-emp-estatus').addEventListener('change', function(){
@@ -3081,8 +3113,11 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const fechaBaja = estatus === 'BAJA' ? document.getElementById('edit-emp-fecha-baja').value : '';
   const fechaNacimiento = document.getElementById('edit-emp-fecha-nacimiento').value;
   const tipoEmpleado = document.getElementById('edit-emp-tipo').value;
+  const escolaridad = normTxt(document.getElementById('edit-emp-escolaridad').value).toUpperCase();
+  const curp = veCurp() ? normTxt(document.getElementById('edit-emp-curp').value).toUpperCase() : '';
 
   if(!nombre){ mostrarToast('Indica el nombre completo', true); return; }
+  if(curp && !CURP_VALIDA.test(curp)){ mostrarToast('La CURP no tiene un formato válido (18 caracteres)', true); return; }
   if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso){ mostrarToast('La fecha de nacimiento debe ser anterior a la fecha de alta', true); return; }
   if(!depto){ mostrarToast('Indica el departamento / planta', true); return; }
   if(!puesto){ mostrarToast('Indica el puesto', true); return; }
@@ -3091,13 +3126,15 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const btn = document.getElementById('btn-guardar-edicion-empleado');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, fechaIngreso, estatus, fechaBaja, fechaNacimiento, tipoEmpleado}});
+    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, fechaIngreso, estatus, fechaBaja, fechaNacimiento, tipoEmpleado, escolaridad, curp}});
     const e = EMP_BY_CODIGO[codigo];
     if(e){
       e.nombre = nombre; e.depto = depto; e.puesto = puesto; e.estatus = estatus; e.fechaBaja = fechaBaja;
       if(fechaIngreso) e.fechaIngreso = fechaIngreso;
       if(fechaNacimiento) e.fechaNacimiento = fechaNacimiento;
       if(tipoEmpleado) e.tipoEmpleado = tipoEmpleado;
+      if(escolaridad) e.escolaridad = escolaridad;
+      if(curp) e.curp = curp;
     }
     recalcularDepartamentos();
     mostrarToast(`Empleado #${codigo} actualizado correctamente`);
