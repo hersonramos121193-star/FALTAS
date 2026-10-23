@@ -262,6 +262,47 @@ tbody tr:hover{background:var(--paper);}
   .brand{justify-content:center;}
   .form-grid{grid-template-columns:1fr;}
 }
+/* ---------- CELULAR: barra de íconos abajo, usuario en una franja arriba, contenido a todo lo ancho ---------- */
+@media(max-width:700px){
+  .app{display:block;}
+  .sidebar{position:fixed;top:auto;left:0;right:0;bottom:0;z-index:150;width:auto;height:auto;flex-direction:row;align-items:stretch;
+    padding:4px 4px calc(4px + env(safe-area-inset-bottom));overflow-x:auto;scrollbar-width:none;box-shadow:0 -4px 16px rgba(11,31,51,.25);}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .brand,.navlabel{display:none;}
+  .navbtn{flex:1 1 0;min-width:38px;width:auto;flex-direction:column;justify-content:center;gap:0;padding:11px 2px;margin:0;position:relative;}
+  .navbtn svg{width:21px;height:21px;}
+  /* el texto queda para lectores de pantalla, sin ocupar lugar */
+  .navbtn span:not(#nav-conn-dot){display:block;position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  .navbtn.active{box-shadow:inset 0 3px 0 var(--gold-400);}
+  .sidebar-foot{position:fixed;top:0;left:0;right:0;z-index:150;margin:0;padding:6px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--navy-900);border-top:none;box-shadow:0 2px 10px rgba(11,31,51,.2);}
+  .sidebar-foot .btn{margin:0 !important;}
+  .sidebar-foot br,.foot-info{display:none;}
+  .main{padding:56px 12px calc(84px + env(safe-area-inset-bottom));}
+  .topbar{margin-bottom:14px;}
+  .pagetitle{font-size:19px;}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;}
+  .kpi{padding:12px 12px 12px 14px;}
+  .kpi-value{font-size:22px;}
+  .panel{margin-bottom:14px;}
+  .panel-head{padding:12px 14px;}
+  .panel-body{padding:14px;}
+  .filters>*{flex:1 1 100%;}
+  .filters select,.filters input{width:100%;}
+  .filterbar{padding:12px 14px;}
+  .filterbar select,.filterbar input[type=text]{flex:1 1 100%;width:100%;}
+  /* Tablas: se deslizan de lado dentro de su recuadro, con la primera columna fija */
+  .panel table,.view table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  tbody tr{background:var(--card);}
+  thead th:first-child,tbody td:first-child{position:sticky;left:0;z-index:1;background:inherit;}
+  thead th:first-child{background:var(--card);}
+  tbody td{padding:9px 10px;}
+  .two-col{gap:14px;}
+  .modal-bg{width:calc(100% - 20px);}
+  .modal-head,.modal-body,.modal-foot{padding-left:16px;padding-right:16px;}
+  .toast-wrap{inset:auto 12px calc(84px + env(safe-area-inset-bottom)) 12px;}
+  .view iframe{height:calc(100dvh - 150px) !important;border-radius:10px !important;}
+}
 .hidden{display:none !important;}
 /* ---------- INICIO DE SESIÓN ---------- */
 body.sin-sesion .app{display:none;}
@@ -413,9 +454,11 @@ body:not(.sin-sesion) .login{display:none;}
     <div class="sidebar-foot">
       <div id="sidebar-usuario" style="color:rgba(255,255,255,.8);font-weight:700;font-size:11.5px;"></div>
       <button class="btn btn-ghost btn-sm" onclick="cerrarSesion()" style="margin:6px 0 10px;">Cerrar sesión</button><br>
-      <span id="sidebar-emp-count">0</span> empleados cargados<br>
-      RH · Coordinación de Seguridad Social<br>
-      <span id="sidebar-version" style="opacity:.7;"></span>
+      <div class="foot-info">
+        <span id="sidebar-emp-count">0</span> empleados cargados<br>
+        RH · Coordinación de Seguridad Social<br>
+        <span id="sidebar-version" style="opacity:.7;"></span>
+      </div>
     </div>
   </aside>
 
@@ -1280,7 +1323,7 @@ body:not(.sin-sesion) .login{display:none;}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.22-v47";
+const APP_VERSION = "2026.10.23-v48";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
