@@ -22,18 +22,22 @@
 </script>
 <style>
   :root{
-    --azul-1:#1f3b64; --azul-2:#2c4d80; --azul-3:#3f6ba3; --gris:#9aa4b2;
-    --bg:#f2f4f8; --card:#ffffff; --texto:#1c2733; --borde:#e1e6ee;
-    --ok:#2e8b57; --warn:#c0392b;
+    /* misma paleta que el resto del dashboard de RH (azul marino y dorado) */
+    --azul-1:#122E4A; --azul-2:#1A3A5C; --azul-3:#254D74; --gris:#6B7B8C;
+    --bg:#F4F6F8; --card:#ffffff; --texto:#101826; --borde:#DCE3EA;
+    --ok:#2E7D4F; --warn:#B2432E; --ambar:#B8892B; --oro:#C89B3C; --oro-claro:#D9AF57; --rosa:#B5679E;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--texto);}
-  header{background:linear-gradient(90deg,var(--azul-1),var(--azul-2));color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--texto);}
+  header{background:var(--azul-1);color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;border-bottom:3px solid var(--oro);}
   header h1{margin:0;font-size:20px;letter-spacing:.5px;}
   header .sub{font-size:12px;opacity:.85;}
-  nav{display:flex;background:var(--azul-1);}
-  nav button{flex:1;background:none;border:none;color:#cfd9ea;padding:12px 8px;cursor:pointer;font-size:13.5px;font-weight:600;border-bottom:3px solid transparent;transition:.15s;}
-  nav button.activo{color:#fff;border-bottom-color:#7fb3ff;background:rgba(255,255,255,.06);}
+  nav{display:flex;background:#fff;border-bottom:1px solid var(--borde);}
+  nav button{flex:1;background:none;border:none;color:var(--gris);padding:12px 8px;cursor:pointer;font-size:13.5px;font-weight:600;border-bottom:3px solid transparent;transition:.15s;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;}
+  nav button svg{width:16px;height:16px;flex-shrink:0;}
+  nav button.activo{color:var(--azul-1);border-bottom-color:var(--oro);}
+  nav button.activo svg{color:var(--oro);}
   main{max-width:1300px;margin:0 auto;padding:22px;}
   .vista{display:none;}
   .vista.activa{display:block;}
@@ -62,8 +66,45 @@
   .tabla-scroll{max-height:520px;overflow:auto;border:1px solid var(--borde);border-radius:8px;}
   .toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;}
   .badge{padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;}
-  .badge.activa{background:#e5f3ea;color:var(--ok);}
-  .badge.cerrada{background:#eceef2;color:#667;}
+  .badge.activa{background:#FBF1DD;color:#8a6420;}
+  .badge.cerrada{background:#E7EDF3;color:var(--azul-2);}
+  /* tipo de incapacidad (D) — mismos colores que las gráficas */
+  .badge.t-rt{background:#FBEAE6;color:#8f3322;}
+  .badge.t-tray{background:#FBF1DD;color:#7a5a17;}
+  .badge.t-enf{background:#E7EDF3;color:var(--azul-2);}
+  .badge.t-mat{background:#F6E9F2;color:#7a2f63;}
+  .badge.neutro{background:#F4F6F8;color:var(--gris);font-weight:600;}
+  header .kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--oro-claro);font-weight:700;}
+  header .latido svg{width:40px;height:40px;color:var(--oro-claro);display:block;}
+  /* B: comparativo en tarjetas */
+  .comparativo{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:18px;}
+  .comp{background:#fff;border:1px solid var(--borde);border-radius:10px;padding:12px 14px;}
+  .comp .et{font-size:11.5px;color:var(--gris);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  .comp .v{font-size:26px;font-weight:800;color:var(--azul-1);line-height:1.1;margin-top:4px;}
+  .comp .a{font-size:11.5px;color:var(--gris);margin-top:4px;}
+  .delta{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-top:6px;}
+  .delta.sube{background:#FBEAE6;color:#8f3322;} .delta.baja{background:#E5F3EB;color:#22603c;} .delta.igual{background:#E7EDF3;color:var(--azul-2);}
+  .comp-nota{font-size:12px;color:var(--gris);margin:-6px 0 14px;}
+  /* C: atención */
+  .atencion{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+  .aten{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid var(--borde);border-left:5px solid;border-radius:0 10px 10px 0;
+    padding:12px 16px;cursor:pointer;font:inherit;color:var(--texto);}
+  .aten:hover{background:#f7f9fb;}
+  .aten b{font-size:26px;font-weight:800;line-height:1;}
+  .aten span{font-size:12.5px;color:var(--gris);}
+  .aten-rojo{border-left-color:var(--warn);} .aten-rojo b{color:var(--warn);}
+  .aten-ambar{border-left-color:var(--ambar);} .aten-ambar b{color:var(--ambar);}
+  .aten-azul{border-left-color:var(--azul-3);} .aten-azul b{color:var(--azul-3);}
+  .filtro-rapido{display:inline-flex;align-items:center;gap:8px;background:var(--azul-1);color:#fff;border-radius:16px;padding:4px 6px 4px 12px;font-size:12.5px;margin-bottom:10px;}
+  .filtro-rapido button{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:12px;padding:2px 9px;cursor:pointer;font:inherit;font-size:12px;}
+  /* E: gráficas por grupo */
+  .grupos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .grupos button{border:1px solid var(--borde);background:#fff;color:var(--azul-2);border-radius:16px;padding:6px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+  .grupos button.on{background:var(--azul-1);color:#fff;border-color:var(--azul-1);}
+  .card[data-grupo].oculta{display:none;}
+  /* D: iniciales */
+  .ini{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#E7EDF3;color:var(--azul-2);
+    font-size:11px;font-weight:800;margin-right:8px;vertical-align:middle;}
   .modal-fondo{position:fixed;inset:0;background:rgba(20,30,45,.5);display:none;align-items:center;justify-content:center;z-index:50;}
   .modal-fondo.activo{display:flex;}
   .modal{background:#fff;border-radius:10px;padding:22px;width:520px;max-width:92vw;max-height:88vh;overflow:auto;}
@@ -97,18 +138,20 @@
 
 <header>
   <div>
-    <h1>🏥 Dashboard Servicio Médico</h1>
-    <div class="sub">METELMEX · Incapacidades y catálogo de personal</div>
+    <div class="kicker">Departamentos</div>
+    <h1>Servicio médico</h1>
+    <div class="sub" id="subEncabezado">Incapacidades del personal</div><span id="kpiEmpleados" hidden></span>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;">
+  <div style="display:flex;align-items:center;gap:14px;">
     <span id="estadoConexion" class="estado-conexion off">Conectando…</span>
+    <span class="latido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/><path d="M20.5 8.5A5 5 0 0012 5a5 5 0 00-8.5 3.5"/></svg></span>
   </div>
 </header>
 
 <nav>
-  <button class="activo" data-vista="dashboard" onclick="cambiarVista('dashboard')">📊 Dashboard</button>
-  <button data-vista="incapacidades" onclick="cambiarVista('incapacidades')">📋 Incapacidades</button>
-  <button data-vista="empleados" onclick="cambiarVista('empleados')">👥 Catálogo de Empleados</button>
+  <button class="activo" data-vista="dashboard" onclick="cambiarVista('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>Dashboard</span></button>
+  <button data-vista="incapacidades" onclick="cambiarVista('incapacidades')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M12 12v6M9 15h6"/></svg><span>Incapacidades</span></button>
+  <button data-vista="empleados" onclick="cambiarVista('empleados')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg><span>Catálogo de empleados</span></button>
 </nav>
 
 <main>
@@ -124,67 +167,70 @@
     <div><button class="btn secundario" onclick="exportarGraficasExcel()">⬇ Exportar gráficas a Excel</button></div>
   </div>
 
-  <div class="card" style="margin-bottom:20px;">
-    <div class="titulo-banda">MÉTRICAS — AÑO A vs AÑO B</div>
-    <table>
-      <thead><tr><th>Métrica</th><th id="thAnioA">Año A</th><th id="thAnioB">Año B</th></tr></thead>
-      <tbody>
-        <tr><td>Incapacidades totales</td><td id="kpiTotalCasosA">0</td><td id="kpiTotalCasos">0</td></tr>
-        <tr><td>Riesgo de trabajo</td><td id="kpiRTA">0</td><td id="kpiRT">0</td></tr>
-        <tr><td>Riesgo de trayecto</td><td id="kpiTrayectoA">0</td><td id="kpiTrayecto">0</td></tr>
-        <tr><td>Maternidad</td><td id="kpiMaternidadA">0</td><td id="kpiMaternidad">0</td></tr>
-        <tr><td>Enfermedad general</td><td id="kpiEnfermedadA">0</td><td id="kpiEnfermedad">0</td></tr>
-        <tr><td>Días perdidos (repartidos por mes calendario)</td><td id="kpiDiasAnioA">0</td><td id="kpiDiasAnio">0</td></tr>
-      </tbody>
-    </table>
+  <div class="atencion">
+    <button type="button" class="aten aten-rojo" data-rapido="rt"><b id="atenRT">0</b><span>riesgos de trabajo activos</span></button>
+    <button type="button" class="aten aten-ambar" data-rapido="regresan"><b id="atenRegresan">0</b><span>terminan su incapacidad en los próximos 7 días</span></button>
+    <button type="button" class="aten aten-azul" data-rapido="activas"><b id="kpiCasosActivos">0</b><span>incapacidades activas hoy</span></button>
   </div>
-  <div class="grid grid-4" style="margin-bottom:20px;">
-    <div class="card kpi"><div class="valor" id="kpiCasosActivos">0</div><div class="label">Incapacidades activas (a la fecha, todas las fechas de inicio)</div></div>
-    <div class="card kpi"><div class="valor" id="kpiEmpleados">0</div><div class="label">Empleados en catálogo</div></div>
+
+  <div class="comp-nota">Comparando <b id="thAnioB">Año B</b> contra <b id="thAnioA">Año A</b> · casos = registros iniciales; días repartidos por mes calendario. Que suba se marca en rojo.</div>
+  <div class="comparativo">
+    <div class="comp"><div class="et">Incapacidades totales</div><div class="v" id="kpiTotalCasos">0</div><div class="a">Año A: <b id="kpiTotalCasosA">0</b></div><span class="delta igual" id="dTotal">=</span></div>
+    <div class="comp"><div class="et">Riesgo de trabajo</div><div class="v" id="kpiRT">0</div><div class="a">Año A: <b id="kpiRTA">0</b></div><span class="delta igual" id="dRT">=</span></div>
+    <div class="comp"><div class="et">Riesgo de trayecto</div><div class="v" id="kpiTrayecto">0</div><div class="a">Año A: <b id="kpiTrayectoA">0</b></div><span class="delta igual" id="dTrayecto">=</span></div>
+    <div class="comp"><div class="et">Enfermedad general</div><div class="v" id="kpiEnfermedad">0</div><div class="a">Año A: <b id="kpiEnfermedadA">0</b></div><span class="delta igual" id="dEnfermedad">=</span></div>
+    <div class="comp"><div class="et">Maternidad</div><div class="v" id="kpiMaternidad">0</div><div class="a">Año A: <b id="kpiMaternidadA">0</b></div><span class="delta igual" id="dMaternidad">=</span></div>
+    <div class="comp"><div class="et">Días perdidos</div><div class="v" id="kpiDiasAnio">0</div><div class="a">Año A: <b id="kpiDiasAnioA">0</b></div><span class="delta igual" id="dDias">=</span></div>
+  </div>
+  <div class="grupos" id="gruposGraficas">
+    <button type="button" class="on" data-grupo="rt">Riesgo de trabajo</button>
+    <button type="button" data-grupo="enf">Enfermedad</button>
+    <button type="button" data-grupo="planta">Por planta y tipo</button>
+    <button type="button" data-grupo="hist">Histórico</button>
   </div>
 
   <div class="grid grid-2">
-    <div class="card">
+    <div class="card" data-grupo="rt">
       <div class="titulo-banda">INCAPACIDADES POR RIESGO DE TRABAJO</div>
       <canvas id="chartCasosRT" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card" data-grupo="rt">
       <div class="titulo-banda">DÍAS POR RIESGO DE TRABAJO</div>
       <canvas id="chartDiasRT" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="enf">
       <div class="titulo-banda">INCAPACIDADES POR ENFERMEDAD</div>
       <canvas id="chartCasosEnf" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="enf">
       <div class="titulo-banda">DÍAS POR ENFERMEDAD</div>
       <canvas id="chartDiasEnf" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="planta">
       <div class="titulo-banda">CASOS POR PLANTA (año A)</div>
       <canvas id="chartPlantaA" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="planta">
       <div class="titulo-banda">CASOS POR PLANTA (año B)</div>
       <canvas id="chartPlanta" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="planta">
       <div class="titulo-banda">DISTRIBUCIÓN POR TIPO DE INCAPACIDAD (año A)</div>
       <canvas id="chartTipoA" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="planta">
       <div class="titulo-banda">DISTRIBUCIÓN POR TIPO DE INCAPACIDAD (año B)</div>
       <canvas id="chartTipo" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="hist">
       <div class="titulo-banda">CASOS POR AÑO (histórico, todos los tipos)</div>
       <canvas id="chartPorAnio" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="hist">
       <div class="titulo-banda">DÍAS PERDIDOS POR AÑO (por tipo de incapacidad)</div>
       <canvas id="chartDiasPorAnio" height="180"></canvas>
     </div>
-    <div class="card">
+    <div class="card oculta" data-grupo="hist">
       <div class="titulo-banda">CASOS POR MES (año B, todos los tipos)</div>
       <canvas id="chartPorMes" height="180"></canvas>
     </div>
@@ -230,6 +276,7 @@
       </div>
     </div>
   </div>
+  <div class="filtro-rapido" id="filtroRapidoEtiqueta" hidden>Mostrando: <span id="filtroRapidoTexto"></span> <button type="button" id="quitarFiltroRapido">quitar ✕</button></div>
   <div class="tabla-scroll">
     <table>
       <thead><tr>
@@ -244,25 +291,17 @@
 <!-- ===================== EMPLEADOS ===================== -->
 <div id="vista-empleados" class="vista">
   <div class="toolbar">
-    <div>
-      <button class="btn secundario" onclick="document.getElementById('archivoEmpleados').click()">⬆ Subir NSS / teléfonos</button>
-      <input type="file" id="archivoEmpleados" class="oculto" accept=".xls,.xlsx,.csv" onchange="cargarCatalogoEmpleados(event)">
-      <button class="btn secundario" onclick="document.getElementById('archivoZonas').click()">🗺 Actualizar tabla Depto→Área</button>
-      <input type="file" id="archivoZonas" class="oculto" accept=".xls,.xlsx" onchange="actualizarTablaDeptoArea(event)">
-      <button class="btn secundario" onclick="exportarEmpleadosXlsx()">⬇ Exportar Excel</button>
-    </div>
+    <div></div>
     <input type="text" id="buscarEmp" placeholder="Buscar empleado..." style="width:260px;" oninput="renderTablaEmpleados()">
   </div>
   <div style="font-size:12px;color:#5b6675;margin-bottom:8px;">
-    Los empleados salen del <b>catálogo de RH</b> (pestaña Empleados del dashboard): las altas, nombres, puestos y bajas se cambian allá.
-    Aquí solo se guardan <b>NSS, teléfono, depto de nómina y notas</b>. Al subir un archivo se actualizan esos datos de los empleados que ya existen
-    (columnas Codigo, NSS, Telefono, Depto, Notas; también reconoce el export de nómina: CODIGO, NOIMSS, TELEFONO, DEPARTAMENTO). Una celda vacía no borra lo guardado.
-    El campo <b>Área</b> se calcula del número de departamento de nómina según la tabla depto→área.
+    Solo consulta. Todo sale de la pestaña <b>Empleados</b> del dashboard de RH (nombre, puesto, planta, NSS, teléfono, estatus):
+    las altas y correcciones se hacen allá, una por una con "Editar" o con la plantilla del catálogo.
   </div>
   <div class="tabla-scroll">
     <table>
       <thead><tr>
-        <th>Código</th><th>Nombre</th><th>Puesto</th><th>Depto</th><th>Área</th><th>NSS</th><th>Teléfono</th><th>Ingreso</th><th>Estatus</th>
+        <th>Código</th><th>Nombre</th><th>Puesto</th><th>Planta</th><th>NSS</th><th>Teléfono</th><th>Ingreso</th><th>Estatus</th>
       </tr></thead>
       <tbody id="tbodyEmpleados"></tbody>
     </table>
@@ -327,7 +366,7 @@
     <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
       <button class="btn peligro" onclick="confirmarModoCarga('reemplazar')">Reemplazar todo</button>
       <button class="btn secundario" onclick="confirmarModoCarga('agregar')">Agregar / actualizar existentes</button>
-      <div style="font-size:11.5px;color:#5b6675;">Incapacidades: se reconocen por <b>Folio</b>; sin folio, por código + fecha de inicio + fecha fin + tipo. Empleados: por <b>Código</b>.</div>
+      <div style="font-size:11.5px;color:#5b6675;">Incapacidades: se reconocen por <b>Folio</b>; sin folio, por código + fecha de inicio + fecha fin + tipo.</div>
       <button class="btn secundario" onclick="cerrarModal('modalModoCarga')">Cancelar</button>
     </div>
   </div>
@@ -549,18 +588,11 @@ function calcularDiasModal(){
 }
 
 function normalizarEmp(r){
-  const depto = String(r.Depto||'').trim();
   return {
-    Codigo: String(r.Codigo||'').trim(), Nombre: r.Nombre||'', Puesto: r.Puesto||'',
-    Depto: depto, Planta: mapearArea(depto) || r.Planta || '',
+    Codigo: String(r.Codigo||'').trim(), Nombre: r.Nombre||'', Puesto: r.Puesto||'', Planta: r.Planta||'',
     NSS: r.NSS||'', Telefono: r.Telefono||'', FechaIngreso: aFechaISO(r.FechaIngreso),
-    Estatus: normalizarEstatusEmpleado(r.Estatus), Notas: sinEntidades(r.Notas)
+    Estatus: normalizarEstatusEmpleado(r.Estatus)
   };
-}
-// "reducci&#243;n" -> "reducción" (acentos que el export de nómina guarda como entidades HTML)
-function sinEntidades(v){
-  const s = String(v||'');
-  return s.includes('&') ? new DOMParser().parseFromString(s, 'text/html').documentElement.textContent : s;
 }
 function aFechaISO(v){
   if(!v) return '';
@@ -626,78 +658,6 @@ function poblarFiltroPlanta(){
 function poblarDatalistCodigos(){
   document.getElementById('listaCodigosEmp').innerHTML =
     empleados.map(e=>`<option value="${esc(e.Codigo)}">${esc(e.Nombre)}</option>`).join('');
-}
-
-/* ============================================================
-   MAPEO DEPARTAMENTO (nómina) -> ÁREA
-============================================================ */
-const MAPA_DEPTO_AREA = {
-  '1':'PLANTA 1','2':'PLANTA 2','3':'PLANTA 2','4':'PLANTA 1','5':'PLANTA 1',
-  '6':'PLANTA 4','7':'PLANTA 3','8':'CORPORATIVO','9':'PLANTA 3','10':'CORPORATIVO',
-  '11':'PLANTA 5','12':'PLANTA 1','82':'VENTAS','83':'PLANTA 1','84':'PLANTA 1',
-  '85':'VENTAS','86':'VENTAS','87':'VENTAS','88':'VENTAS','89':'VENTAS','90':'VENTAS',
-  '91':'VENTAS','92':'VENTAS','94':'VENTAS','95':'VENTAS','96':'VENTAS','97':'PLANTA 4',
-  '98':'PLANTA 4','99':'PLANTA 4','100':'PLANTA 4','101':'PLANTA 4','102':'PLANTA 4',
-  '103':'PLANTA 4','104':'PLANTA 4','105':'PLANTA 4','106':'PLANTA 4','107':'PLANTA 4',
-  '108':'PLANTA 4','109':'PLANTA 4','110':'PLANTA 4','111':'PLANTA 4','112':'PLANTA 4',
-  '113':'VENTAS PAILERIA','114':'CORPORATIVO','115':'CORPORATIVO','116':'PLANTA 1',
-  '117':'PLANTA 1','118':'PLANTA 1','119':'PLANTA 1','120':'PLANTA 1','121':'PLANTA 1',
-  '122':'PLANTA 2','123':'PLANTA 2','124':'PLANTA 2','125':'PLANTA 2','126':'PLANTA 2',
-  '127':'PLANTA 2','128':'PLANTA 3','129':'PLANTA 3','130':'PLANTA 3','131':'PLANTA 3',
-  '132':'PLANTA 3','133':'PLANTA 3','134':'PLANTA 5','135':'PLANTA 5','136':'PLANTA 5',
-  '137':'PLANTA 5','138':'PLANTA 5','139':'PLANTA 5','140':'PLANTA 2','141':'PLANTA 1',
-  '142':'PLANTA 5','143':'PLANTA 1','144':'PLANTA 2','145':'PLANTA 3','146':'PLANTA 4',
-  '147':'PLANTA 5','148':'PLANTA 5','149':'PLANTA 4','150':'PLANTA 4','151':'PLANTA 1',
-  '152':'PLANTA 2','153':'PLANTA 3','154':'PLANTA 4','155':'PLANTA 5','156':'PLANTA 3',
-  '157':'VENTAS PAILERIA','158':'PLANTA 1','159':'VENTAS','160':'VENTAS','161':'PLANTA 2',
-  '162':'VENTAS PAILERIA','163':'VENTAS PAILERIA','164':'VENTAS PAILERIA'
-};
-function mapearArea(deptoRaw, mapa = MAPA_DEPTO_AREA){
-  const cod = String(deptoRaw||'').trim().replace(/^0+/,'');
-  if(!cod) return '';
-  if(mapa[cod]) return mapa[cod];
-  return '';
-}
-function cargarMapaDeptoAreaGuardado(){
-  const guardado = localStorage.getItem('mapaDeptoArea');
-  if(guardado){
-    try{ Object.assign(MAPA_DEPTO_AREA, JSON.parse(guardado)); }catch(e){}
-  }
-}
-async function actualizarTablaDeptoArea(evento){
-  const file = evento.target.files[0];
-  if(!file) return;
-  try{
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
-    const hoja = wb.Sheets[wb.SheetNames[0]];
-    const filas = XLSX.utils.sheet_to_json(hoja, {header:1, defval:''});
-    const nuevoMapa = {};
-    filas.forEach(fila=>{
-      const depto = fila[0];
-      const area = fila[2]; // columna C = AREA según tu catálogo
-      if(depto!=='' && !isNaN(depto) && area){
-        nuevoMapa[String(depto).trim()] = String(area).trim();
-      }
-    });
-    if(!Object.keys(nuevoMapa).length){ alert('No se detectaron filas válidas (se espera: columna A = DEPTO NOMINA, columna C = AREA).'); return; }
-    const mapaCombinado = {...MAPA_DEPTO_AREA, ...nuevoMapa};
-    // recalcula el área de todo el catálogo actual con la tabla nueva
-    const empleadosNuevos = empleados.map(e => ({...e, Planta: mapearArea(e.Depto, mapaCombinado) || e.Planta}));
-    // solo se envían los empleados cuya área cambió
-    const cambiados = empleadosNuevos.filter((e,i) => e.Planta !== empleados[i].Planta);
-    if(cambiados.length && !await persistir({accion:'upsertEmpleados', registros: cambiados})) return;
-    Object.assign(MAPA_DEPTO_AREA, nuevoMapa);
-    localStorage.setItem('mapaDeptoArea', JSON.stringify(MAPA_DEPTO_AREA));
-    empleados = empleadosNuevos;
-    await sincronizarConSheets();
-    alert(`Tabla depto→área actualizada (${Object.keys(nuevoMapa).length} departamentos). Empleados con área modificada: ${cambiados.length}.`);
-  }catch(err){
-    console.error(err);
-    alert('No se pudo leer el archivo de zonas.');
-  } finally {
-    evento.target.value = '';
-  }
 }
 
 /* ============================================================
@@ -832,20 +792,20 @@ function renderDashboard(){
   const listaB = filtrar(incapacidadesGraficables, anioB);
 
   dibujarBarras('chartCasosRT', MESES, [
-    {label:String(anioA), data:serieMensual(listaA, esRT,'casos'), color:'#9aa4b2'},
-    {label:String(anioB), data:serieMensual(listaB, esRT,'casos'), color:'#1f3b64'}
+    {label:String(anioA), data:serieMensual(listaA, esRT,'casos'), color:'#254D74'},
+    {label:String(anioB), data:serieMensual(listaB, esRT,'casos'), color:'#C89B3C'}
   ]);
   dibujarBarras('chartDiasRT', MESES, [
-    {label:String(anioA), data:serieDias(anioA, esRT), color:'#9aa4b2'},
-    {label:String(anioB), data:serieDias(anioB, esRT), color:'#1f3b64'}
+    {label:String(anioA), data:serieDias(anioA, esRT), color:'#254D74'},
+    {label:String(anioB), data:serieDias(anioB, esRT), color:'#C89B3C'}
   ]);
   dibujarBarras('chartCasosEnf', MESES, [
-    {label:String(anioA), data:serieMensual(listaA, esEnf,'casos'), color:'#9aa4b2'},
-    {label:String(anioB), data:serieMensual(listaB, esEnf,'casos'), color:'#1f3b64'}
+    {label:String(anioA), data:serieMensual(listaA, esEnf,'casos'), color:'#254D74'},
+    {label:String(anioB), data:serieMensual(listaB, esEnf,'casos'), color:'#C89B3C'}
   ]);
   dibujarBarras('chartDiasEnf', MESES, [
-    {label:String(anioA), data:serieDias(anioA, esEnf), color:'#9aa4b2'},
-    {label:String(anioB), data:serieDias(anioB, esEnf), color:'#1f3b64'}
+    {label:String(anioA), data:serieDias(anioA, esEnf), color:'#254D74'},
+    {label:String(anioB), data:serieDias(anioB, esEnf), color:'#C89B3C'}
   ]);
 
   // casos por planta — separado por tipo, año A y año B
@@ -892,8 +852,8 @@ function renderDashboard(){
   filtrar(incapacidadesGraficables, anioA).filter(esInicial).forEach(i=>{ porMesA[Number(i.FechaInicio.slice(5,7))-1]++; });
   casosBTodos.forEach(i=>{ porMesB[Number(i.FechaInicio.slice(5,7))-1]++; });
   dibujarBarras('chartPorMes', MESES, [
-    {label:String(anioA), data:porMesA, color:'#9aa4b2'},
-    {label:String(anioB), data:porMesB, color:'#1f3b64'}
+    {label:String(anioA), data:porMesA, color:'#254D74'},
+    {label:String(anioB), data:porMesB, color:'#C89B3C'}
   ]);
 
   // KPIs por tipo — año A y año B
@@ -914,11 +874,27 @@ function renderDashboard(){
   const diasA = sumaDias(baseDias, anioA), diasB = sumaDias(baseDias, anioB);
   document.getElementById('kpiDiasAnioA').textContent = diasA;
   document.getElementById('kpiDiasAnio').textContent = diasB;
+  // B: flecha de B contra A (en incapacidades, subir es malo)
+  const pintarDelta = (id, a, b) => {
+    const el = document.getElementById(id), dif = b - a;
+    el.className = 'delta ' + (dif > 0 ? 'sube' : dif < 0 ? 'baja' : 'igual');
+    el.textContent = dif === 0 ? '= igual' : `${dif > 0 ? '▲' : '▼'} ${Math.abs(dif).toLocaleString('es-MX')}${a ? ` (${Math.round(Math.abs(dif) * 100 / a)}%)` : ''}`;
+  };
+  pintarDelta('dTotal', casosA_INICIAL.length, casosBTodos.length);
+  [['dRT','RIESGO DE TRABAJO'],['dTrayecto','RIESGO DE TRAYECTO'],['dEnfermedad','ENFERMEDAD'],['dMaternidad','MATERNIDAD']]
+    .forEach(([id, tipo]) => pintarDelta(id, contarTipoA(tipo), contarTipo(tipo)));
+  pintarDelta('dDias', diasA, diasB);
 
   // KPIs generales (no dependen del año)
   const casosGlobal = calcularCasos(incapacidadesGraficables); // para "activas" sí importa el estatus real de la cadena completa
   document.getElementById('kpiCasosActivos').textContent = casosGlobal.filter(i=>i.Estatus==='Activa' && (!planta||i.Planta===planta)).length;
   document.getElementById('kpiEmpleados').textContent = empleados.filter(e=>e.Estatus==='Activo').length;
+  // C: atención (casos completos, respeta planta) y dato vivo del encabezado
+  const activasHoy = casosGlobal.filter(i=>i.Estatus==='Activa' && (!planta||i.Planta===planta));
+  const regresan = activasHoy.filter(i => i.FechaFin && i.FechaFin >= hoyISO() && i.FechaFin <= sumarDiasISO(hoyISO(), 6)).length;
+  document.getElementById('atenRT').textContent = activasHoy.filter(i=>i.Incapacidad==='RIESGO DE TRABAJO').length;
+  document.getElementById('atenRegresan').textContent = regresan;
+  document.getElementById('subEncabezado').textContent = `${activasHoy.length} incapacidad(es) activa(s) · ${regresan} terminan esta semana · ${empleados.filter(e=>e.Estatus==='Activo').length} empleados activos`;
 
   // datos guardados para exportar a Excel
   ultimosDatosDashboard = {
@@ -961,6 +937,9 @@ function renderDashboard(){
   };
 }
 
+function hoyISO(){ const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function sumarDiasISO(iso, n){ const d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+
 function dibujarBarras(canvasId, labels, series){
   if(charts[canvasId]) charts[canvasId].destroy();
   charts[canvasId] = new Chart(document.getElementById(canvasId), {
@@ -973,14 +952,14 @@ function dibujarBarrasSimple(canvasId, labels, data){
   if(charts[canvasId]) charts[canvasId].destroy();
   charts[canvasId] = new Chart(document.getElementById(canvasId), {
     type:'bar',
-    data:{ labels, datasets:[{label:'Casos', data, backgroundColor:'#3f6ba3'}] },
+    data:{ labels, datasets:[{label:'Casos', data, backgroundColor:'#254D74'}] },
     options:{ responsive:true, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
   });
 }
 const TIPOS_INCAPACIDAD = ['RIESGO DE TRABAJO','RIESGO DE TRAYECTO','MATERNIDAD','ENFERMEDAD'];
 const COLOR_TIPO = {
-  'RIESGO DE TRABAJO':'#1f3b64', 'RIESGO DE TRAYECTO':'#3f6ba3',
-  'MATERNIDAD':'#c0392b', 'ENFERMEDAD':'#9aa4b2'
+  'RIESGO DE TRABAJO':'#B2432E', 'RIESGO DE TRAYECTO':'#B8892B',
+  'MATERNIDAD':'#B5679E', 'ENFERMEDAD':'#254D74'
 };
 function dibujarBarrasApiladasPorTipo(canvasId, labels, obtenerValor){
   if(charts[canvasId]) charts[canvasId].destroy();
@@ -1022,6 +1001,16 @@ function cruzaDia1(registro, mesesSeleccionados){
   return false;
 }
 
+// Filtro que ponen las tarjetas de atención (C): se ve como etiqueta arriba de la tabla y se quita con un clic
+let filtroRapido = '';
+const TEXTO_RAPIDO = { rt: 'riesgos de trabajo activos', regresan: 'terminan en los próximos 7 días', activas: 'incapacidades activas hoy' };
+function pasaFiltroRapido(i){
+  if(!filtroRapido) return true;
+  const activa = calcularEstatusPorFecha(i.FechaFin) === 'Activa';
+  if(filtroRapido === 'activas') return activa;
+  if(filtroRapido === 'rt') return activa && i.Incapacidad === 'RIESGO DE TRABAJO';
+  return activa && i.FechaFin && i.FechaFin >= hoyISO() && i.FechaFin <= sumarDiasISO(hoyISO(), 6);
+}
 function obtenerIncapacidadesFiltradas(){
   const planta = document.getElementById('filtroIncapPlanta').value;
   const ficha = (document.getElementById('filtroIncapFicha').value||'').toLowerCase().trim();
@@ -1044,20 +1033,30 @@ function obtenerIncapacidadesFiltradas(){
       if(m !== Number(mes)) return false;
     }
     if(mesesDia1.length && !cruzaDia1(i, mesesDia1)) return false;
+    if(!pasaFiltroRapido(i)) return false;
     return true;
   }).sort((a,b)=> (b.FechaInicio||'').localeCompare(a.FechaInicio||''));
 }
 
+function iniciales(nombre){
+  const p = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  const ini = p.length > 1 ? p[0][0] + p[1][0] : (p[0] || '?').slice(0, 2);
+  return `<span class="ini" aria-hidden="true">${esc(ini.toUpperCase())}</span>`;
+}
 function renderTablaIncapacidades(){
   const tbody = document.getElementById('tbodyIncapacidades');
   const filtradas = obtenerIncapacidadesFiltradas();
 
+  const etiqueta = document.getElementById('filtroRapidoEtiqueta');
+  etiqueta.hidden = !filtroRapido;
+  if(filtroRapido) document.getElementById('filtroRapidoTexto').textContent = TEXTO_RAPIDO[filtroRapido];
+  const claseTipo = { 'RIESGO DE TRABAJO':'t-rt', 'RIESGO DE TRAYECTO':'t-tray', 'ENFERMEDAD':'t-enf', 'MATERNIDAD':'t-mat' };
   tbody.innerHTML = filtradas.map(i => {
     const estatusHoy = calcularEstatusPorFecha(i.FechaFin);
     return `
     <tr>
-      <td>${esc(i.Codigo)}</td><td>${esc(i.Nombre)}</td><td>${esc(i.Puesto)}</td><td>${esc(i.Planta)}</td>
-      <td>${esc(i.TipoRegistro)}</td><td>${esc(i.Incapacidad)}</td>
+      <td>${esc(i.Codigo)}</td><td>${iniciales(i.Nombre)}${esc(i.Nombre)}</td><td>${esc(i.Puesto)}</td><td>${esc(i.Planta)}</td>
+      <td><span class="badge neutro">${esc(i.TipoRegistro)}</span></td><td><span class="badge ${claseTipo[i.Incapacidad] || 'neutro'}">${esc(i.Incapacidad)}</span></td>
       <td>${esc(i.FechaInicio)}</td><td>${esc(i.FechaFin)}</td><td>${esc(i.FechaAlta)}</td>
       <td>${esc(i.Dias)}</td><td>${esc(i.Folio)}</td>
       <td><span class="badge ${estatusHoy==='Activa'?'activa':'cerrada'}">${estatusHoy}</span></td>
@@ -1091,6 +1090,7 @@ function limpiarFiltrosIncap(){
   document.getElementById('filtroIncapFolio').value='';
   document.getElementById('filtroIncapAnio').value='';
   document.querySelectorAll('.chkDia1').forEach(c=>c.checked=false);
+  filtroRapido = '';
   renderTablaIncapacidades();
 }
 
@@ -1193,16 +1193,13 @@ function renderTablaEmpleados(){
 
   tbody.innerHTML = filtrados.map(e => `
     <tr>
-      <td>${esc(e.Codigo)}</td><td>${esc(e.Nombre)}</td><td>${esc(e.Puesto)}</td><td>${esc(e.Depto)}</td><td>${esc(e.Planta)}</td>
+      <td>${esc(e.Codigo)}</td><td>${esc(e.Nombre)}</td><td>${esc(e.Puesto)}</td><td>${esc(e.Planta)}</td>
       <td>${esc(e.NSS)}</td><td>${esc(e.Telefono)}</td><td>${esc(e.FechaIngreso)}</td>
       <td><span class="badge ${e.Estatus==='Activo'?'activa':'cerrada'}">${esc(e.Estatus)}</span></td>
-    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:#8892a0;">Sin registros</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:#8892a0;">Sin registros</td></tr>';
 }
 
 // Lo único que Servicio Médico guarda de cada empleado (SM_Empleados); lo demás es del catálogo de RH.
-const CAMPOS_MEDICOS_EMP = ['NSS','Telefono','Depto','Notas'];
-const datosMedicos = e => ({Codigo: e.Codigo, NSS: e.NSS, Telefono: e.Telefono, Depto: e.Depto, Notas: e.Notas});
-
 /* ============================================================
    CARGA DE ARCHIVOS (plantilla incapacidades / catálogo)
 ============================================================ */
@@ -1308,78 +1305,6 @@ async function cargarPlantillaIncapacidades(evento){
   }
 }
 
-/**
- * Repara CSVs "sucios" donde algún campo (típicamente observaciones/notas)
- * contiene saltos de línea reales sin ir entre comillas, lo que rompe el
- * formato CSV estándar (cada salto se leería como fila nueva). Reconstruye
- * las filas usando el número de columnas del encabezado como referencia.
- */
-function repararYParsearCSV(texto){
-  const lineas = texto.split(/\r\n|\n|\r/);
-  const encabezado = lineas[0].split(',').map(h=>h.trim());
-  const nCols = encabezado.length;
-  const filasCrudas = [];
-  let buffer = '';
-  for(let i=1;i<lineas.length;i++){
-    buffer = buffer ? buffer + ' ' + lineas[i] : lineas[i];
-    const nComas = (buffer.match(/,/g)||[]).length;
-    if(nComas >= nCols-1 || i===lineas.length-1){
-      if(buffer.trim()) filasCrudas.push(buffer);
-      buffer='';
-    }
-  }
-  return filasCrudas.map(linea=>{
-    const partes = linea.split(',');
-    const valores = partes.slice(0,nCols-1);
-    valores.push(partes.slice(nCols-1).join(','));
-    const obj={};
-    encabezado.forEach((h,idx)=>{ obj[h] = (valores[idx]||'').trim(); });
-    return obj;
-  });
-}
-
-async function cargarCatalogoEmpleados(evento){
-  const file = evento.target.files[0];
-  if(!file) return;
-  try{
-    let filas;
-    if(file.name.toLowerCase().endsWith('.csv')){
-      const texto = await decodificarTexto(file);
-      filas = repararYParsearCSV(texto);
-    } else {
-      const wb = await leerArchivoComoWorkbook(file);
-      filas = hojaAJson(wb);
-    }
-    let registros = filas.map(f => normalizarEmp({
-      Codigo: campo(f,'Codigo','Código','CVEEMP'),
-      Nombre: campo(f,'Nombre','NOMBRE_COMPLETO'),
-      Puesto: campo(f,'Puesto'),
-      Depto: campo(f,'Depto','Departamento'),
-      NSS: campo(f,'NSS','IMSS','NOIMSS'),
-      Telefono: campo(f,'Telefono','Teléfono'),
-      FechaIngreso: campo(f,'FechaIngreso','Fecha Ingreso','FechaAlta'),
-      Estatus: normalizarEstatusEmpleado(campo(f,'Estatus')),
-      Notas: campo(f,'Notas','EmpObservaciones')
-    })).filter(e=>e.Codigo);
-    if(!registros.length){ alert('No se detectaron filas válidas. Revisa que exista la columna "Codigo".'); return; }
-    // códigos repetidos dentro del archivo: se conserva la última fila de cada código
-    const porCodigo = new Map();
-    const repetidos = new Set();
-    registros.forEach(r=>{ if(porCodigo.has(r.Codigo)) repetidos.add(r.Codigo); porCodigo.set(r.Codigo, r); });
-    if(repetidos.size){
-      alert(`El archivo trae ${repetidos.size} código(s) repetido(s); se tomará la última fila de cada uno:\n${[...repetidos].slice(0,30).join(', ')}${repetidos.size>30?'…':''}`);
-    }
-    registros = [...porCodigo.values()];
-    cargaPendiente = {tipo:'empleados', registros};
-    await confirmarModoCarga('agregar'); // el catálogo es el de RH: aquí nunca se reemplaza completo
-  }catch(err){
-    console.error(err);
-    alert('No se pudo leer el archivo. Verifica el formato.');
-  } finally {
-    evento.target.value = '';
-  }
-}
-
 /* Clave para reconocer el mismo registro entre el archivo y lo ya guardado:
    por Folio (el del certificado IMSS); si no tiene folio, por
    código (o nombre) + fecha de inicio + fecha fin + tipo de incapacidad. */
@@ -1425,13 +1350,13 @@ function combinarIncapacidades(registros, listaExistente){
 
 async function confirmarModoCarga(modo){
   if(!cargaPendiente) return;
-  const {tipo, registros} = cargaPendiente;
-  const existentes = tipo==='incapacidades' ? incapacidades.length : empleados.length;
+  const {registros} = cargaPendiente;
+  const existentes = incapacidades.length;
   if(modo==='reemplazar' && existentes>0){
     const ok = confirm(`Esto BORRARÁ los ${existentes} registros que ya tienes guardados y los sustituirá solo por los ${registros.length} de este archivo.\n\n¿Seguro que quieres continuar?`);
     if(!ok) return;
   }
-  if(tipo==='incapacidades'){
+  {
     const c = combinarIncapacidades(registros, modo==='reemplazar' ? [] : incapacidades);
     // "agregar": solo se envían los registros nuevos o modificados; lo que otros capturaron queda intacto.
     // "reemplazar": se envía todo, y el backend lo rechaza si la hoja cambió desde la última lectura.
@@ -1446,21 +1371,6 @@ async function confirmarModoCarga(modo){
       resumen += `\n• Repetidos dentro del archivo (NO se registraron): ${c.repetidosArchivo.length}\n  ${c.repetidosArchivo.join(', ')}`;
     }
     alert(resumen);
-  } else {
-    // Solo empleados que ya existen en RH; una celda vacía no borra lo guardado.
-    const porCodigo = new Map(empleados.map(e=>[e.Codigo, e]));
-    const desconocidos = registros.filter(r=>!porCodigo.has(r.Codigo)).map(r=>r.Codigo);
-    const cambios = [];
-    registros.forEach(r=>{
-      const e = porCodigo.get(r.Codigo);
-      if(!e) return;
-      const m = normalizarEmp({...e, NSS: r.NSS||e.NSS, Telefono: r.Telefono||e.Telefono, Depto: r.Depto||e.Depto, Notas: r.Notas||e.Notas});
-      if(CAMPOS_MEDICOS_EMP.every(c => String(m[c]) === String(e[c]))) return; // sin cambios
-      cambios.push(m);
-    });
-    if(cambios.length && !await persistir({accion:'upsertEmpleados', registros: cambios.map(datosMedicos)})) return;
-    alert(`Datos médicos actualizados:\n• Modificados: ${cambios.length}\n• Sin cambios: ${registros.length - cambios.length - desconocidos.length}` +
-      (desconocidos.length ? `\n• No están en el catálogo de RH (no se guardaron): ${desconocidos.length}\n  ${desconocidos.slice(0,30).join(', ')}${desconocidos.length>30?'…':''}` : ''));
   }
   cargaPendiente = null;
   cerrarModal('modalModoCarga');
@@ -1484,15 +1394,6 @@ function exportarIncapacidadesXlsx(){
   XLSX.utils.book_append_sheet(wb, ws, 'Incapacidades');
   XLSX.writeFile(wb, 'incapacidades_export.xlsx');
 }
-function exportarEmpleadosXlsx(){
-  const filtrados = obtenerEmpleadosFiltrados();
-  if(!filtrados.length){ alert('No hay registros que coincidan con los filtros aplicados.'); return; }
-  const ws = XLSX.utils.json_to_sheet(filtrados);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
-  XLSX.writeFile(wb, 'catalogo_empleados_export.xlsx');
-}
-
 /* ============================================================
    INICIO
 ============================================================ */
@@ -1505,7 +1406,23 @@ window.addEventListener('DOMContentLoaded', () => {
     if(!b) return;
     if(b.dataset.accion==='editar') editarIncapacidad(b.dataset.id); else eliminarIncapacidad(b.dataset.id);
   });
-  cargarMapaDeptoAreaGuardado();
+  document.querySelector('.atencion').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-rapido]');
+    if(!b) return;
+    filtroRapido = b.dataset.rapido;
+    document.getElementById('filtroIncapPlanta').value = document.getElementById('filtroPlanta').value; // misma planta que el dashboard
+    cambiarVista('incapacidades');
+    renderTablaIncapacidades();
+  });
+  document.getElementById('quitarFiltroRapido').addEventListener('click', () => { filtroRapido = ''; renderTablaIncapacidades(); });
+  document.getElementById('gruposGraficas').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-grupo]');
+    if(!b) return;
+    document.querySelectorAll('#gruposGraficas button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.card[data-grupo]').forEach(c => c.classList.toggle('oculta', c.dataset.grupo !== b.dataset.grupo));
+    // Chart.js deja en 0 la gráfica que se dibuja oculta (y resize() no la recupera): se vuelven a dibujar ya visibles
+    renderDashboard();
+  });
   cargarTodo();
 });
 </script>
