@@ -262,6 +262,53 @@ tbody tr:hover{background:var(--paper);}
   .brand{justify-content:center;}
   .form-grid{grid-template-columns:1fr;}
 }
+/* ---------- GENERALISTAS: encabezado ejecutivo, atención con semáforo, iniciales, filtros rápidos ---------- */
+.topbar.ejecutivo{background:var(--navy-900);color:#fff;border-radius:var(--radius);padding:18px 22px;border-bottom:3px solid var(--gold-500);align-items:center;}
+.topbar.ejecutivo .pagetitle{color:#fff;}
+.topbar.ejecutivo .pagesub{color:rgba(255,255,255,.8);}
+.topbar.ejecutivo .pagesub a{color:var(--gold-400);}
+.topbar.ejecutivo .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25);}
+.topbar.ejecutivo .btn-primary{background:var(--gold-500);color:#2A2005;}
+.kicker-gen{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-400);font-weight:700;margin-bottom:2px;}
+.kpi-ico-g svg{width:14px;height:14px;color:var(--gold-500);vertical-align:-2px;margin-right:5px;}
+.kpi-delta .delta-up,.kpi-delta .delta-down,.kpi-delta .delta-eq{display:inline-block;padding:1px 7px;border-radius:99px;margin-right:3px;}
+.kpi-delta .delta-up{background:var(--bad-bg);}
+.kpi-delta .delta-down{background:var(--ok-bg);}
+.kpi-delta .delta-eq{background:var(--navy-100);color:var(--navy-800);font-weight:700;}
+.atencion{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:16px;}
+.aten{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid var(--line);border-left:5px solid;
+  border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink-900);}
+.aten:hover{box-shadow:var(--shadow);}
+.aten b{font-size:26px;font-weight:800;line-height:1;}
+.aten span{font-size:12.5px;color:var(--ink-500);}
+.aten-rojo{border-left-color:var(--bad);} .aten-rojo b{color:var(--bad);}
+.aten-ambar{border-left-color:var(--warn);} .aten-ambar b{color:var(--warn);}
+.aten-verde{border-left-color:var(--ok);} .aten-verde b{color:var(--ok);}
+.ini{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--navy-100);color:var(--navy-800);
+  font-size:11.5px;font-weight:800;flex-shrink:0;}
+.name-cell.con-ini{display:flex;align-items:center;gap:9px;}
+.barra-top{display:flex;align-items:center;gap:8px;min-width:120px;}
+.barra-top .pista{flex:1;height:8px;background:var(--paper);border-radius:99px;overflow:hidden;}
+.barra-top .pista i{display:block;height:100%;background:var(--navy-800);border-radius:99px;}
+.badge-warn{background:var(--warn-bg);color:var(--warn);}
+.ficha-emp{display:flex;align-items:center;gap:12px;width:100%;flex-wrap:wrap;}
+.ficha-emp .ini{width:42px;height:42px;font-size:14px;}
+.ficha-emp .datos{flex:1;min-width:180px;}
+.ficha-emp .datos b{display:block;font-size:14.5px;color:var(--navy-900);}
+.ficha-emp .datos span{font-size:12px;font-weight:500;color:var(--ink-500);}
+.ficha-emp .etiquetas{display:flex;gap:6px;flex-wrap:wrap;}
+#chip-nombre.con-ficha{background:#fff;border:1px solid var(--line);padding:12px 14px;}
+.rapidos{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.rapido{border:1px solid var(--line);background:#fff;color:var(--navy-800);border-radius:99px;padding:6px 14px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.rapido.on{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+.emp-card .row1 .quien{display:flex;gap:10px;align-items:center;}
+@media(max-width:700px){
+  .topbar.ejecutivo{padding:14px 16px;}
+  .atencion{grid-template-columns:1fr;gap:8px;}
+  .aten{padding:10px 12px;} .aten b{font-size:22px;}
+  .ini{width:26px;height:26px;font-size:10.5px;}
+  .barra-top{min-width:80px;}
+}
 /* ---------- CUMPLEAÑEROS: toque festivo con la misma paleta azul marino y dorado ---------- */
 .cumple-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--navy-900);color:#fff;
   border-radius:var(--radius);padding:18px 22px;margin-bottom:18px;border-bottom:3px solid var(--gold-500);}
@@ -399,6 +446,10 @@ body:not(.sin-sesion) .login{display:none;}
   body{background:#fff;}
   .panel,.kpi{box-shadow:none;break-inside:avoid;}
   .two-col{grid-template-columns:1fr 1fr;}
+  /* el encabezado oscuro sale en blanco si la impresora no imprime fondos */
+  .topbar.ejecutivo{background:none;padding:0 0 10px;border-radius:0;}
+  .topbar.ejecutivo .pagetitle{color:var(--navy-900);}
+  .topbar.ejecutivo .pagesub{color:var(--ink-700);}
 }
 
 .small-muted{font-size:11.5px;color:var(--ink-500);}
@@ -512,9 +563,10 @@ body:not(.sin-sesion) .login{display:none;}
 
     <!-- ============ DASHBOARD ============ -->
     <section id="view-dashboard" class="view">
-      <div class="topbar">
+      <div class="topbar ejecutivo">
         <div>
-          <div class="pagetitle">Dashboard Ausentismo</div>
+          <div class="kicker-gen">Generalistas</div>
+          <div class="pagetitle">Ausentismo</div>
           <div class="pagesub" id="dash-pagesub">Resumen general de faltas registradas</div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;" class="no-print">
@@ -569,32 +621,38 @@ body:not(.sin-sesion) .login{display:none;}
         </div>
       </div>
 
+      <div class="atencion no-print">
+        <button type="button" class="aten aten-rojo" data-aten="top"><b id="aten-reincidentes">0</b><span>activos con 3 o más faltas en el periodo y sin carta compromiso</span></button>
+        <button type="button" class="aten aten-ambar" data-aten="hoy"><b id="aten-hoy">0</b><span>faltas registradas hoy</span></button>
+        <button type="button" class="aten aten-verde" data-aten="cartas"><b id="aten-cartas">0</b><span>cartas compromiso firmadas este mes</span></button>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi">
-          <div class="kpi-label">Ausencias registradas</div>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M10 13l4 4M14 13l-4 4"/></svg></span>Ausencias registradas</div>
           <div class="kpi-value" id="kpi-total">0</div>
           <div class="kpi-sub" id="kpi-total-sub">Histórico completo</div>
           <div class="kpi-delta" id="kpi-total-delta"></div>
         </div>
         <div class="kpi gold">
-          <div class="kpi-label">Empleados con faltas</div>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg></span>Empleados con faltas</div>
           <div class="kpi-value" id="kpi-empleados">0</div>
           <div class="kpi-sub" id="kpi-empleados-sub">—</div>
           <div class="kpi-delta" id="kpi-empleados-delta"></div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">% Ausentismo</div>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></svg></span>% Ausentismo</div>
           <div class="kpi-value" id="kpi-pct">0%</div>
           <div class="kpi-sub" id="kpi-pct-sub">—</div>
           <div class="kpi-delta" id="kpi-pct-delta"></div>
         </div>
         <div class="kpi ok">
-          <div class="kpi-label">Con carta compromiso</div>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M9 15l2 2 4-4"/></svg></span>Con carta compromiso</div>
           <div class="kpi-value" id="kpi-carta-si">0%</div>
           <div class="kpi-sub" id="kpi-carta-si-sub">firmada</div>
         </div>
         <div class="kpi bad">
-          <div class="kpi-label">Sin carta compromiso</div>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M14 3v6h6M12 12v3M12 18h.01"/></svg></span>Sin carta compromiso</div>
           <div class="kpi-value" id="kpi-carta-no">0</div>
           <div class="kpi-sub">pendientes de firmar</div>
           <div class="kpi-delta" id="kpi-carta-no-delta"></div>
@@ -689,7 +747,7 @@ body:not(.sin-sesion) .login{display:none;}
 
       <div class="panel">
         <div class="panel-head">
-          <div class="panel-title">Empleados con más ausencias</div>
+          <div class="panel-title" id="sec-top-ausentes">Empleados con más ausencias</div>
           <span class="small-muted">Top 8 del periodo · solo activos</span>
         </div>
         <div class="panel-body" style="padding:0;">
@@ -841,10 +899,11 @@ body:not(.sin-sesion) .login{display:none;}
 
     <!-- ============ REGISTRO ============ -->
     <section id="view-registro" class="view hidden">
-      <div class="topbar">
+      <div class="topbar ejecutivo">
         <div>
+          <div class="kicker-gen">Generalistas</div>
           <div class="pagetitle">Registrar ausencia</div>
-          <div class="pagesub">Captura los datos de la falta del colaborador</div>
+          <div class="pagesub" id="reg-pagesub">Captura los datos de la falta del colaborador</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <a class="btn btn-ghost" href="plantilla_ausentismo_metelmex.xlsx" download title="Descarga la plantilla de Excel para captura masiva" style="text-decoration:none;">
@@ -938,8 +997,9 @@ body:not(.sin-sesion) .login{display:none;}
 
     <!-- ============ HISTORIAL ============ -->
     <section id="view-historial" class="view hidden">
-      <div class="topbar">
+      <div class="topbar ejecutivo">
         <div>
+          <div class="kicker-gen">Generalistas</div>
           <div class="pagetitle">Historial de ausencias</div>
           <div class="pagesub"><span id="hist-count">0</span> registros encontrados<span id="hist-rango"></span></div>
         </div>
@@ -949,6 +1009,13 @@ body:not(.sin-sesion) .login{display:none;}
         </button>
       </div>
 
+      <div class="rapidos" id="hist-rapidos">
+        <span class="small-muted">Rápido:</span>
+        <button type="button" class="rapido" data-rapido="hoy">Hoy</button>
+        <button type="button" class="rapido" data-rapido="semana">Esta semana</button>
+        <button type="button" class="rapido" data-rapido="mes">Este mes</button>
+        <button type="button" class="rapido" data-rapido="sincarta">Sin carta</button>
+      </div>
       <div class="panel">
         <div class="filterbar">
           <div class="search-wrap">
@@ -1007,8 +1074,9 @@ body:not(.sin-sesion) .login{display:none;}
 
     <!-- ============ EMPLEADOS ============ -->
     <section id="view-empleados" class="view hidden">
-      <div class="topbar">
+      <div class="topbar ejecutivo">
         <div>
+          <div class="kicker-gen">Generalistas</div>
           <div class="pagetitle">Directorio de empleados</div>
           <div class="pagesub" id="emp-pagesub">Búsqueda por nombre o número de empleado</div>
         </div>
@@ -1027,6 +1095,12 @@ body:not(.sin-sesion) .login{display:none;}
           </button>
           <input type="file" id="inp-catalogo-file" accept=".xlsx,.xls,.csv" style="display:none;">
         </div>
+      </div>
+      <div class="kpi-grid" id="emp-resumen">
+        <div class="kpi"><div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg></span>En alta</div><div class="kpi-value" id="emp-k-alta">0</div><div class="kpi-sub">empleados activos hoy</div></div>
+        <div class="kpi ok"><div class="kpi-label">Altas del mes</div><div class="kpi-value" id="emp-k-altas">0</div><div class="kpi-sub" id="emp-k-mes">—</div></div>
+        <div class="kpi bad"><div class="kpi-label">Bajas del mes</div><div class="kpi-value" id="emp-k-bajas">0</div><div class="kpi-sub">con fecha de baja este mes</div></div>
+        <div class="kpi gold"><div class="kpi-label">Con datos incompletos</div><div class="kpi-value" id="emp-k-incompletos">0</div><div class="kpi-sub">activos a los que les falta algún dato obligatorio</div></div>
       </div>
       <div class="panel">
         <div class="filterbar">
@@ -1411,7 +1485,7 @@ body:not(.sin-sesion) .login{display:none;}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.24-v51";
+const APP_VERSION = "2026.10.24-v52";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1826,6 +1900,7 @@ function goTo(view){
 function renderVista(view){
   if(view==='dashboard') renderDashboard();
   if(view==='historial') renderHistorial();
+  if(view==='registro'){ const hoy = hoyISO(); document.getElementById('reg-pagesub').textContent = `Captura los datos de la falta · hoy van ${AUSENCIAS.filter(a=>a.fecha===hoy).length} falta(s) registradas`; }
   if(view==='empleados') renderEmpleados();
   if(view==='supervisores') renderSupervisores();
   if(view==='conexion') renderConexion();
@@ -1959,7 +2034,23 @@ function getSupervisorCapturado(){
 function actualizarChipsEmpleado(){
   document.getElementById('chip-codigo').textContent = empSeleccionado ? empSeleccionado.codigo : '—';
   document.getElementById('chip-depto').textContent = empSeleccionado ? empSeleccionado.depto : '—';
-  document.getElementById('chip-nombre').textContent = empSeleccionado ? `${empSeleccionado.nombre} — ${empSeleccionado.puesto}` : 'Ningún empleado seleccionado';
+  const chip = document.getElementById('chip-nombre');
+  chip.classList.toggle('con-ficha', !!empSeleccionado);
+  if(!empSeleccionado){ chip.textContent = 'Ningún empleado seleccionado'; return; }
+  // R1: ficha para confirmar que es la persona correcta antes de guardar
+  const e = empSeleccionado, hist = ausenciasDe(e.codigo), mes = hoyISO().slice(0,7), anio = mes.slice(0,4);
+  const delMes = hist.filter(a=> (a.fecha||'').slice(0,7) === mes).length;
+  const delAnio = hist.filter(a=> (a.fecha||'').slice(0,4) === anio).length;
+  const conCarta = hist.some(a=> a.carta);
+  const baja = (e.estatus || 'ALTA') === 'BAJA';
+  chip.innerHTML = `<div class="ficha-emp">${iniHTML(e.nombre)}
+    <div class="datos"><b>${escH(e.nombre)}</b><span>#${escH(e.codigo)} · ${escH(e.puesto || '—')} · ${escH(e.depto || '—')}${e.tipoEmpleado ? ' · ' + escH(e.tipoEmpleado) : ''}</span></div>
+    <div class="etiquetas">
+      ${baja ? '<span class="badge badge-bad">Empleado en BAJA</span>' : ''}
+      <span class="badge ${delMes >= 3 ? 'badge-bad' : delMes ? 'badge-warn' : 'badge-ok'}">${delMes} falta(s) este mes</span>
+      <span class="badge badge-neutral">${delAnio} en ${anio}</span>
+      ${hist.length ? `<span class="badge ${conCarta ? 'badge-ok' : 'badge-bad'}">${conCarta ? 'Ya tiene carta compromiso' : 'Sin carta compromiso'}</span>` : ''}
+    </div></div>`;
 }
 
 document.getElementById('inp-carta').addEventListener('change', function(){
@@ -2353,6 +2444,14 @@ function tendenciaSVG(meses, valores){
     ${guias}<path d="${linea}" fill="none" stroke="var(--navy-800)" stroke-width="2.2"/>${puntos}</svg>`;
 }
 
+// Círculo con iniciales (primeras letras de las dos primeras palabras)
+function iniHTML(nombre){
+  const p = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  const ini = p.length > 1 ? p[0][0] + p[1][0] : (p[0] || '?').slice(0, 2);
+  return `<span class="ini" aria-hidden="true">${escH(ini.toUpperCase())}</span>`;
+}
+const CLASE_MOTIVO = { Injustificada: 'badge-bad', Disciplina: 'badge-warn', Justificada: 'badge-ok' };
+
 let dashCache = null;
 function renderDashboard(){
   poblarFiltrosDashboard();
@@ -2381,7 +2480,14 @@ function renderDashboard(){
   const conCarta = LISTA.filter(a=>a.carta).length;
   const pctAus = pctDe(LISTA, rango);
   const filtrosTxt = [planta && `Planta: ${planta}`, sup && `Supervisor: ${sup}`].filter(Boolean).join(' · ');
-  document.getElementById('dash-pagesub').textContent = `${rango.etiqueta}${filtrosTxt ? ' · '+filtrosTxt : ''}`;
+  document.getElementById('dash-pagesub').textContent = `${rango.etiqueta} · ${total} falta(s) · ${pctAus}% de ausentismo${filtrosTxt ? ' · '+filtrosTxt : ''}`;
+  // A2: atención (respeta planta y supervisor)
+  const porEmpPeriodo = {};
+  LISTA.forEach(a=>{ const x = porEmpPeriodo[a.codigo] = porEmpPeriodo[a.codigo] || { n: 0, carta: false }; x.n++; if(a.carta) x.carta = true; });
+  document.getElementById('aten-reincidentes').textContent = Object.entries(porEmpPeriodo)
+    .filter(([cod, x])=> x.n >= 3 && !x.carta && (EMP_BY_CODIGO[cod]?.estatus || 'ALTA') !== 'BAJA').length;
+  document.getElementById('aten-hoy').textContent = BASE.filter(a=> a.fecha === hoy).length;
+  document.getElementById('aten-cartas').textContent = BASE.filter(a=> a.carta && (a.fecha||'').slice(0,7) === hoy.slice(0,7)).length;
   document.getElementById('d-rango-txt').textContent = periodo==='todo'
     ? `Mostrando todo el histórico (${fmtFecha(rango.desde)} a hoy). Elige un periodo para comparar contra el anterior.`
     : `Del ${fmtFecha(rango.desde)} al ${fmtFecha(rango.hasta)}` + (rango.prev ? ` · se compara contra ${rango.prev.etiqueta} (${fmtFecha(rango.prev.desde)} al ${fmtFecha(rango.prev.hasta)})` : '');
@@ -2574,11 +2680,11 @@ function renderDashboard(){
   topEl.innerHTML = filasTop.length===0
     ? `<tr><td colspan="6" class="small-muted" style="text-align:center;padding:24px;">Sin datos con estos filtros</td></tr>`
     : filasTop.map(t=>`<tr>
-        <td class="name-cell"><div class="nm">${t.emp.nombre}</div></td>
-        <td>#${t.cod}</td>
-        <td>${t.emp.depto}</td>
-        <td>${t.sup}</td>
-        <td><span class="count-pill ${t.n>=4?'warn':''}">${t.n}</span></td>
+        <td class="name-cell con-ini">${iniHTML(t.emp.nombre)}<div class="nm">${escH(t.emp.nombre)}</div></td>
+        <td>#${escH(t.cod)}</td>
+        <td>${escH(t.emp.depto)}</td>
+        <td>${escH(t.sup)}</td>
+        <td><div class="barra-top"><div class="pista"><i style="width:${Math.round(t.n*100/Math.max(1, filasTop[0].n))}%;${t.n>=4?'background:var(--bad);':''}"></i></div><span class="count-pill ${t.n>=4?'warn':''}">${t.n}</span></div></td>
         <td>${badgeCarta(t.carta)}</td>
       </tr>`).join('');
 
@@ -2588,6 +2694,19 @@ function renderDashboard(){
 
 ['d-periodo','d-planta','d-supervisor','d-desde','d-hasta'].forEach(id=>
   document.getElementById(id).addEventListener('change', renderDashboard));
+document.querySelector('.atencion').addEventListener('click', ev=>{
+  const b = ev.target.closest('[data-aten]');
+  if(!b) return;
+  if(b.dataset.aten === 'top'){ document.getElementById('sec-top-ausentes').scrollIntoView({behavior:'smooth', block:'start'}); return; }
+  const c = dashCache, hoy = hoyISO();
+  poblarFiltrosHistorial();
+  ['f-buscar','f-depto','f-supervisor','f-motivo','f-carta','f-mes','f-acumuladas'].forEach(id=> document.getElementById(id).value = '');
+  document.getElementById('f-depto').value = c ? c.planta : '';
+  document.getElementById('f-supervisor').value = c ? c.sup : '';
+  if(b.dataset.aten === 'hoy') histRango = { desde: hoy, hasta: hoy };
+  else { histRango = { desde: hoy.slice(0,7)+'-01', hasta: finDeMes(hoy.slice(0,7)) }; document.getElementById('f-carta').value = 'si'; }
+  goTo('historial');
+});
 
 function imprimirDashboard(){
   mostrarToast('En la ventana de impresión elige "Guardar como PDF".');
@@ -2690,9 +2809,27 @@ function obtenerAusenciasFiltradas(){
     return true;
   }).sort((a,b)=> b.fecha.localeCompare(a.fecha));
 }
+function rangoRapido(tipo){
+  const hoy = hoyISO();
+  if(tipo === 'hoy') return { desde: hoy, hasta: hoy };
+  if(tipo === 'semana'){ const l = lunesDeLaSemana(hoy); return { desde: l, hasta: sumarDias(l, 6) }; }
+  return { desde: hoy.slice(0,7)+'-01', hasta: finDeMes(hoy.slice(0,7)) };
+}
+document.getElementById('hist-rapidos').addEventListener('click', ev=>{
+  const b = ev.target.closest('[data-rapido]');
+  if(!b) return;
+  if(b.dataset.rapido === 'sincarta'){ const c = document.getElementById('f-carta'); c.value = c.value === 'no' ? '' : 'no'; }
+  else { const r = rangoRapido(b.dataset.rapido); histRango = (histRango && histRango.desde === r.desde && histRango.hasta === r.hasta) ? null : r; }
+  renderHistorial();
+});
 function renderHistorial(){
   poblarFiltrosHistorial();
   let filtradas = obtenerAusenciasFiltradas();
+  document.querySelectorAll('#hist-rapidos [data-rapido]').forEach(b=>{
+    const k = b.dataset.rapido;
+    b.classList.toggle('on', k === 'sincarta' ? document.getElementById('f-carta').value === 'no'
+      : !!histRango && histRango.desde === rangoRapido(k).desde && histRango.hasta === rangoRapido(k).hasta);
+  });
 
   document.getElementById('hist-count').textContent = filtradas.length;
   document.getElementById('hist-rango').innerHTML = histRango ? ` · del ${fmtFecha(histRango.desde)} al ${fmtFecha(histRango.hasta)} <a href="#" onclick="histRango=null;renderHistorial();return false;">quitar rango</a>` : '';
@@ -2715,12 +2852,12 @@ function renderHistorial(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
         </button>
       </td>
-      <td class="name-cell"><div class="nm">${a.nombre}</div><div class="cd">${a.puesto}</div></td>
-      <td>#${a.codigo}</td>
-      <td>${a.depto}</td>
-      <td>${a.supervisor}</td>
+      <td class="name-cell con-ini">${iniHTML(a.nombre)}<div><div class="nm">${escH(a.nombre)}</div><div class="cd">${escH(a.puesto)}</div></div></td>
+      <td>#${escH(a.codigo)}</td>
+      <td>${escH(a.depto)}</td>
+      <td>${escH(a.supervisor)}</td>
       <td>${fmtFecha(a.fecha)}</td>
-      <td><span class="badge badge-neutral">${a.motivo}</span></td>
+      <td><span class="badge ${CLASE_MOTIVO[a.motivo] || 'badge-neutral'}">${escH(a.motivo)}</span></td>
       <td>${badgeCarta(a.carta)}</td>
       <td><span class="count-pill ${totalEmp>=4?'warn':''}">${totalEmp}</span></td>
       <td style="white-space:nowrap;">
@@ -2882,6 +3019,11 @@ function poblarFiltrosEmpleados(){
     dl.innerHTML = DEPARTAMENTOS.map(d=>`<option value="${d}">`).join('');
   }
 }
+// Datos obligatorios del catálogo (mismos que la plantilla marca en FALTAN_DATOS)
+function faltanDatosEmp(e){
+  return [['nombre','Nombre'],['depto','Planta'],['puesto','Puesto'],['fechaIngreso','Fecha de ingreso'],['fechaNacimiento','Fecha de nacimiento'],['tipoEmpleado','Tipo de empleado']]
+    .filter(([k])=> !String(e[k] || '').trim()).map(([,n])=> n);
+}
 function renderEmpleados(){
   poblarFiltrosEmpleados();
   const q = document.getElementById('f-emp-buscar').value.trim().toLowerCase();
@@ -2894,6 +3036,14 @@ function renderEmpleados(){
     return true;
   });
   document.getElementById('f-emp-count').textContent = `${lista.length} resultado(s)`;
+  // E1: resumen de todo el directorio (no depende de la búsqueda)
+  const mesE = hoyISO().slice(0,7);
+  const activos = EMPLEADOS.filter(e=> (e.estatus || 'ALTA') === 'ALTA');
+  document.getElementById('emp-k-alta').textContent = activos.length;
+  document.getElementById('emp-k-altas').textContent = EMPLEADOS.filter(e=> excelFechaATexto(e.fechaIngreso).slice(0,7) === mesE).length;
+  document.getElementById('emp-k-mes').textContent = `ingresaron en ${NOMBRES_MES[parseInt(mesE.slice(5),10)-1].toLowerCase()}`;
+  document.getElementById('emp-k-bajas').textContent = EMPLEADOS.filter(e=> e.estatus === 'BAJA' && excelFechaATexto(e.fechaBaja).slice(0,7) === mesE).length;
+  document.getElementById('emp-k-incompletos').textContent = activos.filter(e=> faltanDatosEmp(e).length).length;
   const grid = document.getElementById('emp-grid');
   if(lista.length===0){
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
@@ -2906,14 +3056,16 @@ function renderEmpleados(){
   grid.innerHTML = lista.map(e=>{
     const n = ausenciasDe(e.codigo).length;
     const esBaja = (e.estatus || 'ALTA') !== 'ALTA';
+    const falta = esBaja ? [] : faltanDatosEmp(e);
     return `<div class="emp-card" style="${esBaja?'opacity:.65;':''}">
       <div class="row1">
-        <div><div class="nm">${e.nombre}</div><div class="cd">#${e.codigo}</div></div>
+        <div class="quien">${iniHTML(e.nombre)}<div><div class="nm">${escH(e.nombre)}</div><div class="cd">#${escH(e.codigo)}</div></div></div>
         ${n>0 ? `<span class="count-pill ${n>=4?'warn':''}" title="Ausencias acumuladas">${n}</span>` : ''}
       </div>
-      <div class="puesto">${e.puesto}</div>
+      <div class="puesto">${escH(e.puesto)}</div>
+      ${falta.length ? `<span class="badge badge-warn" style="margin-top:8px;" title="Falta: ${escH(falta.join(', '))}">Faltan datos: ${escH(falta.slice(0,2).join(', '))}${falta.length>2?' +'+(falta.length-2):''}</span>` : ''}
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:6px;">
-        <span class="depto-tag">${e.depto}</span>
+        <span class="depto-tag">${escH(e.depto)}</span>
         ${esBaja ? `<span class="depto-tag" style="background:var(--bad);color:#fff;">BAJA</span>` : ''}
         ${MODO_LECTURA ? '' : `<button class="icon-btn" onclick='abrirEditarEmpleado("${e.codigo}")' title="Editar empleado" style="font-size:11px;color:var(--navy-700);font-weight:600;">Editar</button>`}
         ${n>0 ? `<button class="icon-btn" onclick='abrirModal("${e.nombre.replace(/'/g,"")} — #${e.codigo}", ${JSON.stringify(ausenciasDe(e.codigo)).replace(/'/g,"&#39;")})' title="Ver historial de ausencias" style="font-size:11px;color:var(--navy-700);font-weight:600;">Ver historial</button>` : '<span class="small-muted" style="font-size:11px;">Sin faltas</span>'}
@@ -3428,8 +3580,8 @@ function cumpleanerosActivos(){
     })
     .filter(Boolean);
 }
-// Texto de Sheets/Excel antes de meterlo en HTML
-const escH = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Texto de Sheets/Excel antes de meterlo en HTML (función declarada: sirve en todo el script)
+function escH(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 let cumpleDiaSel = null; // día tocado en el calendario (filtra solo la tabla)
 const estaFelicitado = (codigo, anio) => FELICITADOS.some(f=> String(f.codigo)===String(codigo) && String(f.anio)===String(anio));
 const ICO_PASTEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M4 20v-6a2 2 0 012-2h12a2 2 0 012 2v6M4 16c1.5 1 3 1 4 0s2.5-1 4 0 2.5 1 4 0 2.5-1 4 0M12 12V8M12 5.5a1.5 1.5 0 001.5-1.5c0-1-1.5-2.5-1.5-2.5S10.5 3 10.5 4A1.5 1.5 0 0012 5.5z"/></svg>`;
