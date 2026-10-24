@@ -200,6 +200,51 @@
   .filter-bar select, .filter-bar input{margin:0;}
   .filter-actions{display:flex;gap:8px;flex:0 0 auto;min-width:auto;}
 
+  /* ---------- Toque visual: encabezado, pestañas con ícono, pendientes, medidor, gráficas, iniciales ---------- */
+  header{border-bottom:3px solid var(--gold);}
+  header .brand small{color:var(--p2);opacity:1;font-weight:700;}
+  header .brand-sub{font-size:12.5px;opacity:.8;}
+  header .brand-ico{margin-left:auto;margin-right:8px;color:var(--p2);display:flex;}
+  header .brand-ico svg{width:42px;height:42px;}
+  nav button{display:inline-flex;align-items:center;gap:7px;}
+  nav button svg{width:16px;height:16px;flex-shrink:0;opacity:.75;}
+  nav button.active svg{opacity:1;color:var(--gold);}
+  .pendientes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px;}
+  .pend{display:flex;align-items:center;gap:12px;text-align:left;background:#fff;border:1px solid var(--line);border-left:5px solid;
+    border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;cursor:pointer;font:inherit;color:var(--ink);}
+  .pend:hover{background:var(--bg);}
+  .pend b{font-size:26px;font-weight:800;line-height:1;}
+  .pend span{font-size:12.5px;color:var(--ink-soft);}
+  .pend-rojo{border-left-color:var(--danger);} .pend-rojo b{color:var(--danger);}
+  .pend-ambar{border-left-color:var(--warn);} .pend-ambar b{color:var(--warn);}
+  .pend-verde{border-left-color:var(--ok);} .pend-verde b{color:var(--ok);}
+  .kpi{position:relative;}
+  .kpi-ico{position:absolute;top:14px;right:14px;color:var(--gold);}
+  .kpi-ico svg{width:20px;height:20px;}
+  .kpi-anillo{display:flex;align-items:center;gap:14px;}
+  .kpi-anillo svg{width:58px;height:58px;flex-shrink:0;transform:rotate(-90deg);}
+  .anillo-fondo{fill:none;stroke:var(--p1);stroke-width:4;}
+  .anillo-valor{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;transition:stroke-dasharray .4s;}
+  .graficas{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:26px;}
+  .grafica{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+  .grafica-titulo{font-weight:700;color:var(--p5);font-size:14px;margin-bottom:12px;}
+  .barras-v{display:flex;align-items:flex-end;gap:10px;height:150px;}
+  .barras-v .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;min-width:0;}
+  .barras-v .col i{display:block;width:100%;max-width:46px;background:var(--p3);border-radius:4px 4px 0 0;min-height:2px;}
+  .barras-v .col.actual i{background:var(--gold);}
+  .barras-v .col b{font-size:11.5px;color:var(--p5);}
+  .barras-v .col span{font-size:11px;color:var(--ink-soft);}
+  .barras-h{display:flex;flex-direction:column;gap:9px;max-height:170px;overflow-y:auto;}
+  .barras-h .fila{display:grid;grid-template-columns:minmax(80px,30%) 1fr 42px;align-items:center;gap:8px;font-size:12px;}
+  .barras-h .fila span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .barras-h .pista{height:9px;background:var(--p1);border-radius:5px;overflow:hidden;}
+  .barras-h .pista i{display:block;height:100%;border-radius:5px;}
+  .barras-h .fila b{text-align:right;color:var(--p5);}
+  .grafica-vacia{color:var(--ink-soft);font-size:13px;}
+  .iniciales{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--p1);color:var(--p4);
+    font-size:11.5px;font-weight:800;margin-right:9px;vertical-align:middle;flex-shrink:0;}
+  .badge{letter-spacing:.01em;}
+
   /* Celular (dentro del dashboard): pestañas en una fila deslizable, indicadores de 2 en 2,
      tablas deslizables con la primera columna fija y "Nuevos ingresos" como tarjetas */
   @media (max-width:700px){
@@ -238,6 +283,16 @@
     .tabla-tarjetas td:nth-child(6){grid-column:1 / -1;justify-self:end;}
     .tabla-tarjetas td.empty-state{grid-column:1 / -1;padding:20px;}
     .toast{left:12px;right:12px;bottom:12px;}
+    header .brand-ico{display:none;}
+    header .brand-sub{display:none;}
+    .pendientes{grid-template-columns:1fr;gap:8px;}
+    .pend{padding:10px 12px;}
+    .pend b{font-size:22px;}
+    .kpi-ico{top:10px;right:10px;}
+    .kpi-ico svg{width:16px;height:16px;}
+    .kpi-anillo{grid-column:1 / -1;}
+    .barras-v{height:120px;gap:6px;}
+    .iniciales{width:26px;height:26px;font-size:10.5px;margin-right:6px;}
   }
 
   /* Constancias DC-3: solo existen al imprimir (la clase se pone en <body> justo antes de window.print) */
@@ -340,9 +395,11 @@
 
 <header>
   <div class="brand">
-    <small>Metelmex · Recursos Humanos</small>
-    <h1>📚 Dashboard de Capacitación</h1>
+    <small>Departamento de capacitación</small>
+    <h1>Capacitación y desarrollo</h1>
+    <span class="brand-sub">SIRCE · DC-3 · expediente del trabajador</span>
   </div>
+  <span class="brand-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5M22 10v6"/></svg></span>
   <div style="display:flex;align-items:center;gap:10px">
     <span id="statusDot"><span class="dot"></span><span id="statusText">Conectando…</span></span>
     <button id="btnConfig" class="btn btn-ghost btn-sm" style="background:rgba(255,255,255,.16);color:#fff">⚙️ Configuración</button>
@@ -389,14 +446,14 @@
 </div>
 
 <nav>
-  <button class="tab-btn active" data-view="dashboard">Resumen</button>
-  <button class="tab-btn" data-view="cursos">Registrar curso</button>
-  <button class="tab-btn" data-view="listaCursos">Cursos</button>
-  <button class="tab-btn" data-view="empleados">Empleados y horas</button>
-  <button class="tab-btn" data-view="sirce">SIRCE (STPS)</button>
-  <button class="tab-btn" data-view="cumplimiento">Cumplimiento</button>
-  <button class="tab-btn" data-view="catalogos">Catálogos</button>
-  <button class="tab-btn" data-view="historial">Historial</button>
+  <button class="tab-btn active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>Resumen</span></button>
+  <button class="tab-btn" data-view="cursos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Registrar curso</span></button>
+  <button class="tab-btn" data-view="listaCursos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 012-2h3v18H6a2 2 0 01-2-2zM9 3h3v18H9M14 4l4-1 3 17-4 1z"/></svg><span>Cursos</span></button>
+  <button class="tab-btn" data-view="empleados"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg><span>Empleados y horas</span></button>
+  <button class="tab-btn" data-view="sirce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h5M14 3l5 5M14 3v5h5M19 8v3"/><circle cx="17" cy="16" r="3"/><path d="M15.5 18.6L15 22l2-1 2 1-.5-3.4"/></svg><span>SIRCE (STPS)</span></button>
+  <button class="tab-btn" data-view="cumplimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Cumplimiento</span></button>
+  <button class="tab-btn" data-view="catalogos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Catálogos</span></button>
+  <button class="tab-btn" data-view="historial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 4v4h4M12 8v4l3 2"/></svg><span>Historial</span></button>
 </nav>
 
 <main>
@@ -416,15 +473,31 @@
       </div>
     </div>
 
-    <div class="kpis">
-      <div class="kpi"><div class="num" id="kpiCursos">0</div><div class="label">Cursos registrados</div></div>
-      <div class="kpi"><div class="num" id="kpiEmpleados">0</div><div class="label">Empleados en catálogo</div></div>
-      <div class="kpi"><div class="num" id="kpiHoras">0</div><div class="label">Horas de capacitación acumuladas</div></div>
-      <div class="kpi"><div class="num" id="kpiPorVencer">0</div><div class="label">Cursos por vencer (30 días)</div></div>
-      <div class="kpi"><div class="num" id="kpiCumplimiento">—</div><div class="label">Cumplimiento de obligatorios</div></div>
+    <!-- Pendientes (semáforo): cada tarjeta baja a su tabla -->
+    <div class="pendientes">
+      <button type="button" class="pend pend-rojo" data-ir="secNuevosIngresos"><b id="pendNuevos">0</b><span>nuevos ingresos con formatos pendientes</span></button>
+      <button type="button" class="pend pend-ambar" data-ir="secReentrenamiento"><b id="pendReentrena">0</b><span>reentrenamientos vencidos o por vencer</span></button>
+      <button type="button" class="pend pend-verde" data-ir="secUltimosCursos"><b id="pendMes">0</b><span>cursos impartidos este mes</span></button>
     </div>
 
-    <h2>⚠️ Nuevos ingresos: Seguimiento 30 días</h2>
+    <div class="kpis">
+      <div class="kpi"><span class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 012-2h3v18H6a2 2 0 01-2-2zM9 3h3v18H9M14 4l4-1 3 17-4 1z"/></svg></span><div class="num" id="kpiCursos">0</div><div class="label">Cursos registrados</div></div>
+      <div class="kpi"><span class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg></span><div class="num" id="kpiEmpleados">0</div><div class="label">Empleados en catálogo</div></div>
+      <div class="kpi"><span class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div class="num" id="kpiHoras">0</div><div class="label">Horas de capacitación acumuladas</div></div>
+      <div class="kpi"><span class="kpi-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3L2 6M19 3l3 3"/></svg></span><div class="num" id="kpiPorVencer">0</div><div class="label">Cursos por vencer (30 días)</div></div>
+      <div class="kpi kpi-anillo">
+        <svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.9155" class="anillo-fondo"/><circle cx="18" cy="18" r="15.9155" class="anillo-valor" id="kpiCumplAnillo" stroke-dasharray="0 100"/></svg>
+        <div><div class="num" id="kpiCumplimiento">—</div><div class="label">Cumplimiento de obligatorios</div></div>
+      </div>
+    </div>
+
+    <!-- E: gráficas (barras hechas con HTML, sin librerías) -->
+    <div class="graficas">
+      <div class="grafica"><div class="grafica-titulo">Horas de capacitación por mes</div><div class="barras-v" id="grafHorasMes"></div></div>
+      <div class="grafica"><div class="grafica-titulo">Cumplimiento de obligatorios por planta</div><div class="barras-h" id="grafCumplPlanta"></div></div>
+    </div>
+
+    <h2 id="secNuevosIngresos">⚠️ Nuevos ingresos: Seguimiento 30 días</h2>
     <p class="section-sub">Empleados desde 5 días antes de cumplir su primer mes. Marca la casilla de "Entrenamiento en el trabajo" y de "Evaluación de adaptación" al entregarlos (también cuentan si registras un curso con ese nombre). El empleado sigue en la lista hasta que los 2 formatos tengan su check.</p>
     <div class="table-wrap">
       <table class="tabla-tarjetas">
@@ -435,7 +508,7 @@
       </table>
     </div>
 
-    <h2 style="margin-top:36px;">🔁 Reentrenamiento por empleado <span class="muted" id="reentrenamientoCuenta" style="font-size:14px"></span></h2>
+    <h2 style="margin-top:36px;" id="secReentrenamiento">🔁 Reentrenamiento por empleado <span class="muted" id="reentrenamientoCuenta" style="font-size:14px"></span></h2>
     <p class="section-sub">Empleados en ALTA cuyo curso más reciente con vencimiento ya venció o vence en 30 días o menos. Si el empleado volvió a tomar el curso, cuenta la vez más reciente.</p>
     <div class="table-wrap">
       <table>
@@ -444,7 +517,7 @@
       </table>
     </div>
 
-    <h2 style="margin-top:36px;">Últimos cursos registrados</h2>
+    <h2 style="margin-top:36px;" id="secUltimosCursos">Últimos cursos registrados</h2>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Curso</th><th>Fecha</th><th>Duración (hrs)</th><th>Vencimiento</th><th>Participantes</th></tr></thead>
@@ -1358,6 +1431,10 @@ const diasParaUnMes = (emp) => {
 
 
 // ---------- navegación ----------
+document.querySelector('.pendientes').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-ir]');
+  if(b) document.getElementById(b.dataset.ir).scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1679,6 +1756,30 @@ document.getElementById('btnLimpiarFiltrosEmpleados').addEventListener('click', 
   renderEmpleadosTabla();
 });
 
+// Círculo con iniciales del empleado (las primeras letras de las dos primeras palabras del nombre)
+function inicialesHtml(nombre){
+  const p = String(nombre || '').trim().split(/\s+/).filter(Boolean);
+  const ini = p.length > 1 ? p[0][0] + p[1][0] : (p[0] || '?').slice(0, 2);
+  return `<span class="iniciales" aria-hidden="true">${escapeHtml(ini.toUpperCase())}</span>`;
+}
+const celdaNombre = (nombre) => `${inicialesHtml(nombre)}<b>${escapeHtml(nombre)}</b>`;
+
+// E: horas por mes (últimos 6 meses) con la misma suma que el indicador de horas
+function renderGraficaHoras(){
+  const hoy = new Date(), meses = [];
+  for(let i = 5; i >= 0; i--){ const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1); meses.push({ y: d.getFullYear(), m: d.getMonth(), horas: 0 }); }
+  STATE.participaciones.forEach(pa => {
+    const d = parseFechaLocal(pa.FechaImparticion);
+    if(!d) return;
+    const mes = meses.find(x => x.y === d.getFullYear() && x.m === d.getMonth());
+    if(mes) mes.horas += Number(pa.DuracionHoras) || 0;
+  });
+  const max = Math.max(...meses.map(x => x.horas), 1);
+  const nombre = (x) => new Date(x.y, x.m, 1).toLocaleDateString('es-MX', { month: 'short' }).replace('.', '');
+  document.getElementById('grafHorasMes').innerHTML = meses.map((x, i) => `<div class="col${i === 5 ? ' actual' : ''}" title="${x.horas} horas">
+      <b>${Math.round(x.horas)}</b><i style="height:${Math.round(x.horas * 100 / max)}%"></i><span>${nombre(x)}</span></div>`).join('');
+}
+
 function renderResumen(){
   document.getElementById('kpiCursos').textContent = STATE.cursos.length;
   document.getElementById('kpiEmpleados').textContent = STATE.empleados.length;
@@ -1701,8 +1802,14 @@ function renderResumen(){
   }
 
   // Render alertas de nuevos ingresos
-  calcularAlertasNuevosIngresos();
-  renderReentrenamiento();
+  document.getElementById('pendNuevos').textContent = calcularAlertasNuevosIngresos();
+  document.getElementById('pendReentrena').textContent = renderReentrenamiento();
+  const hoyR = new Date();
+  document.getElementById('pendMes').textContent = STATE.cursos.filter(c => {
+    const d = parseFechaLocal(c.FechaImparticion);
+    return d && d.getFullYear() === hoyR.getFullYear() && d.getMonth() === hoyR.getMonth();
+  }).length;
+  renderGraficaHoras();
 
   const ordenados = [...STATE.cursos].sort((a,b) => new Date(b.FechaRegistro||b.FechaImparticion) - new Date(a.FechaRegistro||a.FechaImparticion)).slice(0,8);
   const tbody = document.getElementById('tblResumen');
@@ -1777,7 +1884,7 @@ function calcularAlertasNuevosIngresos(){
 
   if(!nuevoIngresos.length){
     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Sin alertas de nuevos ingresos</td></tr>';
-    return;
+    return 0;
   }
 
   tbody.innerHTML = nuevoIngresos.map(e => {
@@ -1795,7 +1902,7 @@ function calcularAlertasNuevosIngresos(){
     }).join('');
 
     return `<tr>
-      <td><b>${escapeHtml(e.Nombre)}</b></td>
+      <td>${celdaNombre(e.Nombre)}</td>
       <td>${escapeHtml(e.Puesto||'—')}</td>
       <td>${escapeHtml(e.Departamento||'—')}</td>
       <td><span class="badge ${badgeClass}">${txtDias}</span></td>
@@ -1805,6 +1912,7 @@ function calcularAlertasNuevosIngresos(){
       </td>
     </tr>`;
   }).join('');
+  return nuevoIngresos.length;
 }
 
 let cursosExpandidos = new Set();
@@ -2522,8 +2630,21 @@ function renderCumplimiento(){
 
   // indicador del Resumen: todo el personal en ALTA, sin filtros
   let req = 0, ok = 0;
-  STATE.empleados.filter(esAlta).forEach(e => cumplimientoEmpleado(e).forEach(r => { req++; if(cuentaComoCumplido(r)) ok++; }));
+  const porPlanta = new Map();
+  STATE.empleados.filter(esAlta).forEach(e => cumplimientoEmpleado(e).forEach(r => {
+    req++; if(cuentaComoCumplido(r)) ok++;
+    const k = e.Departamento || '(sin planta)', pp = porPlanta.get(k) || { req: 0, ok: 0 };
+    pp.req++; if(cuentaComoCumplido(r)) pp.ok++; porPlanta.set(k, pp);
+  }));
   document.getElementById('kpiCumplimiento').textContent = porcentaje(ok, req);
+  document.getElementById('kpiCumplAnillo').setAttribute('stroke-dasharray', `${req ? Math.round(ok * 100 / req) : 0} 100`);
+  const colorPct = (x) => x >= 90 ? 'var(--ok)' : x >= 70 ? 'var(--gold)' : 'var(--danger)';
+  document.getElementById('grafCumplPlanta').innerHTML = porPlanta.size
+    ? [...porPlanta.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, pp]) => {
+        const x = Math.round(pp.ok * 100 / pp.req);
+        return `<div class="fila" title="${pp.ok} de ${pp.req} cursos obligatorios al día"><span>${escapeHtml(k)}</span><div class="pista"><i style="width:${x}%;background:${colorPct(x)}"></i></div><b>${x}%</b></div>`;
+      }).join('')
+    : '<div class="grafica-vacia">Aún no hay cursos obligatorios. Defínelos en Catálogos → Cursos frecuentes → "Obligatorio para".</div>';
 
   const tbodyE = document.getElementById('tblCumplEmpleados'), tbodyP = document.getElementById('tblCumplPlantas');
   if(!obligatorios.length){
@@ -2557,7 +2678,7 @@ function renderCumplimiento(){
     .map(({e, items}) => {
       const falta = items.filter(r => r.estado !== 'cumple');
       return `<tr>
-        <td><b>${escapeHtml(e.Nombre)}</b></td><td>${escapeHtml(e.Puesto || '—')}</td><td>${escapeHtml(e.Departamento || '—')}</td>
+        <td>${celdaNombre(e.Nombre)}</td><td>${escapeHtml(e.Puesto || '—')}</td><td>${escapeHtml(e.Departamento || '—')}</td>
         <td><b>${porcentaje(items.filter(cuentaComoCumplido).length, items.length)}</b> <span class="muted">(${items.filter(cuentaComoCumplido).length}/${items.length})</span></td>
         <td>${falta.length ? falta.map(r => `<span class="badge ${ESTADOS_OBLIGATORIO[r.estado].cls}" style="margin:0 4px 4px 0">${escapeHtml(r.cc.Nombre)} · ${ESTADOS_OBLIGATORIO[r.estado].texto}</span>`).join('')
               : '<span class="badge badge-ok">✓ Completo</span>'}</td>
@@ -2647,12 +2768,13 @@ function renderReentrenamiento(){
   const lista = reentrenamientosPendientes();
   document.getElementById('reentrenamientoCuenta').textContent = lista.length ? `(${lista.length})` : '';
   const tbody = document.getElementById('tblReentrenamiento');
-  if(!lista.length){ tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nadie tiene reentrenamiento pendiente</td></tr>'; return; }
+  if(!lista.length){ tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nadie tiene reentrenamiento pendiente</td></tr>'; return 0; }
   tbody.innerHTML = lista.map(({e, c, dias}) => `<tr>
-      <td><b>${escapeHtml(e.Nombre)}</b></td><td>${escapeHtml(e.Puesto || '—')}</td><td>${escapeHtml(e.Departamento || '—')}</td>
+      <td>${celdaNombre(e.Nombre)}</td><td>${escapeHtml(e.Puesto || '—')}</td><td>${escapeHtml(e.Departamento || '—')}</td>
       <td>${escapeHtml(c.Nombre)}</td><td>${fmtDate(c.FechaVencimiento)}</td>
       <td><span class="badge ${dias < 0 ? 'badge-danger' : 'badge-warn'}">${dias < 0 ? `Vencido hace ${-dias} día${dias === -1 ? '' : 's'}`
           : dias === 0 ? 'Vence hoy' : `Vence en ${dias} día${dias === 1 ? '' : 's'}`}</span></td></tr>`).join('');
+  return lista.length;
 }
 
 // ---------- constancias DC-3 ----------
