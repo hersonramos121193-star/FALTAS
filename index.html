@@ -262,6 +262,45 @@ tbody tr:hover{background:var(--paper);}
   .brand{justify-content:center;}
   .form-grid{grid-template-columns:1fr;}
 }
+/* ---------- CUMPLEAÑEROS: toque festivo con la misma paleta azul marino y dorado ---------- */
+.cumple-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:var(--navy-900);color:#fff;
+  border-radius:var(--radius);padding:18px 22px;margin-bottom:18px;border-bottom:3px solid var(--gold-500);}
+.cumple-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-400);font-weight:700;}
+.cumple-titulo{font-size:22px;font-weight:800;margin-top:2px;}
+.cumple-banner-sub{font-size:12.5px;opacity:.85;margin-top:2px;}
+.cumple-banner-der{display:flex;align-items:center;gap:14px;}
+.cumple-confeti svg{width:44px;height:44px;color:var(--gold-400);display:block;}
+.cumple-banner .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.25);}
+.cumple-ico svg{width:15px;height:15px;color:var(--gold-500);vertical-align:-2px;}
+.cumple-hoy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.cumple-card{border:1px solid var(--line);border-top:3px solid var(--gold-500);border-radius:0 0 var(--radius) var(--radius);padding:12px 14px;background:#fff;}
+.cumple-card b{display:block;color:var(--navy-900);font-size:14px;}
+.cumple-card .small-muted{display:block;margin-top:2px;}
+.cumple-card .btn{margin-top:10px;}
+.cumple-card.hecho{border-top-color:var(--ok);}
+.cumple-vacio{color:var(--ink-500);font-size:13px;}
+.cumple-semana{margin-top:14px;display:flex;flex-direction:column;gap:6px;font-size:13px;}
+.cumple-semana-dia{display:flex;gap:10px;align-items:baseline;border-top:1px solid var(--line);padding-top:6px;}
+.cumple-semana-dia b{min-width:110px;color:var(--navy-900);}
+.cumple-cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
+.cumple-cal .cab{font-size:11px;color:var(--ink-500);text-align:center;font-weight:700;}
+.cumple-cal button{border:1px solid var(--line);background:#fff;border-radius:8px;min-height:54px;padding:4px;font:inherit;font-size:12px;color:var(--ink-700);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;}
+.cumple-cal button:disabled{cursor:default;color:var(--ink-500);background:var(--paper);}
+.cumple-cal button.con{background:var(--gold-100);border-color:var(--gold-500);color:#7a5a17;font-weight:700;}
+.cumple-cal button.hoy{outline:2px solid var(--navy-800);outline-offset:-2px;}
+.cumple-cal button.sel{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+.cumple-cal button.sel .cumple-ico svg{color:var(--gold-400);}
+.cumple-dia{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;padding:0 6px;border-radius:15px;background:var(--gold-100);color:#7a5a17;font-weight:800;font-size:12.5px;}
+tr.cumple-hoy-fila td{background:var(--gold-100);}
+@media(max-width:700px){
+  .cumple-banner{padding:14px 16px;}
+  .cumple-titulo{font-size:19px;}
+  .cumple-confeti{display:none;}
+  .cumple-cal{gap:3px;}
+  .cumple-cal button{min-height:44px;font-size:11px;}
+  .cumple-semana-dia{flex-direction:column;gap:2px;}
+}
 /* ---------- CELULAR: barra de íconos abajo, usuario en una franja arriba, contenido a todo lo ancho ---------- */
 @media(max-width:700px){
   .app{display:block;}
@@ -404,14 +443,14 @@ body:not(.sin-sesion) .login{display:none;}
       </div>
     </div>
 
-    <div class="navlabel">General</div>
+    <div class="navlabel">Generalistas</div>
     <button class="navbtn active" data-view="dashboard">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-      <span>Dashboard Ausentismo</span>
+      <span>Ausentismo</span>
     </button>
     <button class="navbtn" data-view="cumpleanos">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 22v-9a2 2 0 00-2-2H6a2 2 0 00-2 2v9M4 13V9a2 2 0 012-2h1M20 13V9a2 2 0 00-2-2h-1M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2M12 3v1"/><circle cx="12" cy="16" r="2"/></svg>
-      <span>Dashboard Cumpleañeros</span>
+      <span>Cumpleañeros</span>
     </button>
     <button class="navbtn solo-edicion" data-view="registro" id="nav-registro">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -426,15 +465,7 @@ body:not(.sin-sesion) .login{display:none;}
       <span>Empleados</span>
     </button>
 
-    <div class="navlabel">Reportes</div>
-    <button class="navbtn" data-view="kpis-semanales">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
-      <span>Kpis ausentismo semanal</span>
-    </button>
-    <button class="navbtn" data-view="revision-nomina">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      <span>Revisión nómina</span>
-    </button>
+    <div class="navlabel">Departamentos</div>
     <button class="navbtn" data-view="capacitacion">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>
       <span>Capacitación</span>
@@ -442,6 +473,16 @@ body:not(.sin-sesion) .login{display:none;}
     <button class="navbtn" data-view="serviciomedico">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
       <span>Servicio médico</span>
+    </button>
+    <button class="navbtn" data-view="revision-nomina">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span>Revisión nómina</span>
+    </button>
+
+    <div class="navlabel">Reportes</div>
+    <button class="navbtn" data-view="kpis-semanales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+      <span>Kpis ausentismo semanal</span>
     </button>
 
     <div class="navlabel">Configuración</div>
@@ -664,15 +705,32 @@ body:not(.sin-sesion) .login{display:none;}
 
     <!-- ============ DASHBOARD CUMPLEAÑEROS ============ -->
     <section id="view-cumpleanos" class="view hidden">
-      <div class="topbar">
+      <!-- Encabezado de celebración (A) -->
+      <div class="cumple-banner">
         <div>
-          <div class="pagetitle">Dashboard Cumpleañeros</div>
-          <div class="pagesub">Control de cumpleaños del personal activo</div>
+          <div class="cumple-kicker">Celebramos a nuestra gente</div>
+          <div class="cumple-titulo" id="cumple-banner-titulo">Cumpleañeros</div>
+          <div class="cumple-banner-sub" id="cumple-banner-sub">Control de cumpleaños del personal activo</div>
         </div>
+        <div class="cumple-banner-der">
+          <span class="cumple-confeti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20l5-14 9 9-14 5z"/><path d="M14 3v2M19 5l-1.5 1.5M21 10h-2M16 2l-.5 1.5M9 6c2 1 4 3 5 5"/><circle cx="20" cy="2.5" r=".6"/><circle cx="22" cy="6" r=".6"/></svg></span>
         <button class="btn btn-ghost" id="btn-exportar-cumple">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
           Exportar a Excel
         </button>
+        </div>
+      </div>
+
+      <!-- Hoy y próximos 7 días (B): no depende del mes elegido, sí de planta y tipo -->
+      <div class="panel cumple-hoy-panel" style="margin-bottom:18px;">
+        <div class="panel-head">
+          <div class="panel-title"><span class="cumple-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M4 20v-6a2 2 0 012-2h12a2 2 0 012 2v6M4 16c1.5 1 3 1 4 0s2.5-1 4 0 2.5 1 4 0 2.5-1 4 0M12 12V8M12 5.5a1.5 1.5 0 001.5-1.5c0-1-1.5-2.5-1.5-2.5S10.5 3 10.5 4A1.5 1.5 0 0012 5.5z"/></svg></span> Hoy cumplen años</div>
+          <span class="small-muted" id="cumple-hoy-fecha"></span>
+        </div>
+        <div class="panel-body">
+          <div class="cumple-hoy-grid" id="cumple-hoy"></div>
+          <div class="cumple-semana" id="cumple-semana"></div>
+        </div>
       </div>
 
       <div class="panel" style="margin-bottom:18px;">
@@ -721,25 +779,35 @@ body:not(.sin-sesion) .login{display:none;}
       </div>
 
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">Cumpleañeros</div>
+        <div class="kpi gold">
+          <div class="kpi-label"><span class="cumple-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M4 20v-6a2 2 0 012-2h12a2 2 0 012 2v6M4 16c1.5 1 3 1 4 0s2.5-1 4 0 2.5 1 4 0 2.5-1 4 0M12 12V8M12 5.5a1.5 1.5 0 001.5-1.5c0-1-1.5-2.5-1.5-2.5S10.5 3 10.5 4A1.5 1.5 0 0012 5.5z"/></svg></span> Cumpleañeros</div>
           <div class="kpi-value" id="cumple-total">0</div>
           <div class="kpi-sub" id="cumple-total-sub">este mes</div>
         </div>
         <div class="kpi bad">
-          <div class="kpi-label">Administrativos que cumplen años</div>
+          <div class="kpi-label"><span class="cumple-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg></span> Administrativos que cumplen años</div>
           <div class="kpi-value" id="cumple-admin">0</div>
           <div class="kpi-sub">requieren atención especial</div>
         </div>
         <div class="kpi ok">
-          <div class="kpi-label" id="cumple-cat2-label">—</div>
+          <div class="kpi-label"><span class="cumple-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8S10.5 4 8.5 4a2 2 0 000 4M12 8s1.5-4 3.5-4a2 2 0 010 4"/></svg></span> <span id="cumple-cat2-label">—</span></div>
           <div class="kpi-value" id="cumple-cat2-valor">0</div>
           <div class="kpi-sub">del periodo seleccionado</div>
         </div>
-        <div class="kpi gold">
-          <div class="kpi-label" id="cumple-cat3-label">—</div>
+        <div class="kpi">
+          <div class="kpi-label"><span class="cumple-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 15c3.3 0 6-3 6-6.5S15.3 2 12 2 6 5 6 8.5 8.7 15 12 15zM12 15l-1 2h2l-1-2zM12 17c0 2-2 2-2 5"/></svg></span> <span id="cumple-cat3-label">—</span></div>
           <div class="kpi-value" id="cumple-cat3-valor">0</div>
           <div class="kpi-sub">del periodo seleccionado</div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-cumple-calendario" style="margin-bottom:18px;">
+        <div class="panel-head">
+          <div class="panel-title" id="cumple-cal-titulo">Calendario</div>
+          <span class="small-muted">Toca un día para ver solo a quienes cumplen ese día</span>
+        </div>
+        <div class="panel-body">
+          <div class="cumple-cal" id="cumple-calendario"></div>
         </div>
       </div>
 
@@ -1239,6 +1307,16 @@ body:not(.sin-sesion) .login{display:none;}
           <input type="text" id="edit-emp-curp" maxlength="18" autocomplete="off" style="text-transform:uppercase">
           <span class="help">18 caracteres. Vacía conserva la que ya tenía.</span>
         </div>
+        <div class="field">
+          <label>NSS</label>
+          <input type="text" id="edit-emp-nss" maxlength="13" inputmode="numeric" autocomplete="off">
+          <span class="help">11 dígitos. Lo usa Servicio Médico.</span>
+        </div>
+        <div class="field">
+          <label>Teléfono</label>
+          <input type="text" id="edit-emp-telefono" autocomplete="off">
+          <span class="help">Lo usa Servicio Médico. Vacío conserva el que ya tenía.</span>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -1333,7 +1411,7 @@ body:not(.sin-sesion) .login{display:none;}
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.24-v49";
+const APP_VERSION = "2026.10.24-v51";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1603,7 +1681,8 @@ function cargarEmpleadosBase(lista){
     const emp = { codigo: String(e.codigo), nombre: e.nombre||'', depto: e.depto||'', puesto: e.puesto||'',
       fechaIngreso: e.fechaIngreso||'', estatus: e.estatus||'ALTA', fechaNacimiento: e.fechaNacimiento||'', tipoEmpleado: e.tipoEmpleado||'',
       fechaBaja: e.fechaBaja||'', // con catálogo único la fecha de baja ya viene aquí
-      escolaridad: e.escolaridad||'', curp: e.curp||'' }; // la CURP solo llega a quien tiene el módulo capacitacion
+      escolaridad: e.escolaridad||'', curp: e.curp||'', // la CURP solo llega a quien tiene el módulo capacitacion
+      nss: e.nss||'', telefono: e.telefono||'' };
     EMPLEADOS.push(emp);
     EMP_BY_CODIGO[emp.codigo] = emp;
   });
@@ -1630,8 +1709,8 @@ function leerCacheDatos(){
 }
 function guardarCacheDatos(datos){
   // ponytail: localStorage (~5MB). Si las hojas crecen más, se omite la copia; pasar a IndexedDB si pasa seguido.
-  // La CURP no se guarda en el navegador: llega de nuevo en cada carga desde Google Sheets.
-  const sinCurp = Object.assign({}, datos, { base: (datos.base||[]).map(e=>{ const { curp, ...resto } = e || {}; return resto; }) });
+  // CURP, NSS y teléfono no se guardan en el navegador: llegan de nuevo en cada carga desde Google Sheets.
+  const sinCurp = Object.assign({}, datos, { base: (datos.base||[]).map(e=>{ const { curp, nss, telefono, ...resto } = e || {}; return resto; }) });
   try{ localStorage.setItem(CLAVE_CACHE_DATOS, JSON.stringify({ url: getScriptUrl(), guardado: new Date().toISOString(), datos: sinCurp })); }
   catch(e){ try{ localStorage.removeItem(CLAVE_CACHE_DATOS); }catch(_){} }
 }
@@ -2856,7 +2935,8 @@ const COLS_CATALOGO = ['Numero_Empleado','Nombre','Planta','Puesto','Estatus','F
 // Opcionales (no cuentan en FALTAN_DATOS). La CURP solo la ve y guarda quien tiene el módulo capacitacion.
 const CURP_VALIDA = /^[A-Z]{4}\d{6}[HMX][A-Z]{5}[A-Z\d]\d$/;
 const veCurp = () => moduloPermitido('capacitacion');
-const colsOpcionalesCatalogo = () => veCurp() ? ['Escolaridad','CURP'] : ['Escolaridad'];
+const colsOpcionalesCatalogo = () => (veCurp() ? ['Escolaridad','CURP'] : ['Escolaridad']).concat(['NSS','Telefono']);
+const nssLimpio = v => String(v||'').replace(/\D/g,''); // "8818049025-7" -> "88180490257"
 
 // Algunos archivos de RH traen la Ñ y las comillas como código HTML ("MU&#209;OZ", "&quot;"): se leen como texto normal.
 function sinEntidades(s){
@@ -2888,7 +2968,7 @@ async function descargarPlantillaCatalogo(){
     const fila = [e.codigo, e.nombre||'', e.depto||'', e.puesto||'', e.estatus||'ALTA', aFecha(e.fechaIngreso),
       e.estatus==='BAJA' ? aFecha(e.fechaBaja) : '', aFecha(e.fechaNacimiento), (e.tipoEmpleado||'').toUpperCase()];
     const falta = COLS_CATALOGO.filter((c,i)=> c!=='Fecha_Baja' && fila[i]==='').concat(e.estatus==='BAJA' && fila[6]==='' ? ['Fecha_Baja'] : []);
-    const opcionales = [e.escolaridad||''].concat(veCurp() ? [e.curp||''] : []);
+    const opcionales = [e.escolaridad||''].concat(veCurp() ? [e.curp||''] : [], [e.nss||'', e.telefono||'']);
     return [...fila, ...opcionales, falta.join(', ')];
   });
   const incompletos = filas.filter(f=>f[f.length-1]).length;
@@ -2977,6 +3057,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
     const colTipoEmpleado = buscarColGenerico(headersReales, ['tipo_empleado','tipo de empleado','tipo empleado','tipo']);
     const colEscolaridad = buscarColGenerico(headersReales, ['escolaridad']);
     const colCurp = veCurp() ? buscarColGenerico(headersReales, ['curp']) : null;
+    const colNss = buscarColGenerico(headersReales, ['nss','noimss','imss','numero_seguro_social']);
+    const colTelefono = buscarColGenerico(headersReales, ['telefono','teléfono','tel']);
 
     const faltanCols = [['Numero_Empleado',colCodigo],['Nombre',colNombre],['Planta',colDepto],['Puesto',colPuesto],['Estatus',colEstatus],
       ['Fecha_Ingreso',colFechaIngreso],['Fecha_Baja',colFechaBaja],['Fecha_Nacimiento',colFechaNacimiento],['Tipo_Empleado',colTipoEmpleado]]
@@ -3013,6 +3095,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       const fechaNacimiento = vacia.Fecha_Nacimiento ? '' : fechaCatalogo(crudo.Fecha_Nacimiento);
       const escolaridad = colEscolaridad ? texto(colEscolaridad) : '';
       const curp = colCurp ? texto(colCurp).replace(/\s/g,'') : '';
+      const nss = colNss ? nssLimpio(fila[colNss]) : '';
+      const telefono = colTelefono ? normTxt(fila[colTelefono]) : '';
 
       // Activos: todo obligatorio. Bajas (ex empleados): basta con su Fecha_Baja; ingreso y nacimiento son opcionales.
       const problemas = [];
@@ -3027,6 +3111,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       });
       if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso) problemas.push('Fecha_Nacimiento es posterior a Fecha_Ingreso');
       if(curp && !CURP_VALIDA.test(curp)) problemas.push(`CURP "${curp}" no tiene formato válido (18 caracteres)`);
+      if(nss && nss.length !== 11) problemas.push(`NSS "${normTxt(fila[colNss])}" no tiene 11 dígitos`);
       if(esBaja && fechaBaja && fechaIngreso && fechaBaja < fechaIngreso) bajaAntesDeIngreso.push(codigo); // posible reingreso: se sube y solo se avisa
       if(problemas.length){
         errores.push(`Fila ${numFila} (#${codigo}): ${problemas.join('; ')}. No se subió; ${empExistente ? 'el empleado conserva sus datos actuales' : 'no se dio de alta'}.`);
@@ -3037,7 +3122,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       porCodigo.set(codigo, {
         codigo, nombre: nombre || (empExistente?empExistente.nombre:''), depto: depto || (empExistente?empExistente.depto:''),
         puesto: puesto || (empExistente?empExistente.puesto:''), estatus, fechaBaja, fechaIngreso, fechaNacimiento, tipoEmpleado,
-        escolaridad, curp, _esNuevo: !empExistente
+        escolaridad, curp, nss, telefono, _esNuevo: !empExistente
       });
     });
 
@@ -3058,7 +3143,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       if(EMP_BY_CODIGO[r.codigo]) return; // por si acaso ya existía
       const emp = { codigo:r.codigo, nombre:r.nombre, depto:r.depto, puesto:r.puesto, estatus:r.estatus,
         fechaIngreso:r.fechaIngreso, fechaBaja: r.estatus==='BAJA'?r.fechaBaja:'', fechaNacimiento:r.fechaNacimiento, tipoEmpleado:r.tipoEmpleado,
-        escolaridad:r.escolaridad, curp:r.curp };
+        escolaridad:r.escolaridad, curp:r.curp, nss:r.nss, telefono:r.telefono };
       EMPLEADOS.push(emp);
       EMP_BY_CODIGO[r.codigo] = emp;
     });
@@ -3072,6 +3157,8 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       if(r.tipoEmpleado) emp.tipoEmpleado = r.tipoEmpleado;
       if(r.escolaridad) emp.escolaridad = r.escolaridad;
       if(r.curp) emp.curp = r.curp;
+      if(r.nss) emp.nss = r.nss;
+      if(r.telefono) emp.telefono = r.telefono;
     });
 
     recalcularDepartamentos();
@@ -3138,6 +3225,8 @@ function abrirEditarEmpleado(codigo){
   document.getElementById('edit-emp-escolaridad').value = e.escolaridad || '';
   document.getElementById('edit-emp-curp').value = e.curp || '';
   document.getElementById('wrap-edit-emp-curp').style.display = veCurp() ? '' : 'none';
+  document.getElementById('edit-emp-nss').value = e.nss || '';
+  document.getElementById('edit-emp-telefono').value = e.telefono || '';
   document.getElementById('modal-editar-emp-bg').showModal();
 }
 document.getElementById('edit-emp-estatus').addEventListener('change', function(){
@@ -3169,9 +3258,12 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const tipoEmpleado = document.getElementById('edit-emp-tipo').value;
   const escolaridad = normTxt(document.getElementById('edit-emp-escolaridad').value).toUpperCase();
   const curp = veCurp() ? normTxt(document.getElementById('edit-emp-curp').value).toUpperCase() : '';
+  const nss = nssLimpio(document.getElementById('edit-emp-nss').value);
+  const telefono = normTxt(document.getElementById('edit-emp-telefono').value);
 
   if(!nombre){ mostrarToast('Indica el nombre completo', true); return; }
   if(curp && !CURP_VALIDA.test(curp)){ mostrarToast('La CURP no tiene un formato válido (18 caracteres)', true); return; }
+  if(nss && nss.length !== 11){ mostrarToast('El NSS debe tener 11 dígitos', true); return; }
   if(fechaIngreso && fechaNacimiento && fechaNacimiento >= fechaIngreso){ mostrarToast('La fecha de nacimiento debe ser anterior a la fecha de alta', true); return; }
   if(!depto){ mostrarToast('Indica el departamento / planta', true); return; }
   if(!puesto){ mostrarToast('Indica el puesto', true); return; }
@@ -3180,7 +3272,7 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
   const btn = document.getElementById('btn-guardar-edicion-empleado');
   btn.disabled = true; btn.textContent = 'Guardando...';
   try{
-    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, fechaIngreso, estatus, fechaBaja, fechaNacimiento, tipoEmpleado, escolaridad, curp}});
+    await apiPost({action:'updateEmpleado', empleado:{codigo, nombre, depto, puesto, fechaIngreso, estatus, fechaBaja, fechaNacimiento, tipoEmpleado, escolaridad, curp, nss, telefono}});
     const e = EMP_BY_CODIGO[codigo];
     if(e){
       e.nombre = nombre; e.depto = depto; e.puesto = puesto; e.estatus = estatus; e.fechaBaja = fechaBaja;
@@ -3189,6 +3281,8 @@ document.getElementById('btn-guardar-edicion-empleado').addEventListener('click'
       if(tipoEmpleado) e.tipoEmpleado = tipoEmpleado;
       if(escolaridad) e.escolaridad = escolaridad;
       if(curp) e.curp = curp;
+      if(nss) e.nss = nss;
+      if(telefono) e.telefono = telefono;
     }
     recalcularDepartamentos();
     mostrarToast(`Empleado #${codigo} actualizado correctamente`);
@@ -3334,6 +3428,72 @@ function cumpleanerosActivos(){
     })
     .filter(Boolean);
 }
+// Texto de Sheets/Excel antes de meterlo en HTML
+const escH = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let cumpleDiaSel = null; // día tocado en el calendario (filtra solo la tabla)
+const estaFelicitado = (codigo, anio) => FELICITADOS.some(f=> String(f.codigo)===String(codigo) && String(f.anio)===String(anio));
+const ICO_PASTEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M4 20v-6a2 2 0 012-2h12a2 2 0 012 2v6M4 16c1.5 1 3 1 4 0s2.5-1 4 0 2.5 1 4 0 2.5-1 4 0M12 12V8M12 5.5a1.5 1.5 0 001.5-1.5c0-1-1.5-2.5-1.5-2.5S10.5 3 10.5 4A1.5 1.5 0 0012 5.5z"/></svg>`;
+
+// Próximos 7 días (hoy incluido), con planta y tipo elegidos; cruza de diciembre a enero.
+function cumpleSemana(){
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const planta = document.getElementById('f-cumple-planta').value, tipo = document.getElementById('f-cumple-tipo').value;
+  return cumpleanerosActivos()
+    .filter(e=> (!planta || e.depto===planta) && (!tipo || e.tipoEmpleado===tipo))
+    .map(e=>{
+      let f = new Date(hoy.getFullYear(), e._mes, e._dia);
+      if(f < hoy) f = new Date(hoy.getFullYear()+1, e._mes, e._dia);
+      return { ...e, _faltan: Math.round((f - hoy)/86400000), _fecha: f, _edadQueCumple: f.getFullYear() - parseInt(e._fechaNacNorm.slice(0,4),10) };
+    })
+    .filter(e=> e._faltan <= 6)
+    .sort((a,b)=> a._faltan - b._faltan || a.nombre.localeCompare(b.nombre));
+}
+function renderCumpleHoy(semana){
+  const anio = String(new Date().getFullYear());
+  const hoy = semana.filter(e=>e._faltan===0);
+  document.getElementById('cumple-hoy-fecha').textContent = new Date().toLocaleDateString('es-MX', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('cumple-hoy').innerHTML = hoy.length ? hoy.map(e=>{
+    const hecho = estaFelicitado(e.codigo, anio);
+    return `<div class="cumple-card${hecho?' hecho':''}">
+      <b>${escH(e.nombre)}</b>
+      <span class="small-muted">#${escH(e.codigo)} · ${escH(e.depto)} · ${escH(e.puesto)}</span>
+      <span class="small-muted">Cumple ${e._edadQueCumple} años</span>
+      ${hecho ? '<span style="margin-top:10px;display:inline-block;color:var(--ok);font-weight:700;font-size:12.5px;">✓ Felicitado</span>'
+              : (MODO_LECTURA ? '' : `<button class="btn btn-primary btn-felicitar" data-codigo="${escH(e.codigo)}" data-anio="${anio}">Marcar felicitado</button>`)}
+    </div>`;
+  }).join('') : '<div class="cumple-vacio">Hoy nadie cumple años.</div>';
+  const proximos = semana.filter(e=>e._faltan>0);
+  const porDia = new Map();
+  proximos.forEach(e=>{ const k = e._fecha.toLocaleDateString('es-MX', {weekday:'long', day:'numeric'}); (porDia.get(k) || porDia.set(k, []).get(k)).push(e); });
+  document.getElementById('cumple-semana').innerHTML = porDia.size
+    ? '<div class="small-muted" style="font-weight:700;">Próximos 7 días</div>' + [...porDia].map(([dia, l])=>`<div class="cumple-semana-dia"><b>${escH(dia)}</b><span>${l.map(e=>`${escH(e.nombre)} <span class="small-muted">(${escH(e.depto)})</span>`).join(' · ')}</span></div>`).join('')
+    : '<div class="cumple-vacio">Nadie más cumple años en los próximos 7 días.</div>';
+}
+function renderCumpleCalendario(lista, selMes){
+  const panel = document.getElementById('panel-cumple-calendario');
+  if(selMes === 'todos'){ panel.style.display = 'none'; return; }
+  panel.style.display = '';
+  const hoy = new Date();
+  const mes = selMes === '' ? hoy.getMonth() : parseInt(selMes,10), anio = hoy.getFullYear();
+  const diasMes = new Date(anio, mes+1, 0).getDate(), inicio = (new Date(anio, mes, 1).getDay() + 6) % 7; // lunes primero
+  const porDia = {};
+  lista.forEach(e=>{ (porDia[e._dia] = porDia[e._dia] || []).push(e.nombre); });
+  document.getElementById('cumple-cal-titulo').textContent = `Calendario de ${NOMBRES_MES[mes].toLowerCase()} ${anio}`;
+  let html = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div class="cab">${d}</div>`).join('') + '<div></div>'.repeat(inicio);
+  for(let d=1; d<=diasMes; d++){
+    const n = (porDia[d]||[]).length;
+    const cls = [n?'con':'', (mes===hoy.getMonth() && d===hoy.getDate())?'hoy':'', cumpleDiaSel===d?'sel':''].filter(Boolean).join(' ');
+    html += `<button type="button" data-dia="${d}" class="${cls}" ${n?`title="${escH(porDia[d].join(', '))}"`:'disabled'} aria-label="${d} de ${NOMBRES_MES[mes]}: ${n} cumpleaños">${d}${n?`<span><span class="cumple-ico">${ICO_PASTEL}</span> ${n}</span>`:''}</button>`;
+  }
+  document.getElementById('cumple-calendario').innerHTML = html;
+}
+async function guardarFelicitado(codigo, anio, felicitado){
+  await apiPost({action:'toggleFelicitado', codigo, anio, felicitado});
+  FELICITADOS = FELICITADOS.filter(f=> !(String(f.codigo)===String(codigo) && String(f.anio)===String(anio)));
+  if(felicitado) FELICITADOS.push({codigo, anio});
+  mostrarToast(felicitado ? 'Marcado como felicitado — visible para todos.' : 'Se quitó la marca de felicitado.');
+}
+
 function renderCumple(){
   const selMes = document.getElementById('f-cumple-mes').value;
   const hoyMes = new Date().getMonth();
@@ -3375,7 +3535,13 @@ function renderCumple(){
   }
 
   document.getElementById('cumple-total').textContent = lista.length;
-  document.getElementById('cumple-total-sub').textContent = etiquetaPeriodo;
+  const yaFelicitados = lista.filter(e=> estaFelicitado(e.codigo, anioActualTxt)).length;
+  document.getElementById('cumple-total-sub').textContent = `${etiquetaPeriodo} · ${lista.length - yaFelicitados} por felicitar · ${yaFelicitados} felicitados`;
+  const semana = cumpleSemana();
+  document.getElementById('cumple-banner-titulo').textContent = selMes === 'todos' ? 'Cumpleañeros del año' : `Cumpleañeros de ${etiquetaPeriodo.toLowerCase()}`;
+  document.getElementById('cumple-banner-sub').textContent = `${lista.length} colaborador(es) · ${semana.length} en los próximos 7 días`;
+  renderCumpleHoy(semana);
+  renderCumpleCalendario(lista, selMes);
 
   const admins = lista.filter(e=>(e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO');
   document.getElementById('cumple-admin').textContent = admins.length;
@@ -3445,7 +3611,12 @@ function renderCumple(){
     panelAlerta60.style.display = 'none';
   }
 
-  document.getElementById('cumple-count').textContent = `${lista.length} colaborador(es)`;
+  const listaMes = lista;
+  if(cumpleDiaSel && selMes !== 'todos') lista = lista.filter(e=> e._dia === cumpleDiaSel);
+  document.getElementById('cumple-count').innerHTML = cumpleDiaSel && selMes !== 'todos'
+    ? `${lista.length} colaborador(es) el día ${cumpleDiaSel} · <a href="#" id="cumple-quitar-dia">ver todo el mes</a>`
+    : `${lista.length} colaborador(es)`;
+  const hoyD = new Date();
   const body = document.getElementById('cumple-body');
   if(lista.length===0){
     body.innerHTML = `<tr><td colspan="7" class="small-muted" style="text-align:center;padding:20px;">No hay cumpleaños registrados para este periodo. Sube el catálogo de empleados con la fecha de nacimiento para verlos aquí.</td></tr>`;
@@ -3454,24 +3625,44 @@ function renderCumple(){
       const esAdmin = (e.tipoEmpleado||'').toUpperCase()==='ADMINISTRATIVO';
       const anio = String(new Date().getFullYear());
       const felicitado = FELICITADOS.some(f=> String(f.codigo)===String(e.codigo) && String(f.anio)===anio);
-      return `<tr style="${esAdmin?'background:#FBEAE7;':''}">
-        <td>${e._dia}${selMes==='todos'?' de '+NOMBRES_MES[e._mes].slice(0,3):''}</td>
-        <td>${e.nombre}${esAdmin?' <span style="color:var(--bad);font-weight:700;">★</span>':''}</td>
-        <td>#${e.codigo}</td>
-        <td>${e.depto}</td>
-        <td>${e.puesto}</td>
-        <td>${e.tipoEmpleado || 'Sin especificar'}</td>
-        <td>${e._edad || '—'}</td>
+      const esHoy = e._mes===hoyD.getMonth() && e._dia===hoyD.getDate();
+      return `<tr style="${esAdmin?'background:#FBEAE7;':''}" class="${esHoy && !esAdmin ? 'cumple-hoy-fila' : ''}">
+        <td><span class="cumple-dia">${e._dia}${selMes==='todos'?' '+NOMBRES_MES[e._mes].slice(0,3):''}</span></td>
+        <td>${escH(e.nombre)}${esAdmin?' <span style="color:var(--bad);font-weight:700;">★</span>':''}</td>
+        <td>#${escH(e.codigo)}</td>
+        <td>${escH(e.depto)}</td>
+        <td>${escH(e.puesto)}</td>
+        <td>${escH(e.tipoEmpleado || 'Sin especificar')}</td>
+        <td>${e._edad ? e._edad + ' años' : '—'}</td>
         <td style="text-align:center;">
           <input type="checkbox" class="chk-felicitado" data-codigo="${e.codigo}" data-anio="${anio}" ${felicitado?'checked':''} title="Felicitado" aria-label="Felicitado">
         </td>
       </tr>`;
     }).join('');
   }
-  cumpleCache = { lista, etiquetaPeriodo };
+  cumpleCache = { lista: listaMes, etiquetaPeriodo };
   renderBusquedaIndividualCumple();
 }
-document.getElementById('f-cumple-mes').addEventListener('change', renderCumple);
+document.getElementById('f-cumple-mes').addEventListener('change', ()=>{ cumpleDiaSel = null; renderCumple(); });
+document.getElementById('cumple-calendario').addEventListener('click', ev=>{
+  const b = ev.target.closest('button[data-dia]');
+  if(!b || b.disabled) return;
+  const d = parseInt(b.dataset.dia,10);
+  cumpleDiaSel = cumpleDiaSel === d ? null : d;
+  renderCumple();
+});
+document.getElementById('cumple-count').addEventListener('click', ev=>{
+  if(ev.target.id !== 'cumple-quitar-dia') return;
+  ev.preventDefault(); cumpleDiaSel = null; renderCumple();
+});
+document.getElementById('cumple-hoy').addEventListener('click', async ev=>{
+  const b = ev.target.closest('.btn-felicitar');
+  if(!b) return;
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  b.disabled = true; b.textContent = 'Guardando...';
+  try{ await guardarFelicitado(b.dataset.codigo, b.dataset.anio, true); renderCumple(); }
+  catch(err){ b.disabled = false; b.textContent = 'Marcar felicitado'; mostrarToast('No se pudo guardar el cambio. Revisa tu conexión.', true); }
+});
 document.getElementById('f-cumple-planta').addEventListener('change', renderCumple);
 document.getElementById('f-cumple-tipo').addEventListener('change', renderCumple);
 document.getElementById('f-cumple-felicitado').addEventListener('change', renderCumple);
@@ -3484,10 +3675,8 @@ document.getElementById('cumple-body').addEventListener('change', async function
   const felicitado = chk.checked;
   chk.disabled = true;
   try{
-    await apiPost({action:'toggleFelicitado', codigo, anio, felicitado});
-    FELICITADOS = FELICITADOS.filter(f=> !(String(f.codigo)===String(codigo) && String(f.anio)===String(anio)));
-    if(felicitado) FELICITADOS.push({codigo, anio});
-    mostrarToast(felicitado ? 'Marcado como felicitado — visible para todos.' : 'Se quitó la marca de felicitado.');
+    await guardarFelicitado(codigo, anio, felicitado);
+    renderCumple(); // actualiza tarjetas de hoy e indicadores
   }catch(err){
     chk.checked = !felicitado; // revertir si falló el guardado
     mostrarToast('No se pudo guardar el cambio. Revisa tu conexión.', true);
