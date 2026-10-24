@@ -262,7 +262,7 @@
   <div class="tabla-scroll">
     <table>
       <thead><tr>
-        <th>Código</th><th>Nombre</th><th>Puesto</th><th>Depto</th><th>Área</th><th>NSS</th><th>Teléfono</th><th>Ingreso</th><th>Estatus</th><th></th>
+        <th>Código</th><th>Nombre</th><th>Puesto</th><th>Depto</th><th>Área</th><th>NSS</th><th>Teléfono</th><th>Ingreso</th><th>Estatus</th>
       </tr></thead>
       <tbody id="tbodyEmpleados"></tbody>
     </table>
@@ -312,36 +312,6 @@
     <div style="text-align:right;margin-top:14px;">
       <button class="btn secundario" onclick="cerrarModal('modalIncapacidad')">Cancelar</button>
       <button class="btn" onclick="guardarIncapacidad()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL EMPLEADO -->
-<div class="modal-fondo" id="modalEmpleado">
-  <div class="modal">
-    <h3 id="tituloModalEmp">Datos médicos del empleado</h3>
-    <input type="hidden" id="empCodigoOriginal">
-    <div class="fila-modal">
-      <div class="campo"><label>Código</label><input type="text" id="empCodigo" readonly style="background:#f2f4f8;"></div>
-      <div class="campo"><label>Nombre</label><input type="text" id="empNombre" readonly style="background:#f2f4f8;"></div>
-    </div>
-    <div class="fila-modal">
-      <div class="campo"><label>Puesto</label><input type="text" id="empPuesto" readonly style="background:#f2f4f8;"></div>
-      <div class="campo"><label>Depto (código nómina)</label><input type="text" id="empDepto" oninput="previsualizarAreaEmpleado()"></div>
-    </div>
-    <div class="campo"><label>Área (calculada automáticamente)</label><input type="text" id="empPlanta" readonly style="background:#f2f4f8;"></div>
-    <div class="fila-modal">
-      <div class="campo"><label>NSS</label><input type="text" id="empNSS"></div>
-      <div class="campo"><label>Teléfono</label><input type="text" id="empTelefono"></div>
-    </div>
-    <div class="fila-modal">
-      <div class="campo"><label>Fecha de ingreso</label><input type="date" id="empFechaIngreso" readonly style="background:#f2f4f8;"></div>
-      <div class="campo"><label>Estatus</label><select id="empEstatus" disabled><option>Activo</option><option>Baja</option></select></div>
-    </div>
-    <div class="campo"><label>Notas</label><input type="text" id="empNotas"></div>
-    <div style="text-align:right;margin-top:14px;">
-      <button class="btn secundario" onclick="cerrarModal('modalEmpleado')">Cancelar</button>
-      <button class="btn" onclick="guardarEmpleado()">Guardar</button>
     </div>
   </div>
 </div>
@@ -584,8 +554,13 @@ function normalizarEmp(r){
     Codigo: String(r.Codigo||'').trim(), Nombre: r.Nombre||'', Puesto: r.Puesto||'',
     Depto: depto, Planta: mapearArea(depto) || r.Planta || '',
     NSS: r.NSS||'', Telefono: r.Telefono||'', FechaIngreso: aFechaISO(r.FechaIngreso),
-    Estatus: normalizarEstatusEmpleado(r.Estatus), Notas: r.Notas||''
+    Estatus: normalizarEstatusEmpleado(r.Estatus), Notas: sinEntidades(r.Notas)
   };
+}
+// "reducci&#243;n" -> "reducción" (acentos que el export de nómina guarda como entidades HTML)
+function sinEntidades(v){
+  const s = String(v||'');
+  return s.includes('&') ? new DOMParser().parseFromString(s, 'text/html').documentElement.textContent : s;
 }
 function aFechaISO(v){
   if(!v) return '';
@@ -1221,51 +1196,12 @@ function renderTablaEmpleados(){
       <td>${esc(e.Codigo)}</td><td>${esc(e.Nombre)}</td><td>${esc(e.Puesto)}</td><td>${esc(e.Depto)}</td><td>${esc(e.Planta)}</td>
       <td>${esc(e.NSS)}</td><td>${esc(e.Telefono)}</td><td>${esc(e.FechaIngreso)}</td>
       <td><span class="badge ${e.Estatus==='Activo'?'activa':'cerrada'}">${esc(e.Estatus)}</span></td>
-      <td>
-        <button class="btn chico secundario" data-accion="editar" data-id="${esc(e.Codigo)}">✎</button>
-      </td>
-    </tr>`).join('') || '<tr><td colspan="10" style="text-align:center;color:#8892a0;">Sin registros</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:#8892a0;">Sin registros</td></tr>';
 }
 
-function previsualizarAreaEmpleado(){
-  const depto = document.getElementById('empDepto').value;
-  document.getElementById('empPlanta').value = mapearArea(depto) || '(código de depto no reconocido)';
-}
-function editarEmpleado(codigo){
-  const e = empleados.find(x=>x.Codigo===codigo);
-  if(!e) return;
-  document.getElementById('tituloModalEmp').textContent = 'Editar empleado';
-  document.getElementById('empCodigoOriginal').value = e.Codigo;
-  document.getElementById('empCodigo').value = e.Codigo;
-  document.getElementById('empNombre').value = e.Nombre;
-  document.getElementById('empPuesto').value = e.Puesto;
-  document.getElementById('empDepto').value = e.Depto;
-  document.getElementById('empPlanta').value = e.Planta;
-  document.getElementById('empNSS').value = e.NSS;
-  document.getElementById('empTelefono').value = e.Telefono;
-  document.getElementById('empFechaIngreso').value = e.FechaIngreso;
-  document.getElementById('empEstatus').value = e.Estatus;
-  document.getElementById('empNotas').value = e.Notas;
-  abrirModal('modalEmpleado');
-}
 // Lo único que Servicio Médico guarda de cada empleado (SM_Empleados); lo demás es del catálogo de RH.
 const CAMPOS_MEDICOS_EMP = ['NSS','Telefono','Depto','Notas'];
 const datosMedicos = e => ({Codigo: e.Codigo, NSS: e.NSS, Telefono: e.Telefono, Depto: e.Depto, Notas: e.Notas});
-async function guardarEmpleado(){
-  const codigo = document.getElementById('empCodigoOriginal').value;
-  const idx = empleados.findIndex(x=>x.Codigo===codigo);
-  if(idx<0){ alert('Ese empleado ya no está en el catálogo de RH.'); return; }
-  const registro = normalizarEmp({...empleados[idx],
-    Depto: document.getElementById('empDepto').value,
-    NSS: document.getElementById('empNSS').value,
-    Telefono: document.getElementById('empTelefono').value,
-    Notas: document.getElementById('empNotas').value
-  });
-  if(!await persistir({accion:'upsertEmpleado', registro: datosMedicos(registro)})) return; // el modal queda abierto para reintentar
-  empleados[idx]=registro;
-  cerrarModal('modalEmpleado');
-  refrescarTodaLaUI();
-}
 
 /* ============================================================
    CARGA DE ARCHIVOS (plantilla incapacidades / catálogo)
@@ -1568,11 +1504,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const b = ev.target.closest('button[data-accion]');
     if(!b) return;
     if(b.dataset.accion==='editar') editarIncapacidad(b.dataset.id); else eliminarIncapacidad(b.dataset.id);
-  });
-  document.getElementById('tbodyEmpleados').addEventListener('click', ev => {
-    const b = ev.target.closest('button[data-accion]');
-    if(!b) return;
-    if(b.dataset.accion==='editar') editarEmpleado(b.dataset.id);
   });
   cargarMapaDeptoAreaGuardado();
   cargarTodo();
