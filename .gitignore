@@ -1,0 +1,18 @@
+# Este repositorio es PÚBLICO (GitHub Pages): solo la parte visual de la app.
+
+# Datos personales y archivos de trabajo
+*.xlsx
+*.xls
+*.csv
+!plantilla_ausentismo_metelmex.xlsx
+casos_*
+
+# Código de Apps Script (vive en el editor de Apps Script)
+*.gs
+*.gs.js
+
+# Entregas y respaldos
+*.zip
+entrega*/
+favorito-peoplecloud*/
+respaldos/

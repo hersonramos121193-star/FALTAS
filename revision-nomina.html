@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cotejo de tiempo extra — Metelmex</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+:root{
+  --bg:#E8ECEE; --panel:#FFFFFF; --ink:#16242C; --muted:#5A6A73; --line:#C9D2D7; --soft:#F3F5F6;
+  --steel:#2B5670; --steel-2:#3E7391;
+  --ok:#2E7A4E; --warn:#C48600; --orange:#C8631C; --risk:#B1352A; --riskdark:#7E1F18; --info:#3B6E8F; --neutral:#7B878E; --vac:#6A4F9E;
+  --r:6px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--steel-2);outline-offset:2px}
+.wrap{max-width:1480px;margin:0 auto;padding:0 20px 48px}
+header.top{background:var(--ink);color:#fff}
+header.top .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-top:22px;padding-bottom:18px;flex-wrap:wrap}
+header.top h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em}
+header.top p{margin:4px 0 0;color:#AFC0CA;font-size:13.5px}
+.semana-tag{font-size:13px;color:#D6E0E6;text-align:right}
+.semana-tag strong{display:block;font-size:20px;color:#fff;font-weight:700}
+
+.carga{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.drop{background:var(--panel);border:1.5px dashed var(--line);border-radius:var(--r);padding:14px 16px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;transition:border-color .15s}
+.drop:hover,.drop.over{border-color:var(--steel-2)}
+.drop.ok{border-style:solid;border-color:var(--ok)}
+.drop.err{border-style:solid;border-color:var(--risk)}
+.drop input{display:none}
+.drop .n{flex:0 0 28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;color:var(--steel)}
+.drop.ok .n{background:var(--ok);color:#fff}
+.drop h3{margin:0;font-size:14.5px}
+.drop .st{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.drop.err .st{color:var(--risk)}
+.btn.plantilla{margin-top:8px;padding:4px 10px;font-size:12.5px}
+
+.controles{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-top:16px;background:var(--panel);border-radius:var(--r);padding:12px 16px;border:1px solid var(--line)}
+.ctl{display:flex;flex-direction:column;gap:3px}
+.ctl label{font-size:12px;color:var(--muted);font-weight:600}
+.ctl select,.ctl input{border:1px solid var(--line);border-radius:5px;padding:7px 9px;background:#fff;min-width:170px}
+.ctl input[type=search]{min-width:230px}
+.btn{border:0;border-radius:5px;padding:8px 14px;font-weight:600;cursor:pointer;background:var(--steel);color:#fff}
+.btn:hover{background:var(--steel-2)}
+.btn:disabled{background:var(--neutral);cursor:not-allowed}
+.btn.sec{background:transparent;color:var(--steel);border:1px solid var(--steel)}
+.spacer{flex:1}
+.excl{margin-top:10px;font-size:13px;color:var(--muted)}
+.excl button{background:none;border:0;padding:0;color:var(--steel);text-decoration:underline;cursor:pointer;font-weight:600}
+
+nav.tabs{display:flex;gap:2px;margin-top:22px;border-bottom:2px solid var(--ink);overflow-x:auto}
+nav.tabs button{border:0;background:transparent;padding:10px 16px 9px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:6px 6px 0 0;white-space:nowrap}
+nav.tabs button .c{display:inline-block;min-width:22px;margin-left:6px;padding:0 6px;border-radius:10px;background:var(--line);color:var(--ink);font-size:12px}
+nav.tabs button[aria-selected=true]{background:var(--ink);color:#fff}
+nav.tabs button[aria-selected=true] .c{background:#fff}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-top:0;border-radius:0 0 var(--r) var(--r);padding:18px 18px 8px}
+.nota-legal{font-size:13px;color:var(--muted);max-width:90ch;margin:0 0 14px}
+.nota-legal b{color:var(--ink)}
+
+/* Barra de distribución (elemento principal) */
+.ledger{display:flex;height:34px;border-radius:5px;overflow:hidden;background:var(--soft);margin:4px 0 10px}
+.ledger button{border:0;padding:0;cursor:pointer;min-width:3px;position:relative;transition:filter .15s,opacity .15s}
+.ledger button:hover{filter:brightness(1.12)}
+.ledger.filtrado button:not(.act){opacity:.28}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 8px;margin-bottom:12px}
+.leyenda button{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:20px;padding:4px 11px 4px 8px;cursor:pointer;font-size:13px}
+.leyenda button .sw{width:11px;height:11px;border-radius:3px}
+.leyenda button b{font-weight:700}
+.leyenda button.act{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.cifras{display:flex;flex-wrap:wrap;gap:28px;margin:4px 0 14px;font-size:13px;color:var(--muted)}
+.cifras strong{display:block;font-size:22px;color:var(--ink);font-weight:700}
+
+.tabla-wrap{overflow:auto;max-height:68vh;border:1px solid var(--line);border-radius:5px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:var(--ink);color:#fff;text-align:left;font-weight:600;padding:8px 9px;white-space:nowrap;z-index:1}
+tbody td{padding:7px 9px;border-bottom:1px solid #E3E8EB;vertical-align:top;white-space:nowrap}
+tbody tr:hover td{background:#F6F8F9}
+td.num,th.num{text-align:right}
+td.cat{border-left:4px solid var(--c,#999)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;background:var(--c,#999);white-space:nowrap}
+.chk{color:var(--muted);font-size:12px;white-space:nowrap}
+.est{font-style:italic;color:var(--orange)}
+.obs{color:var(--muted);font-size:12.5px;min-width:260px;white-space:normal}
+.dif-pos{color:var(--orange);font-weight:700}
+.dif-neg{color:var(--risk);font-weight:700}
+.vacio{padding:40px 12px;text-align:center;color:var(--muted)}
+.dia-cell{min-width:74px}
+.dia-cell .x{font-weight:700;font-size:14px}
+.dia-cell .w{display:block;color:var(--muted);font-size:11.5px}
+.dia-cell.inc .x{color:var(--warn)}
+.dia-cell.estm .x{color:var(--orange)}
+.dia-cell.vac .x{color:var(--vac);font-size:13px}
+.flag-on{color:var(--risk);font-weight:700}
+.diag{background:#FFF6E0;border:1px solid var(--warn);border-radius:5px;padding:10px 14px;margin-bottom:14px;font-size:13.5px}
+.diag .btn{padding:3px 9px;font-size:12.5px;margin-left:4px}
+.bienvenida{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px;margin-top:22px;max-width:760px}
+.bienvenida h2{margin:0 0 8px;font-size:18px}
+.bienvenida ol{margin:0;padding-left:20px;color:var(--muted)}
+.bienvenida li{margin:3px 0}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:5px;font-size:13px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;max-width:420px}
+.toast.show{opacity:1;transform:none}
+.toast.err{background:var(--risk)}
+.ajustes{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px 16px}
+.ajustes summary{cursor:pointer;font-weight:600}
+.ajustes summary span{font-weight:400;color:var(--muted);font-size:13px}
+.aj-grid{display:grid;grid-template-columns:3fr 2fr;gap:24px;margin-top:10px}
+.aj-grid h4{margin:0 0 4px;font-size:14px}
+.aj-ayuda{margin:0 0 8px;font-size:12.5px;color:var(--muted);max-width:75ch}
+.aj-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12.5px;color:var(--muted)}
+.aj-form input{border:1px solid var(--line);border-radius:5px;padding:5px 7px;font-size:13px;color:var(--ink)}
+.aj-tabla{width:auto;margin-bottom:8px}
+.aj-tabla td,.aj-tabla th{padding:4px 10px;border-bottom:1px solid #E3E8EB;font-size:12.5px;white-space:nowrap}
+.aj-tabla th{background:var(--soft);color:var(--ink);position:static}
+.aj-tabla button{background:none;border:0;color:var(--risk);cursor:pointer;font-weight:600}
+@media (max-width:860px){.aj-grid{grid-template-columns:1fr}}
+@media (max-width:860px){.carga{grid-template-columns:1fr}.ctl select,.ctl input{min-width:140px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div>
+    <h1>Cotejo de tiempo extra</h1>
+    <p>Solicitudes de PeopleCloud HRM contra checadas reales, Grupo Metelmex</p>
+  </div>
+  <div class="semana-tag" id="semanaTag" hidden>Semana analizada<strong id="semanaTxt"></strong></div>
+</div></header>
+
+<main class="wrap">
+  <section class="carga" aria-label="Carga de archivos">
+    <label class="drop" id="dropSol"><input type="file" accept=".xlsx,.xls" id="fSol"><span class="n">1</span>
+      <span><h3>Solicitudes de PeopleCloud</h3><p class="st" id="stSol">Reporte de PeopleCloud: hora extra, festivo trabajado, vacaciones, pase de salida e incapacidad</p></span></label>
+    <label class="drop" id="dropChe"><input type="file" accept=".xlsx,.xls" id="fChe"><span class="n">2</span>
+      <span><h3>Registros de asistencia</h3><p class="st" id="stChe">Checadas de PeopleCloud, cualquiera de los dos formatos</p></span></label>
+    <label class="drop" id="dropCat"><input type="file" accept=".xlsx,.xls" id="fCat"><span class="n">3</span>
+      <span><h3>Catálogo de empleados (opcional)</h3><p class="st" id="stCat">Excluye al personal administrativo</p>
+      <button type="button" class="btn sec plantilla" id="btnPlantilla">Descargar plantilla</button></span></label>
+  </section>
+
+  <section class="controles" id="controles" hidden>
+    <div class="ctl"><label for="selSemana">Semana (lunes a domingo)</label><select id="selSemana"></select></div>
+    <div class="ctl"><label for="selPlanta">Planta</label><select id="selPlanta"></select></div>
+    <div class="ctl"><label for="txtBuscar">Buscar colaborador</label><input type="search" id="txtBuscar" placeholder="Ficha o nombre"></div>
+    <div class="ctl"><label for="sel0830">Entrada 08:30 se toma como</label>
+      <select id="sel0830"><option value="17">08:30 a 17:00</option><option value="18">08:30 a 18:00</option></select></div>
+    <span class="spacer"></span>
+    <button class="btn" id="btnPlantillaAus">Exportar plantilla</button>
+    <button class="btn" id="btnExcel">Exportar a Excel</button>
+  </section>
+  <p class="excl" id="exclTxt" hidden></p>
+  <details class="ajustes" id="ajustesBox" hidden>
+    <summary>Ajustes por colaborador <span id="ajResumen"></span></summary>
+    <div class="aj-grid">
+      <div>
+        <h4>Horarios específicos</h4>
+        <p class="aj-ayuda">Sustituyen al catálogo de turnos. "Fin" es el fin de la jornada ordinaria: lo que se trabaje después cuenta como tiempo extra. Sin fechas, aplica siempre y el colaborador entra al cotejo aunque su turno sea administrativo.</p>
+        <div id="ajHorarios"></div>
+        <div class="aj-form">
+          <input id="ajNum" placeholder="Ficha" size="7">
+          <label>Entrada <input type="time" id="ajIni"></label>
+          <label>Fin <input type="time" id="ajFin"></label>
+          <label>Desde <input type="date" id="ajDesde"></label>
+          <label>Hasta <input type="date" id="ajHasta"></label>
+          <input id="ajNota" placeholder="Nota (opcional)" size="22">
+          <button class="btn" id="ajAgregar" type="button">Agregar horario</button>
+        </div>
+        <h4 style="margin-top:16px">Checadas manuales</h4>
+        <p class="aj-ayuda">Para una checada que no quedó registrada en PeopleCloud y que validaste con el supervisor. Se suma a las checadas del reloj y la Observación del día indica que se capturó a mano. Para una salida de turno nocturno, usa la fecha del día en que salió (por ejemplo, entrada 23/09 21:00 y salida 24/09 04:00).</p>
+        <div id="ajChecadas"></div>
+        <div class="aj-form">
+          <input id="acNum" placeholder="Ficha" size="7">
+          <label>Fecha <input type="date" id="acFecha"></label>
+          <label>Hora <input type="time" id="acHora"></label>
+          <input id="acNota" placeholder="Nota (opcional)" size="22">
+          <button class="btn" id="acAgregar" type="button">Agregar checada</button>
+        </div>
+      </div>
+      <div>
+        <h4>Guardias de seguridad</h4>
+        <p class="aj-ayuda">Se detectan por la palabra "Guardia" en la descripción de sus solicitudes. Van en su propia pestaña, con límite de 5 h extra por día y fuera de la alerta semanal.</p>
+        <p id="ajGuardiasDet" class="aj-ayuda"></p>
+        <div class="aj-form">
+          <input id="ajGuardias" placeholder="Fichas adicionales, separadas por coma" size="34">
+          <button class="btn" id="ajGuardar" type="button">Guardar guardias</button>
+        </div>
+        <p style="margin-top:14px"><button class="btn sec" id="ajReset" type="button">Restablecer ajustes iniciales</button></p>
+      </div>
+    </div>
+  </details>
+
+  <section class="bienvenida" id="bienvenida">
+    <h2>Carga los dos reportes para iniciar el cotejo</h2>
+    <ol>
+      <li>Descarga de PeopleCloud el reporte de solicitudes y el de registros de asistencia de la misma semana.</li>
+      <li>Súbelos en los recuadros 1 y 2. Incluye en las checadas el lunes siguiente para cerrar el turno nocturno del domingo.</li>
+      <li>Para las faltas basta con el reporte de solicitudes: la pestaña Faltas llena la plantilla de ausentismo con el botón Exportar plantilla.</li>
+      <li>Elige la semana y la planta. Cada pestaña muestra un tipo de revisión y se exporta completa a Excel.</li>
+    </ol>
+  </section>
+
+  <div id="app" hidden>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <section class="panel" id="panel" role="tabpanel"></section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>/* plantilla_ausentismo_metelmex.xlsx incrustada (hojas Plantilla, Instrucciones y Catalogo_Empleados vacía: el catálogo vigente viene del dashboard). Para actualizarla, reemplaza este base64. */
+const PLANTILLA_B64="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JamkbSHJrIUkbCGRjOSkICWppG0hyayFJGwhkYzkpCAlqaRtIcmshSRsIZGM5KQgJamkbSHJrIUkbCGRjOSkICWppG0hyayFJGwhkYzkpCAlqaRtIcmshSRsIZGM5KQgJamkbSHJrIUkbCGRjOSkICWppG0hyayFJGwhkYzkpCAlqaRtIcmshSRsIZGM5KQgJamkbSHJrIUkbCGRjOSkICWpntHB0WdryhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLMWkjCFhLJSE4KUpJK2haSzFpIwhYSyUhOClKSStoWksxaSMIWEslITgpSkkraFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKSStsWks5aSMoWEslITgpSkkrbFpLOWkjKFhLJSE4KUpJK2xaSzlpIyhYSyUhOClKS6hkdHH22pmwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM5KQgJam0bSHprIWkbCGRjOSkICWptG0h6ayFpGwhkYzkpCAlqbRtIemshaRsIZGM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";</script>
+<script>
+/* ===== Núcleo de cálculo: lectura de archivos y cotejo ===== */
+const CORE = (function(){
+  const HR = 60, DAY = 1440;
+  const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const LIMITE_TRIPLES = 4;
+  // Igual que la herramienta "Cálculo de Horas Extras" de Mesa de Servicio (Art. 66 LFT): los primeros 3 días
+  // con tiempo extra de lunes a sábado tienen hasta 3 h dobles (máx. 9 por semana) y el excedente es triple;
+  // desde el cuarto día con tiempo extra todo es triple. El domingo (posición 6) siempre es todo triple y suma a la alerta.
+  // Verificado contra la herramienta el 2026-10-21 con 2,097,152 combinaciones (0 a 6 h, medias horas).
+  function doblesTriples(horasLunADom){
+    let dobles=0, triples=0, diasConDobles=0;
+    horasLunADom.forEach((h,i)=>{
+      if(i===6){ triples+=h; return; }
+      const d = (h>0 && diasConDobles<3) ? Math.min(h,3,9-dobles) : 0;
+      if(h>0) diasConDobles++;
+      dobles+=d; triples+=h-d;
+    });
+    return {dobles, triples};
+  }
+  const LIMITE_GUARDIA = 5;
+  const TOLERANCIA = 15; // minutos de tolerancia sobre la hora de entrada
+  // Reglas especiales: la ficha solo se marca el día indicado (4 = jueves) y solo si
+  // trabajó tiempo extra sin solicitud, o tiene solicitud y no trabajó tiempo extra.
+  // Horario por planta (por dispositivo donde checa). dow: 1=lunes ... 6=sábado.
+  // todoExtra: día sin jornada ordinaria; todo lo trabajado cuenta como tiempo extra.
+  const HORARIOS_PLANTA = [
+    { dispositivo:/^planta 0$/i, nombre:'Planta 0', dias:{
+        1:{ini:'08:00',fin:'18:00'}, 2:{ini:'08:00',fin:'17:30'}, 3:{ini:'08:00',fin:'17:30'},
+        4:{ini:'08:00',fin:'17:30'}, 5:{ini:'08:00',fin:'17:30'}, 6:{todoExtra:true} } }
+  ];
+  const REGLAS_DIA = { '12261': {dia:4, nombreDia:'jueves'} };
+  // Horarios específicos iniciales (se pueden editar en el dashboard)
+  const AJUSTES_INICIALES = {
+    horarios:[
+      {num:'13934', nombre:'', inicio:'08:00', fin:'16:30', desde:'', hasta:'', nota:'Horario fijo; sí puede hacer tiempo extra'},
+      {num:'10684', nombre:'', inicio:'19:00', fin:'02:00', desde:'2026-09-14', hasta:'2026-09-15', nota:'Laboró 19:00 a 07:00; jornada nocturna ordinaria de 7 h (Art. 61 LFT)'}
+    ],
+    guardiasExtra:[]
+  };
+
+  const ADMIN_TURNOS = ['administrativos','administrativos operativo','admin especial 2 (+)'];
+  const FICHAS_SIEMPRE_INCLUIDAS = ['12261'];
+  const DISPOSITIVOS_EXTERNOS = ['monterrey','san luis potosi','villahermosa','movil','casa ing.isidro','control vehicular','web'];
+  const MAPA_DISPOSITIVO = [
+    [/^planta i\b/i, 'Planta 1'],
+    [/^planta 4/i, 'Planta 2'],
+    [/^planta iii/i, 'Planta 3'],
+    [/^planta 6/i, 'Estructuras'],
+    [/^planta 0/i, 'Niveladora'],
+    [/^nave norte/i, 'Nave Norte'],
+  ];
+
+  function norm(s){ return (s==null?'':String(s)).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' '); }
+
+  // Catálogo de turnos (acordado). start/end en minutos del día.
+  function catalogo(opcion0830){
+    const base = [
+      {id:'07:00-15:00', s:420, e:900},
+      {id:'15:00-22:30', s:900, e:1350},
+      {id:'19:00-02:00', s:1140, e:120},
+      {id:'21:00-04:00', s:1260, e:240},
+      {id:'22:00-05:00', s:1320, e:300},
+      {id:'23:00-06:00', s:1380, e:360},
+    ];
+    base.push(opcion0830==='18' ? {id:'08:30-18:00', s:510, e:1080} : {id:'08:30-17:00', s:510, e:1020});
+    base.forEach(t=>{ t.dur = ((t.e - t.s) + DAY) % DAY; });
+    return base;
+  }
+
+  // ---- Fechas: todo en "minutos absolutos" basados en UTC para evitar horario de verano ----
+  function absMin(y,m,d,H,M,S){ return Math.floor(Date.UTC(y,m-1,d,H||0,M||0,S||0)/60000); }
+  function keyFromAbs(a){ const dt=new Date(a*60000); return dt.toISOString().slice(0,10); }
+  function absFromKey(k){ const [y,m,d]=k.split('-').map(Number); return absMin(y,m,d,0,0,0); }
+  function addDays(k,n){ return keyFromAbs(absFromKey(k)+n*DAY); }
+  function dow(k){ return new Date(absFromKey(k)*60000).getUTCDay(); }
+  function hhmm(a){ if(a==null) return ''; const dt=new Date(a*60000); return String(dt.getUTCHours()).padStart(2,'0')+':'+String(dt.getUTCMinutes()).padStart(2,'0'); }
+  function fmtDia(k){ const [y,m,d]=k.split('-'); return DIAS[dow(k)]+' '+d+'/'+m; }
+  function fmtDur(min){ if(min==null) return ''; const s=min<0?'-':''; min=Math.abs(Math.round(min)); return s+Math.floor(min/60)+':'+String(min%60).padStart(2,'0'); }
+
+  function parseFechaHora(v){
+    if(v==null || v==='') return null;
+    if(typeof v==='number'){
+      const p = XLSX.SSF.parse_date_code(v);
+      if(!p) return null;
+      return {abs: absMin(p.y,p.m,p.d,p.H,p.M,Math.round(p.S)), hasTime: (v%1)!==0};
+    }
+    if(v instanceof Date){ return {abs: absMin(v.getFullYear(),v.getMonth()+1,v.getDate(),v.getHours(),v.getMinutes(),v.getSeconds()), hasTime:true}; }
+    const s = String(v).trim();
+    let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:[ T]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([ap]\.?\s*m\.?)?)?$/i);
+    if(m){
+      let y=+m[3]; if(y<100) y+=2000;
+      let H = m[4]!=null?+m[4]:0; const M=m[5]!=null?+m[5]:0; const S=m[6]!=null?+m[6]:0;
+      if(m[7]){ const pm=/p/i.test(m[7]); if(pm && H<12) H+=12; if(!pm && H===12) H=0; }
+      return {abs: absMin(y,+m[2],+m[1],H,M,S), hasTime: m[4]!=null};
+    }
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if(m) return {abs: absMin(+m[1],+m[2],+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0)), hasTime: m[4]!=null};
+    return null;
+  }
+  function parseHoraSola(v){
+    if(typeof v==='number' && v<1 && v>=0) return Math.round(v*DAY);
+    const m = String(v||'').trim().match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+    return m ? (+m[1])*60 + (+m[2]) : null;
+  }
+  function parseCantidad(v){
+    if(v==null || v==='') return 0;
+    if(typeof v==='number') return v<1 ? Math.round(v*24*100)/100 : v;
+    const s=String(v).trim();
+    const m=s.match(/^(\d+):(\d{2})/);
+    if(m) return (+m[1]) + (+m[2])/60;
+    const n=parseFloat(s.replace(',','.'));
+    return isNaN(n)?0:n;
+  }
+  function splitEmpleado(s){
+    const m=String(s||'').match(/^\s*(\d+)\s*\/\s*(.+?)\s*$/);
+    return m ? {num:m[1], nombre:m[2]} : null;
+  }
+
+  function findHeader(rows, required){
+    for(let i=0;i<Math.min(rows.length,40);i++){
+      const r=(rows[i]||[]).map(norm);
+      if(required.every(req=> r.some(c=> req.some(a=> c===a)))) return i;
+    }
+    return -1;
+  }
+  function colIdx(hdr, aliases){ const h=hdr.map(norm); for(const a of aliases){ const i=h.indexOf(a); if(i>=0) return i; } return -1; }
+
+  // ---------- Solicitudes ----------
+  function leerSolicitudes(rows){
+    const hi = findHeader(rows, [['estatus'],['cantidad']]);
+    if(hi<0) throw new Error('No encontré los encabezados "Estatus" y "Cantidad" en el archivo de solicitudes.');
+    const h=rows[hi];
+    const c = {
+      permiso: colIdx(h,['permiso']),
+      num: colIdx(h,['nº','no','no.','n°','numero','num','ficha']),
+      emp: colIdx(h,['empleado']),
+      loc: colIdx(h,['localidad']),
+      area: colIdx(h,['area']),
+      cant: colIdx(h,['cantidad']),
+      fi: colIdx(h,['f. inicial','fecha inicial','f inicial','fecha']),
+      ff: colIdx(h,['f. final','fecha final','f final']),
+      est: colIdx(h,['estatus']),
+      tipo: colIdx(h,['tipo']),
+      desc: colIdx(h,['descripcion'])
+    };
+    const faltan = Object.entries({num:'Nº',emp:'Empleado',loc:'Localidad',cant:'Cantidad',fi:'F. inicial',est:'Estatus'}).filter(([k])=>c[k]<0).map(([,v])=>v);
+    if(faltan.length) throw new Error('Faltan columnas en solicitudes: '+faltan.join(', '));
+    const out=[];
+    for(let i=hi+1;i<rows.length;i++){
+      const r=rows[i]; if(!r) continue;
+      const num = r[c.num]!=null ? String(r[c.num]).trim() : '';
+      if(!num) continue;
+      let tipoK='te';
+      if(c.tipo>=0 && r[c.tipo]){
+        const t=norm(r[c.tipo]);
+        if(/hora extra/.test(t)) tipoK='te';
+        else if(/festivo trabajado/.test(t)) tipoK='festivo';
+        else if(/^vacaciones/.test(t)) tipoK='vac';
+        else if(/pase de salida/.test(t)) tipoK='pase';
+        else if(/^incapacidad/.test(t)) tipoK='incap';
+        else if(/^falta/.test(t)) tipoK='falta';
+        else if(/descanso trabajado/.test(t)) tipoK='descanso';
+        else if(/^permiso (con|sin) goce/.test(t)) tipoK='permiso';
+        else tipoK='otro';
+      }
+      const f=parseFechaHora(r[c.fi]); if(!f) continue;
+      const ff=c.ff>=0 ? parseFechaHora(r[c.ff]) : null;
+      out.push({
+        permiso: c.permiso>=0 ? r[c.permiso] : '',
+        num, nombre: String(r[c.emp]||'').trim(),
+        localidad: String(r[c.loc]||'').trim().replace(/^planta ([123])\b.*$/i,'Planta $1'), // "Planta 1 Electroforjado" -> "Planta 1"
+        area: c.area>=0 ? String(r[c.area]||'').trim() : '',
+        descripcion: c.desc>=0 ? String(r[c.desc]||'') : '',
+        // Pase de salida: la Cantidad son horas (aunque el reporte diga Días). Incapacidad y vacaciones: días.
+        horas: (tipoK==='pase' && typeof r[c.cant]==='number') ? r[c.cant] : parseCantidad(r[c.cant]),
+        tipoK, tipo: c.tipo>=0 ? String(r[c.tipo]||'').trim() : 'Hora extra',
+        fecha: keyFromAbs(f.abs),
+        fechaFin: ff ? keyFromAbs(ff.abs) : keyFromAbs(f.abs),
+        estatus: String(r[c.est]||'').trim(),
+        disc: /disciplin/.test(norm((c.tipo>=0?r[c.tipo]:'')+' '+(c.desc>=0?r[c.desc]:'')))
+      });
+    }
+    return out;
+  }
+
+  // ---------- Checadas (dos formatos) ----------
+  function leerChecadas(rows){
+    const out=[];
+    const hi = findHeader(rows, [['empleado'],['hora','fecha y hora','fecha/hora']]);
+    if(hi>=0){
+      const h=rows[hi];
+      const c={ emp:colIdx(h,['empleado']), hora:colIdx(h,['hora','fecha y hora','fecha/hora']), fecha:colIdx(h,['fecha']),
+                disp:colIdx(h,['dispositivo']), turno:colIdx(h,['turno']) };
+      let actual=null;
+      for(let i=hi+1;i<rows.length;i++){
+        const r=rows[i]; if(!r) continue;
+        const e=splitEmpleado(r[c.emp]); if(e) actual=e;
+        if(!actual) continue;
+        let f=parseFechaHora(r[c.hora]);
+        if((!f || !f.hasTime) && c.fecha>=0){
+          const fd=parseFechaHora(r[c.fecha]); const hm=parseHoraSola(r[c.hora]);
+          if(fd && hm!=null) f={abs: fd.abs+hm, hasTime:true};
+        }
+        if(!f || !f.hasTime) continue;
+        out.push({num:actual.num, nombre:actual.nombre, abs:f.abs,
+                  disp: c.disp>=0 ? String(r[c.disp]||'').trim() : '',
+                  turno: c.turno>=0 ? String(r[c.turno]||'').trim() : ''});
+      }
+      if(out.length) return out;
+    }
+    // Formato por bloques: fila con "num / nombre" y filas siguientes con fecha-hora
+    let actual=null, hdr=null;
+    for(let i=0;i<rows.length;i++){
+      const r=rows[i]||[];
+      const cells=r.filter(v=>v!=null && v!=='');
+      if(!cells.length) continue;
+      const e = r.map(splitEmpleado).find(Boolean);
+      const normed=r.map(norm);
+      if(normed.includes('dispositivo') || normed.includes('hora')) { hdr=r.map(norm); }
+      if(e && !r.some(v=>{const f=parseFechaHora(v); return f&&f.hasTime;})){ actual=e; continue; }
+      if(e) actual=e;
+      if(!actual) continue;
+      let f=null, fechaSola=null, horaSola=null;
+      for(const v of r){
+        const p=parseFechaHora(v);
+        if(p && p.hasTime){ f=p; break; }
+        if(p && !p.hasTime) fechaSola=p;
+        const hs=(typeof v==='string' || (typeof v==='number' && v<1)) ? parseHoraSola(v) : null;
+        if(hs!=null) horaSola=hs;
+      }
+      if(!f && fechaSola && horaSola!=null) f={abs:fechaSola.abs+horaSola, hasTime:true};
+      if(!f) continue;
+      let disp='', turno='';
+      if(hdr){ const di=hdr.indexOf('dispositivo'); const ti=hdr.indexOf('turno'); if(di>=0) disp=String(r[di]||'').trim(); if(ti>=0) turno=String(r[ti]||'').trim(); }
+      out.push({num:actual.num, nombre:actual.nombre, abs:f.abs, disp, turno});
+    }
+    if(!out.length) throw new Error('No encontré checadas con fecha y hora en el archivo.');
+    return out;
+  }
+
+  // ---------- Catálogo opcional ----------
+  function leerCatalogo(rows){
+    const NUM=['numero de empleado','no. empleado','no empleado','numero_empleado','numero','nº','no','no.','n°','num','ficha','codigo','clave'];
+    const TIPO=['tipo de empleado','tipo empleado','tipo','tipoempleado','tipo_empleado','clasificacion'];
+    const hi = findHeader(rows, [NUM, TIPO]);
+    if(hi<0) throw new Error('El catálogo debe tener las columnas "Número de empleado" y "Tipo de empleado". Descarga la plantilla para ver el formato.');
+    const h=rows[hi];
+    const c={ num: colIdx(h,NUM), tipo: colIdx(h,TIPO), nombre: colIdx(h,['nombre','empleado','nombre del empleado']) };
+    const map={};
+    for(let i=hi+1;i<rows.length;i++){
+      const r=rows[i]||[]; let num = r[c.num]!=null ? String(r[c.num]).trim() : '';
+      const e=splitEmpleado(num); if(e) num=e.num;
+      if(!/^\d+$/.test(num)) continue;
+      map[num]={nombre: c.nombre>=0 ? String(r[c.nombre]||'').trim() : '', tipo: norm(r[c.tipo])};
+    }
+    if(!Object.keys(map).length) throw new Error('No encontré números de empleado en el catálogo.');
+    return map;
+  }
+
+
+  // Días de descanso obligatorio, Art. 74 LFT (fr. I, II, III, IV, V y VIII).
+  function nthMonday(y,m,n){ let k=y+'-'+String(m).padStart(2,'0')+'-01'; while(dow(k)!==1) k=addDays(k,1); return addDays(k,7*(n-1)); }
+  function festivosLFT(y){
+    return [
+      [y+'-01-01','1 de enero'],
+      [nthMonday(y,2,1),'Primer lunes de febrero (5 de febrero)'],
+      [nthMonday(y,3,3),'Tercer lunes de marzo (21 de marzo)'],
+      [y+'-05-01','1 de mayo'],
+      [y+'-09-16','16 de septiembre'],
+      [nthMonday(y,11,3),'Tercer lunes de noviembre (20 de noviembre)'],
+      [y+'-12-25','25 de diciembre']
+    ];
+  }
+  function mondaysFrom(keys){
+    const set=new Set();
+    keys.forEach(k=>{ const d=dow(k); set.add(addDays(k, d===0?-6:1-d)); });
+    return [...set].sort();
+  }
+
+  function moda(arr){ const c={}; let best=null,bn=0; arr.forEach(v=>{ if(!v) return; c[v]=(c[v]||0)+1; if(c[v]>bn){bn=c[v];best=v;} }); return best; }
+  function circDist(a,b){ const d=Math.abs(a-b)%DAY; return Math.min(d, DAY-d); }
+  function plantaDeDispositivo(d){ const n=norm(d); for(const [re,p] of MAPA_DISPOSITIVO){ if(re.test(n)) return p; } return null; }
+
+  // ---------- Cálculo de horas reales por colaborador ----------
+  // Paso 1: identifica jornadas completas (entrada y salida) probando ventanas de día (03:00-03:00)
+  //         y de noche (12:00-12:00); gana el régimen que predomina en la semana del colaborador.
+  // Paso 2: las checadas sueltas se asignan al turno de las jornadas completas más cercanas
+  //         y se completan con el promedio real de esa persona en ese turno.
+  function calcularDias(punchesAll, weekDays, cat, forzado){
+    forzado=forzado||{perm:null,porDia:{}};
+    if(forzado.perm) cat=[forzado.perm];
+    const mon=weekDays[0];
+    const lo=absFromKey(addDays(mon,-1))+12*HR, hi=absFromKey(addDays(mon,8))+12*HR;
+    let p=punchesAll.map(x=>x.abs).filter(a=>a>=lo && a<hi).sort((a,b)=>a-b);
+    const dedup=[]; p.forEach(a=>{ if(!dedup.length || a-dedup[dedup.length-1]>3) dedup.push(a); }); p=dedup;
+    const usado=new Set();
+    const fechas=[]; for(let i=-1;i<=8;i++) fechas.push(addDays(mon,i));
+    const diurnos=cat.filter(t=>t.s<=15*HR), nocturnos=cat.filter(t=>t.s>15*HR);
+    const sesiones=[];
+    const sueltas={};
+    const diasForzados=new Set(Object.keys(forzado.porDia));
+    // Horarios específicos por fecha: se toman las checadas dentro de la ventana de ese horario
+    Object.entries(forzado.porDia).forEach(([d,t])=>{
+      const A=absFromKey(d)+t.s, E=A+t.dur;
+      const pts=p.filter(x=>x>=A-4*HR && x<=E+(t.dur===0?15:8)*HR && !usado.has(x));
+      if(pts.length>=2 && pts[pts.length-1]-pts[0]>=HR){ sesiones.push({d,reg:'F',t,pts,A,E,forzado:true}); pts.forEach(x=>usado.add(x)); }
+      else if(pts.length===1){ const a=pts[0]; usado.add(a); sueltas[d]={t,A,E,pts:[a],roles:[Math.abs(a-A)<=Math.abs(a-E)?'entrada':'salida'],forzado:true}; }
+    });
+
+    function candidatos(){
+      const out=[];
+      fechas.forEach(d=>{
+        if(diasForzados.has(d)) return;
+        const d0=absFromKey(d);
+        [['D',d0+3*HR,d0+27*HR,diurnos],['N',d0+12*HR,d0+36*HR,nocturnos]].forEach(([reg,a,b,turnos])=>{
+          const pts=p.filter(x=>x>=a && x<b && !usado.has(x));
+          if(pts.length<2) return;
+          const first=pts[0], last=pts[pts.length-1], span=last-first;
+          if(span<4*HR) return;
+          let best=null;
+          if(reg==='N'){
+            // Turno nocturno: se toma el primer horario cuya entrada + 15 min de tolerancia cubre la llegada;
+            // quien llega después de la tolerancia pasa al siguiente horario (p. ej. 21:23 -> 22:00).
+            const ord=turnos.slice().sort((x,y)=>x.s-y.s);
+            let t=ord.find(t=>first<=d0+t.s+TOLERANCIA && first>=d0+t.s-150);
+            if(!t && ord.length && first>d0+ord[ord.length-1].s) t=ord[ord.length-1];
+            if(t){ const A=d0+t.s, E=A+t.dur, dev=Math.abs(first-A);
+              if(dev<=150 && span<=t.dur+5.25*HR) best={d,reg,t,pts,A,E,score:dev+Math.max(0,last-E)/4,dev}; }
+          } else {
+            // Turno diurno: siempre el de entrada más cercana; si la jornada es demasiado larga para ese turno,
+            // el grupo se descarta (evita tomar una salida de la mañana y una entrada de la noche como un solo día).
+            let t=null, md=1e9;
+            turnos.forEach(x=>{ const dv=Math.abs(first-(d0+x.s)); if(dv<md){md=dv;t=x;} });
+            if(t){ const A=d0+t.s, E=A+t.dur, dev=md;
+              if(dev<=150 && span<=t.dur+5.25*HR) best={d,reg,t,pts,A,E,score:dev+Math.max(0,last-E)/4,dev}; }
+          }
+          if(best) out.push(best);
+        });
+      });
+      return out;
+    }
+    let prefer=null;
+    for(let it=0; it<6; it++){
+      const cs=candidatos(); if(!cs.length) break;
+      if(prefer===null){
+        const nD=cs.filter(c=>c.reg==='D' && weekDays.includes(c.d)).length, nN=cs.filter(c=>c.reg==='N' && weekDays.includes(c.d)).length;
+        prefer = nN>nD ? 'N' : 'D';
+      }
+      // Gana la jornada más coherente; el régimen predominante de la semana solo suma ventaja (60 puntos)
+      const pen=x=>x.score+(x.reg===prefer?0:60);
+      cs.sort((x,y)=> pen(x)-pen(y));
+      let picked=0; const tomados=new Set();
+      cs.forEach(c=>{
+        if(c.pts.some(x=>usado.has(x)||tomados.has(x))) return;
+        if(sesiones.some(s=>s.d===c.d)) return;
+        c.pts.forEach(x=>tomados.add(x)); sesiones.push(c); picked++;
+      });
+      tomados.forEach(x=>usado.add(x));
+      if(!picked) break;
+    }
+
+    // Turno dominante y regla de día aislado
+    const cnt={}; sesiones.filter(s=>weekDays.includes(s.d)).forEach(s=>cnt[s.t.id]=(cnt[s.t.id]||0)+1);
+    let dom=null,dn=0; cat.forEach(t=>{ if((cnt[t.id]||0)>dn){dn=cnt[t.id];dom=t;} });
+    const aislado={};
+    sesiones.forEach(s=>{
+      if(!s.forzado && s.reg!=='N' && dom && s.t.id!==dom.id && (cnt[s.t.id]||0)<=1 && dn>=2 && circDist(s.t.s,dom.s)<=60 && weekDays.includes(s.d)){
+        aislado[s.d]=s.t.id; s.t=dom; s.A=absFromKey(s.d)+dom.s; s.E=s.A+dom.dur;
+      }
+    });
+
+
+    // Checadas sueltas
+    const ses=sesiones.slice().sort((a,b)=>a.pts[0]-b.pts[0]);
+    p.filter(a=>!usado.has(a)).forEach(a=>{
+      let cands=[];
+      const prev=[...ses].reverse().find(s=>s.pts[0]<=a), next=ses.find(s=>s.pts[0]>a);
+      [prev,next].forEach(s=>{ if(s && !cands.includes(s.t)) cands.push(s.t); });
+      if(!cands.length) cands=cat.slice();
+      let best=null;
+      cands.forEach(t=>{
+        [-1,0,1].forEach(off=>{
+          const d=addDays(keyFromAbs(a),off);
+          if(sesiones.some(s=>s.d===d) || diasForzados.has(d)) return;
+          const A=absFromKey(d)+t.s, E=A+t.dur;
+          const dA=Math.abs(a-A), dE=Math.abs(a-E);
+          const dist=Math.min(dA,dE);
+          if(dist>8*HR) return;
+          if(!best || dist<best.dist) best={d,t,A,E,dist,rol: dA<=dE?'entrada':'salida'};
+        });
+      });
+      if(!best) return;
+      const k=best.d;
+      if(!sueltas[k]) sueltas[k]={t:best.t,A:best.A,E:best.E,pts:[],roles:[]};
+      sueltas[k].pts.push(a); sueltas[k].roles.push(best.rol);
+    });
+
+    const res={};
+    weekDays.forEach(d=>{
+      const s=sesiones.find(x=>x.d===d);
+      const r={dia:d, turno:'', checadas:[], entrada:null, salida:null, trabajadoMin:null, extraMin:null, extra:null, estado:'sin_checadas', nota:''};
+      let A,E,tDia=null;
+      const notaF=t=>/\(/.test(t.id)?'Horario de planta: '+t.id+'. ':'Horario específico configurado ('+t.id+'). ';
+      if(s){
+        tDia=s.t;
+        r.turno=s.t.id; r.checadas=s.pts.slice(); r.entrada=s.pts[0]; r.salida=s.pts[s.pts.length-1]; r.estado='completo'; A=s.A; E=s.E;
+        if(s.forzado) r.nota=notaF(s.t);
+        if(aislado[d]) r.nota='Horario de '+aislado[d]+' solo este día; se tomó el turno dominante '+dom.id+' (día aislado con salida tardía). ';
+      } else if(sueltas[d]){
+        const u=sueltas[d]; A=u.A; E=u.E; tDia=u.t; r.turno=u.t.id; r.checadas=u.pts.slice();
+        if(u.forzado) r.nota=notaF(u.t);
+        if(u.pts.length>=2 && u.pts[u.pts.length-1]-u.pts[0]>=HR){ r.entrada=u.pts[0]; r.salida=u.pts[u.pts.length-1]; r.estado='completo'; r.nota+='Jornada fuera de patrón; revisar. '; }
+        else {
+          // Solo se estima la ENTRADA: si falta, se toma la hora de inicio del turno reconocido.
+          // Si falta la SALIDA no se estima nada: se reporta la falta de checada.
+          const a=u.pts[0], esEntrada=u.roles[0]==='entrada';
+          if(esEntrada){
+            r.entrada=a; r.estado='incidencia';
+            r.nota+='Falta checada de salida (solo registró entrada a las '+hhmm(a)+'). No se calcularon horas; validar con el supervisor.';
+          } else {
+            r.salida=a; r.entrada=A; r.estado='estimado';
+            r.nota+='Falta checada de entrada; se tomó la hora de inicio del turno ('+hhmm(A)+') como entrada.';
+          }
+        }
+      } else if(dom){ r.turno=dom.id; }
+      if(r.estado==='completo' || r.estado==='estimado'){
+        r.trabajadoMin=r.salida-r.entrada;
+        let ex;
+        if(tDia && tDia.todoExtra) ex=r.trabajadoMin;
+        else { ex=Math.max(0,r.salida-E); const antic=A-r.entrada; if(antic>=HR) ex+=antic; }
+        r.extraMin=ex; r.extra=Math.floor(ex/HR+1e-9);
+      }
+      res[d]=r;
+    });
+    return {dias:res, dominante:dom?dom.id:''};
+  }
+
+  // ---------- Proceso completo para una semana ----------
+  function hm2min(s){ const m=String(s||'').match(/^(\d{1,2}):(\d{2})$/); return m? (+m[1])*60+(+m[2]) : null; }
+  function turnoCustom(ini,fin){ const s=hm2min(ini), e=hm2min(fin); if(s==null||e==null) return null; const t={id:ini+'-'+fin, s, e}; t.dur=((e-s)+DAY)%DAY || DAY; return t; }
+  function procesar(solAll, chec, catMap, mon, opcion0830, ajustes){
+    ajustes=ajustes||{horarios:[],guardiasExtra:[]};
+    const cat=catalogo(opcion0830);
+    const weekDays=[0,1,2,3,4,5,6].map(i=>addDays(mon,i));
+    const inWeek=k=>weekDays.includes(k);
+    const domingo=weekDays[6];
+    const est=s=>norm(s.estatus);
+    const noCancel=s=>!/cancel|rechaz/.test(est(s));
+
+    const fletes=new Set(solAll.filter(s=>/fletes borja/i.test(s.localidad)).map(s=>s.num));
+    const sol=solAll.filter(s=>s.tipoK==='te');
+    const solMet=sol.filter(s=>!fletes.has(s.num));
+    const solSem=solMet.filter(s=>inWeek(s.fecha));
+    // Horarios específicos (por colaborador, permanentes o por rango de fechas)
+    const forz={};
+    (ajustes.horarios||[]).forEach(h=>{
+      const t=turnoCustom(h.inicio,h.fin); if(!t || !h.num) return;
+      const f=forz[h.num]||(forz[h.num]={perm:null,porDia:{}});
+      if(!h.desde && !h.hasta) f.perm=t;
+      else weekDays.forEach(d=>{ if((!h.desde||d>=h.desde) && (!h.hasta||d<=h.hasta)) f.porDia[d]=t; });
+      // por rango: también el día previo/siguiente si cae en rango (turnos nocturnos)
+    });
+    const permitidos=new Set([...FICHAS_SIEMPRE_INCLUIDAS, ...Object.keys(forz).filter(n=>forz[n].perm)]);
+    // Guardias: detectados por la descripción de sus solicitudes o agregados manualmente
+    const guardias=new Set([...solAll.filter(s=>/guardia/i.test(s.descripcion||'')).map(s=>s.num), ...(ajustes.guardiasExtra||[]).map(String)]);
+    const festSem=solAll.filter(s=>s.tipoK==='festivo' && !fletes.has(s.num) && inWeek(s.fecha) && noCancel(s));
+
+    // Vacaciones autorizadas (rango F. inicial a F. final)
+    const vacSet=new Set();
+    // Incapacidades (rango de días) y pases de salida (horas) autorizados
+    const incSet=new Set(), paseMap={};
+    solAll.filter(s=>s.tipoK==='incap' && noCancel(s)).forEach(s=>{
+      let k=s.fecha, n=0; while(k<=s.fechaFin && n<400){ incSet.add(s.num+'|'+k); k=addDays(k,1); n++; }
+    });
+    solAll.filter(s=>s.tipoK==='pase' && est(s)==='autorizado').forEach(s=>{ const k=s.num+'|'+s.fecha; paseMap[k]=(paseMap[k]||0)+s.horas; });
+    solAll.filter(s=>s.tipoK==='vac' && est(s)==='autorizado').forEach(s=>{
+      let k=s.fecha, n=0; while(k<=s.fechaFin && n<400){ vacSet.add(s.num+'|'+k); k=addDays(k,1); n++; }
+    });
+
+    // Festivos obligatorios de la semana: Art. 74 LFT + días con solicitudes de festivo trabajado
+    const festivos={};
+    [...new Set(weekDays.map(d=>+d.slice(0,4)))].forEach(y=>festivosLFT(y).forEach(([k,n])=>{ if(inWeek(k)) festivos[k]=n; }));
+    festSem.forEach(s=>{ if(!festivos[s.fecha]) festivos[s.fecha]='Festivo registrado en PeopleCloud'; });
+
+    // info por empleado
+    const emp={};
+    const getE=(num,nombre)=>{ if(!emp[num]) emp[num]={num,nombre:nombre||'',locs:[],disps:[],turnos:[],punches:[]}; if(nombre && !emp[num].nombre) emp[num].nombre=nombre; return emp[num]; };
+    solAll.forEach(s=>{ const e=getE(s.num,s.nombre); e.locs.push(s.localidad); if(s.area) e.area=e.area||s.area; });
+    const lo=absFromKey(addDays(mon,-1))+12*60, hi=absFromKey(addDays(mon,8))+12*60, wLo=absFromKey(mon), wHi=absFromKey(addDays(mon,7));
+    // Checadas capturadas a mano en el dashboard: se suman a las del reloj
+    const manuales=(ajustes.checadas||[]).map(m=>({num:String(m.num), nombre:'', abs:absFromKey(m.fecha)+hm2min(m.hora), disp:'', turno:'', nota:m.nota||''}));
+    chec=chec.concat(manuales);
+    chec.forEach(c=>{ if(c.abs<lo||c.abs>=hi) return; const e=getE(c.num,c.nombre); e.punches.push(c); if(c.abs>=wLo && c.abs<wHi){ e.disps.push(c.disp); e.turnos.push(c.turno); } });
+
+    const excluidos=[]; const activos=[];
+    Object.values(emp).forEach(e=>{
+      const tieneSolSem=solMet.some(s=>s.num===e.num && inWeek(s.fecha)) || festSem.some(s=>s.num===e.num);
+      const tienePunch=e.punches.some(c=>c.abs>=wLo && c.abs<wHi);
+      if(!tieneSolSem && !tienePunch) return;
+      e.turnoPC=moda(e.turnos)||'';
+      e.dispositivo=moda(e.disps)||'';
+      e.planta=moda(e.locs.filter(l=>!/fletes borja/i.test(l))) || plantaDeDispositivo(e.dispositivo) || 'Sin planta identificada';
+      const siempre=permitidos.has(e.num);
+      let motivo='';
+      if(fletes.has(e.num)) motivo='Fletes Borja S.A. de C.V. (no es Metelmex)';
+      else if(!siempre && ADMIN_TURNOS.includes(norm(e.turnoPC))) motivo='Turno administrativo en PeopleCloud ('+e.turnoPC+')';
+      else if(!siempre && catMap && catMap[e.num] && /administrativ/.test(catMap[e.num].tipo)) motivo='Tipo de empleado administrativo en catálogo';
+      else if(!tieneSolSem && DISPOSITIVOS_EXTERNOS.includes(norm(e.dispositivo))) motivo='Checa en dispositivo externo ('+e.dispositivo+') y no tiene solicitudes';
+      if(motivo){ excluidos.push({num:e.num,nombre:e.nombre,planta:e.planta,dispositivo:e.dispositivo,turnoPC:e.turnoPC,motivo}); return; }
+      e.guardia=guardias.has(e.num);
+      // Horario de planta (no aplica a guardias ni a quien tenga horario específico permanente)
+      let fz=forz[e.num];
+      const hp=HORARIOS_PLANTA.find(h=>h.dispositivo.test(norm(e.dispositivo)));
+      if(hp && !e.guardia && !(fz && fz.perm)){
+        const porDia={};
+        weekDays.forEach(d=>{
+          const cfg=hp.dias[dow(d)]; if(!cfg) return;
+          if(cfg.todoExtra) porDia[d]={id:'Sábado sin jornada ('+hp.nombre+')', s:480, e:480, dur:0, todoExtra:true};
+          else { const t=turnoCustom(cfg.ini,cfg.fin); t.id=cfg.ini+'-'+cfg.fin+' ('+hp.nombre+')'; porDia[d]=t; }
+        });
+        fz={perm:null, porDia:Object.assign(porDia, fz?fz.porDia:{})};
+        e.horarioPlanta=hp.nombre;
+      }
+      const calc=calcularDias(e.punches, weekDays, cat, fz);
+      e.dias=calc.dias; e.turnoDominante=calc.dominante;
+      weekDays.forEach(d=>{ const r=e.dias[d];
+        const ms=manuales.filter(m=>m.num===e.num && r.checadas.includes(m.abs));
+        if(ms.length) r.nota+=(r.nota?' ':'')+'Checada capturada a mano: '+ms.map(m=>hhmm(m.abs)+(m.nota?' ('+m.nota+')':'')).join(', ')+'.'; });
+      weekDays.forEach(d=>{
+        const r=e.dias[d];
+        if(festivos[d]) r.festivo=festivos[d];
+        if(vacSet.has(e.num+'|'+d)){
+          r.vacaciones=true;
+          if(r.estado==='sin_checadas'){ r.estado='vacaciones'; r.nota='Vacaciones autorizadas: no laboró.'; }
+          else r.nota='Checó en un día de vacaciones autorizadas; verificar. '+r.nota;
+        }
+        if(incSet.has(e.num+'|'+d)){
+          r.incapacidad=true;
+          if(r.estado==='sin_checadas'||r.estado==='vacaciones'){ r.estado='incapacidad'; r.nota='Incapacidad: no laboró.'; }
+          else r.nota='Checó en un día de incapacidad; verificar. '+r.nota;
+        }
+        const ps=paseMap[e.num+'|'+d];
+        if(ps){ r.pase=ps; r.nota+=(r.nota?' ':'')+'Tiene pase de salida autorizado de '+ps+' h (informativo; no se descuenta del tiempo extra).'; }
+      });
+      activos.push(e);
+    });
+    const byNum={}; activos.forEach(e=>byNum[e.num]=e);
+
+    const sumSol=(num,d,f)=>solSem.filter(s=>s.num===num && s.fecha===d && f(est(s))).reduce((a,s)=>a+s.horas,0);
+    const isAut=x=>x==='autorizado', isRev=x=>x!=='autorizado' && !/cancel|rechaz/.test(x);
+
+    // Cotejo principal (lunes a sábado, autorizadas)
+    const cotejo=[], guardiasRows=[];
+    activos.forEach(e=>{
+      const destino = e.guardia ? guardiasRows : cotejo;
+      weekDays.slice(0,6).forEach(d=>{
+        const r=e.dias[d]; const sa=sumSol(e.num,d,isAut);
+        const real=r.extra; let cat_;
+        if(sa>0 && (r.estado==='vacaciones'||r.estado==='incapacidad')) cat_=r.estado;
+        else if(sa>0 && r.estado==='sin_checadas') cat_='sin_checadas';
+        else if(r.estado==='incidencia') cat_='incidencia';
+        else if(r.estado==='sin_checadas' || r.estado==='vacaciones' || r.estado==='incapacidad') return;
+        else if(sa===0 && real===0) return;
+        else if(sa===0) cat_='sin_solicitud';
+        else if(real===sa) cat_='coincide';
+        else if(real<sa) cat_='solicitado_mas';
+        else cat_='trabajado_mas';
+        const sp=sumSol(e.num,d,isRev);
+        const rv=(r.estado==='completo'||r.estado==='estimado')?real:null;
+        const regla=REGLAS_DIA[e.num];
+        if(regla){
+          if(dow(d)!==regla.dia) return;
+          const marca = (cat_==='sin_solicitud') || (sa>0 && (cat_==='sin_checadas' || rv===0));
+          if(!marca) return;
+          r.nota='Regla especial: esta ficha solo se revisa los '+regla.nombreDia+'. '+r.nota;
+        }
+        destino.push({e, d, r, sol:sa, pend:sp, real:rv, dif:rv==null?null:rv-sa, cat:cat_, exceso: sa>LIMITE_GUARDIA || (rv||0)>LIMITE_GUARDIA});
+      });
+    });
+
+    // Pendientes de autorizar: toda solicitud de la semana que no está Autorizada ni Cancelada
+    const revisar=[];
+    const exByNum={}; excluidos.forEach(x=>exByNum[x.num]=x);
+    const vacio=d=>({dia:d,turno:'',checadas:[],entrada:null,salida:null,trabajadoMin:null,extraMin:null,extra:null,estado:'sin_checadas',nota:''});
+    solSem.filter(s=>{ const x=est(s); return x!=='autorizado' && !/cancel|rechaz/.test(x); }).forEach(s=>{
+      const esDom=s.fecha===domingo;
+      const e=byNum[s.num];
+      if(!e){
+        const x=exByNum[s.num]||{num:s.num,nombre:s.nombre,planta:s.localidad,motivo:'Sin checadas en la semana'};
+        const r=vacio(s.fecha); r.nota='Fuera del cotejo: '+x.motivo+'.';
+        revisar.push({e:{num:x.num,nombre:x.nombre||s.nombre,planta:x.planta||s.localidad}, d:s.fecha, r, sol:s.horas, real:null, dif:null, cat:'fuera', esDom, permiso:s.permiso, estatus:s.estatus, area:s.area});
+        return;
+      }
+      const r=e.dias[s.fecha];
+      const real = (r.estado==='completo'||r.estado==='estimado') ? (esDom ? Math.floor(r.trabajadoMin/60) : r.extra) : null;
+      let c;
+      if(r.estado==='vacaciones'||r.estado==='incapacidad') c=r.estado;
+      else if(r.estado==='sin_checadas') c='sin_checadas';
+      else if(r.estado==='incidencia') c='incidencia';
+      else if(real>=s.horas) c='respaldada';
+      else if(real>0) c='parcial';
+      else c='sin_respaldo';
+      revisar.push({e, d:s.fecha, r, sol:s.horas, real, dif: real==null?null:real-s.horas, cat:c, esDom, permiso:s.permiso, estatus:s.estatus, area:s.area});
+    });
+    revisar.sort((a,b)=>a.d.localeCompare(b.d)||a.e.planta.localeCompare(b.e.planta)||a.e.nombre.localeCompare(b.e.nombre));
+
+    // Descanso trabajado (domingo)
+    const descanso=[];
+    // Solicitudes de "Descanso trabajado" que cubren el domingo de la semana
+    const descSol=(num,f)=>solAll.some(s=>s.tipoK==='descanso' && s.num===num && s.fecha<=domingo && s.fechaFin>=domingo && f(est(s)));
+    activos.forEach(e=>{
+      const r=e.dias[domingo];
+      const sa=sumSol(e.num,domingo,isAut), sr=sumSol(e.num,domingo,isRev);
+      const da=descSol(e.num,isAut), dp=descSol(e.num,isRev);
+      const aut = sa>0 || da, pend = sr>0 || dp;
+      if((r.estado==='sin_checadas'||r.estado==='vacaciones'||r.estado==='incapacidad') && !aut && !pend) return;
+      const trab = (r.estado==='completo'||r.estado==='estimado') ? Math.floor(r.trabajadoMin/60) : null;
+      let c;
+      if(r.estado==='vacaciones'||r.estado==='incapacidad') c=r.estado;
+      else if(r.estado==='sin_checadas') c='sin_checadas';
+      else if(r.estado==='incidencia') c='incidencia';
+      else if(aut) c='con_solicitud';
+      else if(pend) c='pendiente';
+      else c='sin_solicitud';
+      descanso.push({e, d:domingo, r, sol:sa, solRev:sr, trab, cat:c, solDescanso: da?'Autorizado':dp?'Pendiente':''});
+    });
+
+    // Festivo trabajado (Art. 74 y 75 LFT)
+    const festivo=[];
+    Object.keys(festivos).sort().forEach(h=>{
+      const nums=new Set([...activos.map(e=>e.num), ...festSem.filter(s=>s.fecha===h).map(s=>s.num)]);
+      nums.forEach(num=>{
+        const fs=festSem.filter(s=>s.num===num && s.fecha===h);
+        const aut=fs.some(s=>est(s)==='autorizado'), pend=fs.some(s=>est(s)!=='autorizado');
+        const e=byNum[num];
+        const estatus=fs.map(s=>s.estatus).join(', ');
+        if(!e){
+          const x=exByNum[num]||{num, nombre:(fs[0]||{}).nombre, planta:(fs[0]||{}).localidad, motivo:'Sin checadas en la semana'};
+          const r=vacio(h); r.nota='Fuera del cotejo: '+x.motivo+'.';
+          festivo.push({e:{num,nombre:x.nombre,planta:x.planta}, d:h, nombreFestivo:festivos[h], r, trab:null, te:0, estatus, cat:'fuera'});
+          return;
+        }
+        const r=e.dias[h];
+        if((r.estado==='sin_checadas'||r.estado==='vacaciones'||r.estado==='incapacidad') && !fs.length) return;
+        const trab=(r.estado==='completo'||r.estado==='estimado') ? Math.floor(r.trabajadoMin/60) : null;
+        let c;
+        if(r.estado==='vacaciones'||r.estado==='incapacidad') c=r.estado;
+        else if(r.estado==='sin_checadas') c='sin_checadas';
+        else if(r.estado==='incidencia') c='incidencia';
+        else if(aut) c='con_solicitud';
+        else if(pend) c='pendiente';
+        else c='sin_solicitud';
+        festivo.push({e, d:h, nombreFestivo:festivos[h], r, trab, te:sumSol(num,h,isAut), estatus, cat:c});
+      });
+    });
+    festivo.sort((a,b)=>a.d.localeCompare(b.d)||String(a.e.planta).localeCompare(String(b.e.planta))||String(a.e.nombre).localeCompare(String(b.e.nombre)));
+
+    // Alertas LFT (lunes a domingo, igual que la herramienta de Mesa de Servicio)
+    const alertas=[];
+    activos.forEach(e=>{
+      if(e.guardia || REGLAS_DIA[e.num]) return;
+      const dias=weekDays;
+      const aut=dias.map(d=>sumSol(e.num,d,isAut));
+      const rea=dias.map(d=>{ const r=e.dias[d]; return (r.estado==='completo'||r.estado==='estimado')?r.extra:0; });
+      const f=arr=>({dias:arr.filter(x=>x>0).length, total:arr.reduce((a,b)=>a+b,0), ...doblesTriples(arr)});
+      const A=f(aut), R=f(rea);
+      // Criterio de la empresa: alerta con más de LIMITE_TRIPLES horas triples AUTORIZADAS (las reales son referencia)
+      const flags=[];
+      if(A.triples>LIMITE_TRIPLES) flags.push('triples');
+      if(!flags.length) return;
+      alertas.push({e, aut, rea, A, R, flags});
+    });
+
+    return {weekDays, activos, excluidos, cotejo, guardias:guardiasRows, revisar, descanso, festivo, festivos, alertas, cat, faltas:faltas(solAll, weekDays)};
+  }
+
+  // ---------- Faltas (plantilla de ausentismo) ----------
+  // Solo solicitudes de tipo Falta (o cualquiera que diga "disciplina"); incapacidades y permisos quedan fuera.
+  // Motivo: "disciplina" = Disciplina; tipo con "Justificada" = Justificada; el resto = Injustificada.
+  // Un día con varias solicitudes toma el motivo de mayor prioridad.
+  const PRIO_MOTIVO={Disciplina:3, Justificada:2, Injustificada:1};
+  function faltas(solAll, weekDays){
+    const map={};
+    solAll.filter(s=>(s.disc || s.tipoK==='falta') && s.tipoK!=='te'
+        && !/cancel/.test(norm(s.estatus)) && /^Planta [123]$/.test(s.localidad)).forEach(s=>{
+      const t=norm(s.tipo+' '+s.descripcion);
+      const motivo = s.disc ? 'Disciplina' : (/justificad/.test(t) && !/injustificad/.test(t)) ? 'Justificada' : 'Injustificada';
+      const dias=[]; for(let k=s.fecha; k<=s.fechaFin && dias.length<400; k=addDays(k,1)) dias.push(k);
+      // Si el rango trae más días que la cantidad de la solicitud, el domingo es descanso y no se registra
+      const usar = dias.length>Math.round(s.horas) ? dias.filter(k=>dow(k)!==0) : dias;
+      const nota = String(s.descripcion||'').replace(/\s+/g,' ').trim() || s.tipo;
+      usar.filter(d=>weekDays.includes(d)).forEach(d=>{
+        const x=map[s.num+'|'+d];
+        if(!x){ map[s.num+'|'+d]={e:{num:s.num, nombre:s.nombre, planta:s.localidad}, d, cat:motivo, notas:nota?[nota]:[]}; return; }
+        if(nota && !x.notas.includes(nota)) x.notas.push(nota);
+        if(PRIO_MOTIVO[motivo]>PRIO_MOTIVO[x.cat]) x.cat=motivo;
+      });
+    });
+    return Object.values(map).sort((a,b)=>PRIO_MOTIVO[b.cat]-PRIO_MOTIVO[a.cat]||a.d.localeCompare(b.d)||(+a.e.num)-(+b.e.num));
+  }
+
+  return {LIMITE_TRIPLES, doblesTriples, LIMITE_GUARDIA, AJUSTES_INICIALES, leerSolicitudes, leerChecadas, leerCatalogo, procesar, faltas, mondaysFrom, addDays, fmtDia, hhmm, fmtDur, norm, dow, keyFromAbs};
+})();
+if(typeof module!=='undefined') module.exports=CORE;
+
+/* ===== Interfaz ===== */
+const $=id=>document.getElementById(id);
+const ST={sol:null, che:null, cat:null, R:null, tab:'cotejo', filtro:{}, ajustes:cargarAjustes()};
+function cargarAjustes(){
+  try{ const v=localStorage.getItem('cotejoTE.ajustes'); if(v) return JSON.parse(v); }catch(e){}
+  return JSON.parse(JSON.stringify(CORE.AJUSTES_INICIALES));
+}
+function guardarAjustes(){ try{ localStorage.setItem('cotejoTE.ajustes', JSON.stringify(ST.ajustes)); }catch(e){} }
+
+// Categorías comunes a Pendientes, Festivo y Descanso
+const COMUNES=[
+  ['sin_checadas','Solicitado sin checadas','var(--riskdark)','Tiene solicitud, pero no existe ninguna checada ese día.'],
+  ['incidencia','Falta checada','var(--neutral)','Falta la checada de salida. No se calculan horas; validar con el supervisor.'],
+  ['vacaciones','En vacaciones','var(--vac)','Tiene solicitud, pero no laboró por vacaciones autorizadas ese día.'],
+  ['incapacidad','En incapacidad','var(--vac)','Tiene solicitud, pero no laboró por incapacidad ese día.']];
+const CATS={
+  cotejo:[
+    ['coincide','Coincide','var(--ok)','Las horas reales de las checadas son iguales a las autorizadas.'],
+    ['solicitado_mas','Solicitado de más','var(--risk)','Se autorizaron más horas de las que muestran las checadas. Riesgo de pago indebido.'],
+    ['trabajado_mas','Trabajó más de lo autorizado','var(--orange)','Las checadas muestran más horas que las autorizadas. Posible adeudo al trabajador.'],
+    ['sin_solicitud','Trabajado sin solicitud','var(--warn)','Hay horas extra reales sin solicitud autorizada ese día.'],
+    ['sin_checadas','Solicitado sin checadas','var(--riskdark)','Hay horas autorizadas pero no existe ninguna checada ese día.'],
+    ['incidencia','Falta checada','var(--neutral)','Falta la checada de salida. No se calculan horas; validar con el supervisor.'],
+    ['vacaciones','Autorizado en vacaciones','var(--vac)','No laboró por vacaciones autorizadas, pero tiene tiempo extra autorizado ese día. Revisar la solicitud.'],
+    ['incapacidad','Autorizado en incapacidad','var(--vac)','No laboró por incapacidad, pero tiene tiempo extra autorizado ese día. Revisar la solicitud.']],
+  revisar:[
+    ['respaldada','Con respaldo en checadas','var(--ok)','Las checadas cubren las horas solicitadas.'],
+    ['parcial','Respaldo parcial','var(--orange)','Las checadas cubren solo parte de lo solicitado.'],
+    ['sin_respaldo','Sin respaldo','var(--risk)','Hubo asistencia, pero sin horas extra.'],
+    ...COMUNES,
+    ['fuera','Fuera del cotejo','var(--info)','El colaborador está excluido del análisis (administrativo, dispositivo externo) o no tiene checadas en la semana.']],
+  festivo:[
+    ['con_solicitud','Con festivo trabajado autorizado','var(--ok)','Laboró el festivo y tiene solicitud de festivo trabajado autorizada.'],
+    ['pendiente','Festivo trabajado pendiente','var(--info)','Laboró el festivo y su solicitud aún no está autorizada.'],
+    ['sin_solicitud','Laboró sin solicitud de festivo','var(--warn)','Hay checadas el día festivo, pero no existe solicitud de festivo trabajado.'],
+    ...COMUNES,
+    ['fuera','Fuera del cotejo','var(--info)','Tiene solicitud de festivo, pero está excluido del análisis o no tiene checadas en la semana.']],
+  descanso:[
+    ['con_solicitud','Con solicitud autorizada','var(--ok)','Laboró el domingo y tiene solicitud autorizada de Descanso trabajado o de hora extra.'],
+    ['pendiente','Solicitud pendiente de autorizar','var(--info)','Laboró el domingo y su solicitud de Descanso trabajado o de hora extra aún no está autorizada.'],
+    ['sin_solicitud','Sin solicitud','var(--warn)','Laboró el domingo sin solicitud de Descanso trabajado ni de hora extra.'],
+    ...COMUNES],
+  faltas:[
+    ['Injustificada','Injustificada','var(--risk)','Falta cuyo tipo no dice Justificada ni menciona disciplina.'],
+    ['Justificada','Justificada','var(--ok)','Falta cuyo tipo o descripción dice "justificada".'],
+    ['Disciplina','Disciplina','var(--riskdark)','La solicitud dice "disciplina" en el tipo o en la descripción.']],
+  alertas:[
+    ['triples','Más de 4 h triples en la semana','var(--risk)','Criterio interno (igual que la herramienta de Mesa de Servicio): los primeros 3 días con tiempo extra tienen hasta 3 h dobles por día y el excedente es triple; desde el cuarto día con tiempo extra todo es triple; el domingo todo es triple. La alerta aplica con más de 4 h triples autorizadas; las horas reales se muestran solo como referencia.']]
+};
+const TABS=[['cotejo','Cotejo autorizado'],['guardias','Guardias'],['revisar','Pendientes de autorizar'],['descanso','Descanso trabajado'],['festivo','Festivo trabajado'],['alertas','Alertas LFT'],['detalle','Detalle por colaborador'],['faltas','Faltas']];
+
+function toast(msg,err){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',4200); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const H=x=>x==null?'—':(Math.round(x*100)/100).toString();
+
+function leerArchivo(file){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onload=e=>{ try{ const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); const ws=wb.Sheets[wb.SheetNames[0]];
+      res(XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null})); }catch(err){ rej(err); } };
+    fr.onerror=()=>rej(new Error('No se pudo leer el archivo.'));
+    fr.readAsArrayBuffer(file);
+  });
+}
+function conectarDrop(dropId,inputId,stId,handler){
+  const d=$(dropId), inp=$(inputId);
+  inp.addEventListener('change',()=>{ if(inp.files[0]) procesarArchivo(inp.files[0]); inp.value=''; });
+  ['dragenter','dragover'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>d.addEventListener(ev,e=>{e.preventDefault();d.classList.remove('over');}));
+  d.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) procesarArchivo(f); });
+  async function procesarArchivo(f){
+    $(stId).textContent='Leyendo '+f.name+'…';
+    try{ const rows=await leerArchivo(f); const msg=handler(rows); d.className='drop ok'; $(stId).textContent=f.name+': '+msg; iniciar(); }
+    catch(err){ d.className='drop err'; $(stId).textContent=err.message||String(err); toast(err.message||String(err),true); }
+  }
+}
+conectarDrop('dropSol','fSol','stSol',rows=>{ const all=CORE.leerSolicitudes(rows); const s=all.filter(x=>x.tipoK!=='otro'||x.disc); ST.sol=s;
+  const n=k=>s.filter(x=>x.tipoK===k).length; const otros=all.length-s.length;
+  return n('te')+' de hora extra, '+n('festivo')+' de festivo trabajado, '+n('vac')+' de vacaciones, '+n('pase')+' pases de salida, '+n('incap')+' incapacidades, '+n('falta')+' faltas, '+n('permiso')+' permisos y '+n('descanso')+' de descanso trabajado'+(otros?' ('+otros+' de otros tipos no se usan)':''); });
+conectarDrop('dropChe','fChe','stChe',rows=>{ const c=CORE.leerChecadas(rows); ST.che=c;
+  return c.length+' checadas de '+new Set(c.map(x=>x.num)).size+' colaboradores'; });
+const resumenCat=m=>Object.keys(m).length+' empleados, '+Object.values(m).filter(x=>/administrativ/.test(x.tipo)).length+' administrativos';
+conectarDrop('dropCat','fCat','stCat',rows=>{ const m=CORE.leerCatalogo(rows); ST.cat=m; return resumenCat(m); });
+// Sin Excel, el tipo de empleado sale del catálogo "Empleados" del dashboard; un Excel subido lo reemplaza.
+function catDashboard(){
+  try{ const cat=window.parent!==window && parent.catalogoParaRevisionNomina && parent.catalogoParaRevisionNomina();
+    if(!cat || !cat.length) return null;
+    const m={}; cat.forEach(x=>{ m[String(x.codigo).trim()]={nombre:x.nombre||'', tipo:CORE.norm(x.tipoEmpleado)}; });
+    return m; }catch(e){ console.error(e); return null; }
+}
+const catVigente=()=>ST.cat||catDashboard();
+(()=>{ const m=catDashboard(); if(m){ $('dropCat').className='drop ok'; $('stCat').textContent='Catálogo del dashboard: '+resumenCat(m)+'. Se usa en automático; subir un Excel lo reemplaza.'; } })();
+$('btnPlantilla').addEventListener('click',ev=>{
+  ev.preventDefault(); ev.stopPropagation();
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet([['Número de empleado','Nombre','Tipo de empleado'],[12345,'Nombre Apellido Apellido','OPERATIVO']]);
+  ws['!cols']=[{wch:20},{wch:40},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws,'Catalogo');
+  const ins=XLSX.utils.aoa_to_sheet([
+    ['Instrucciones'],
+    ['1. Llena una fila por empleado en la hoja Catalogo, desde la fila 2. Borra la fila de ejemplo (12345).'],
+    ['2. Número de empleado: la ficha de PeopleCloud, solo números.'],
+    ['3. Tipo de empleado: ADMINISTRATIVO, OPERATIVO, SINDICALIZADO, SERVICIOS o TECNICOS.'],
+    ['4. Quien tenga tipo ADMINISTRATIVO queda fuera del cotejo, excepto la ficha 12261 y quien tenga un horario específico permanente en el dashboard.'],
+    ['5. Los empleados que no estén en el catálogo se analizan normalmente.']]);
+  ins['!cols']=[{wch:110}];
+  XLSX.utils.book_append_sheet(wb,ins,'Instrucciones');
+  XLSX.writeFile(wb,'Plantilla_catalogo_empleados.xlsx');
+  toast('Plantilla descargada.');
+});
+
+function iniciar(){
+  if(!ST.sol) return;
+  if(!ST.che) ST.tab='faltas'; // solo con solicitudes se habilita la pestaña Faltas; el cotejo necesita las checadas
+  const keys=[...ST.sol.filter(s=>s.tipoK!=='vac'&&s.tipoK!=='pase').map(s=>s.fecha), ...(ST.che||[]).map(c=>CORE.keyFromAbs(c.abs))];
+  const mons=CORE.mondaysFrom(keys);
+  const sel=$('selSemana'); const prev=sel.value;
+  const cuenta=m=>{ const f=CORE.addDays(m,6); return ST.sol.filter(s=>s.tipoK==='te' && s.fecha>=m && s.fecha<=f && CORE.norm(s.estatus)==='autorizado').length; };
+  sel.innerHTML=mons.map(m=>`<option value="${m}">${CORE.fmtDia(m)} al ${CORE.fmtDia(CORE.addDays(m,6))} (${cuenta(m)} autorizadas)</option>`).join('');
+  if(prev && mons.includes(prev)) sel.value=prev;
+  else { let best=mons[0],bn=-1; mons.forEach(m=>{const n=cuenta(m); if(n>bn){bn=n;best=m;}}); sel.value=best; }
+  $('controles').hidden=false; $('bienvenida').hidden=true; $('app').hidden=false;
+  recalcular();
+}
+function recalcular(){
+  try{
+    ST.R=CORE.procesar(ST.sol, ST.che||[], catVigente(), $('selSemana').value, $('sel0830').value, ST.ajustes);
+  }catch(err){ console.error(err); toast('Error al calcular: '+err.message,true); return; }
+  const pl=$('selPlanta'), prev=pl.value;
+  // Solo con solicitudes (pestaña Faltas) las plantas son Planta 1, 2 y 3
+  const plantas=ST.che ? [...new Set([...ST.R.activos,...ST.R.faltas.map(r=>r.e)].map(e=>e.planta))].sort() : ['Planta 1','Planta 2','Planta 3'];
+  pl.innerHTML='<option value="">Todas las plantas</option>'+plantas.map(p=>`<option>${esc(p)}</option>`).join('');
+  if(plantas.includes(prev)) pl.value=prev;
+  const m=$('selSemana').value;
+  $('semanaTag').hidden=false; $('semanaTxt').textContent=CORE.fmtDia(m)+' al '+CORE.fmtDia(CORE.addDays(m,6));
+  ST.filtro={};
+  render();
+}
+['selSemana','sel0830'].forEach(id=>$(id).addEventListener('change',recalcular));
+$('selPlanta').addEventListener('change',render);
+$('txtBuscar').addEventListener('input',()=>{ clearTimeout(window._b); window._b=setTimeout(render,180); });
+
+function pasaFiltro(e){
+  const pl=$('selPlanta').value; if(pl && e.planta!==pl) return false;
+  const q=CORE.norm($('txtBuscar').value); if(q && !(e.num.includes(q) || CORE.norm(e.nombre).includes(q))) return false;
+  return true;
+}
+function pasaPlanta(e){ const pl=$('selPlanta').value; return !pl || e.planta===pl; }
+
+function datosTab(tab){
+  const R=ST.R;
+  if(tab==='cotejo') return R.cotejo.filter(r=>pasaFiltro(r.e));
+  if(tab==='guardias') return R.guardias.filter(r=>pasaFiltro(r.e));
+  if(tab==='revisar') return R.revisar.filter(r=>pasaFiltro(r.e));
+  if(tab==='descanso') return R.descanso.filter(r=>pasaFiltro(r.e));
+  if(tab==='festivo') return R.festivo.filter(r=>pasaFiltro(r.e));
+  if(tab==='alertas') return R.alertas.filter(r=>pasaFiltro(r.e));
+  if(tab==='detalle') return R.activos.filter(pasaFiltro);
+  if(tab==='excluidos') return R.excluidos.filter(pasaFiltro);
+  if(tab==='faltas') return R.faltas.filter(r=>pasaFiltro(r.e));
+  return [];
+}
+
+function render(){
+  if(!ST.R) return;
+  const ex=ST.R.excluidos.filter(pasaPlanta);
+  $('exclTxt').hidden=false;
+  $('exclTxt').innerHTML=`Fuera del análisis: <b>${ex.length}</b> colaboradores (Fletes Borja, turno administrativo, dispositivos externos sin solicitud${catVigente()?', administrativos del catálogo':''}). <button id="verExcl">Ver quiénes</button>`;
+  $('verExcl').onclick=()=>{ ST.tab='excluidos'; render(); };
+  const tabs=ST.che?[...TABS]:TABS.filter(([k])=>k==='faltas'); if(ST.tab==='excluidos') tabs.push(['excluidos','Excluidos']);
+  $('tabs').innerHTML=tabs.map(([k,l])=>`<button role="tab" aria-selected="${ST.tab===k}" data-t="${k}">${l}<span class="c">${datosTab(k).length}</span></button>`).join('');
+  $('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ST.tab=b.dataset.t; render(); });
+  const P=$('panel');
+  renderAjustes();
+  ({cotejo:rCotejo, guardias:rGuardias, revisar:rRevisar, descanso:rDescanso, festivo:rFestivo, alertas:rAlertas, detalle:rDetalle, excluidos:rExcluidos, faltas:rFaltas})[ST.tab](P);
+  diagnostico(P, tabs);
+}
+/* Si la búsqueda no aparece en ninguna pestaña, explica por qué y en qué semana está */
+function diagnostico(P, tabs){
+  const q=CORE.norm($('txtBuscar').value); if(!q) return;
+  if(tabs.some(([k])=>datosTab(k).length) || ST.R.excluidos.some(pasaFiltro)) return;
+  const coincide=x=>String(x.num).includes(q) || CORE.norm(x.nombre).includes(q);
+  const sols=ST.sol.filter(s=>(s.tipoK==='te'||s.tipoK==='festivo') && coincide(s));
+  const chs=(ST.che||[]).filter(coincide);
+  const lunes=k=>CORE.mondaysFrom([k])[0], m=$('selSemana').value;
+  const semanas={};
+  sols.forEach(s=>{ const w=lunes(s.fecha); (semanas[w]=semanas[w]||{s:[],c:0}).s.push(s); });
+  chs.forEach(c=>{ const w=lunes(CORE.keyFromAbs(c.abs)); (semanas[w]=semanas[w]||{s:[],c:0}).c++; });
+  let msg;
+  if(!sols.length && !chs.length) msg=`No hay solicitudes de hora extra o festivo ni checadas que coincidan con "${esc($('txtBuscar').value)}" en los archivos cargados.`;
+  else if(semanas[m] && $('selPlanta').value) msg=`Hay registros en esta semana, pero no corresponden a la planta seleccionada. Cambia el filtro a "Todas las plantas".`;
+  else {
+    const otras=Object.keys(semanas).filter(w=>w!==m).sort();
+    msg=`No hay registros en la semana seleccionada. Aparece en: `+otras.map(w=>{ const x=semanas[w];
+      const det=x.s.map(s=>CORE.fmtDia(s.fecha)+' '+esc(s.tipo)+' '+H(s.horas)+' h ('+esc(s.estatus)+')').join(', ');
+      const ok=ST.R && [...document.getElementById('selSemana').options].some(o=>o.value===w);
+      return `<b>${CORE.fmtDia(w)} al ${CORE.fmtDia(CORE.addDays(w,6))}</b>${det?': '+det:''}${x.c?' · '+x.c+' checadas':''} ${ok?`<button class="btn sec" data-sem="${w}">Ir a esa semana</button>`:''}`; }).join('; ')+'.';
+  }
+  P.insertAdjacentHTML('afterbegin',`<div class="diag" role="status"><b>Búsqueda sin resultados.</b> ${msg}</div>`);
+  P.querySelectorAll('[data-sem]').forEach(b=>b.onclick=()=>{ $('selSemana').value=b.dataset.sem; recalcular(); });
+}
+
+function barra(tab, rows, key, fk=tab){
+  const defs=CATS[tab]; const act=ST.filtro[fk];
+  const cnt={}; rows.forEach(r=>{ (key?key(r):[r.cat]).forEach(k=>cnt[k]=(cnt[k]||0)+1); });
+  const total=defs.reduce((a,[k])=>a+(cnt[k]||0),0)||1;
+  const seg=defs.filter(([k])=>cnt[k]).map(([k,l,c,d])=>`<button style="flex:${cnt[k]};background:${c}" class="${act===k?'act':''}" data-k="${k}" title="${esc(l)}: ${cnt[k]} (${Math.round(cnt[k]*100/total)}%)" aria-label="${esc(l)}: ${cnt[k]}"></button>`).join('');
+  const ley=defs.map(([k,l,c,d])=>`<button class="${act===k?'act':''}" data-k="${k}" title="${esc(d)}"><span class="sw" style="background:${c}"></span>${esc(l)} <b>${cnt[k]||0}</b></button>`).join('');
+  return `<div class="ledger ${act?'filtrado':''}">${seg}</div><div class="leyenda">${ley}</div>`;
+}
+function wireBarra(P,fk){
+  P.querySelectorAll('.ledger button,.leyenda button').forEach(b=>b.onclick=()=>{ ST.filtro[fk]= ST.filtro[fk]===b.dataset.k ? null : b.dataset.k; render(); });
+}
+function catDef(tab,k){ return CATS[tab].find(x=>x[0]===k)||[k,k,'#999','']; }
+function checadasTxt(r){ return r.checadas.length ? r.checadas.map(CORE.hhmm).join(', ') : '—'; }
+function horaTxt(a,r){ if(a==null) return '—'; return r.estado==='estimado' && !r.checadas.includes(a)?`<span class="est" title="Falta checada de entrada: se tomó la hora de inicio del turno">${CORE.hhmm(a)}*</span>`:CORE.hhmm(a); }
+function difTxt(d){ if(d==null) return '—'; if(d>0) return `<span class="dif-pos">+${H(d)}</span>`; if(d<0) return `<span class="dif-neg">${H(d)}</span>`; return '0'; }
+function tabla(head, body, vacio){ return `<div class="tabla-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body||`<tr><td colspan="30" class="vacio">${vacio}</td></tr>`}</tbody></table></div>`; }
+
+/* ===== Columnas compartidas por pestañas y Excel =====
+   h: encabezado en pantalla; hx: encabezado en Excel (si difiere); html: celda en pantalla; xl: valor en Excel;
+   w: ancho en Excel; soloHtml / soloXl: la columna solo aparece en uno de los dos. */
+const hr=a=>a==null?'':CORE.hhmm(a);
+const dur=m=>m==null?'':Math.round(m/60*100)/100;
+const num=x=>x==null?'':x;
+const td=(v,cls)=>`<td${cls?` class="${cls}"`:''}>${v}</td>`;
+const col=(h,html,xl,w,o={})=>({h,html,xl,w,...o});
+const K={
+  ficha:   tab=>col('Ficha', r=>`<td class="cat" style="--c:${catDef(tab,r.cat)[2]}">${r.e.num}</td>`, r=>+r.e.num||r.e.num, 8),
+  nombre:  col('Nombre', r=>td(esc(r.e.nombre)), r=>r.e.nombre, 34),
+  planta:  col('Planta', r=>td(esc(r.e.planta)), r=>r.e.planta, 26),
+  area:    col('Área', r=>td(esc(r.area)), r=>r.area, 22),
+  fecha:   col('Fecha', null, r=>r.d, 11, {soloXl:true}),
+  dia:     col('Día', r=>td(CORE.fmtDia(r.d)+(r.esDom?' (descanso)':'')), r=>CORE.fmtDia(r.d), 10),
+  estatus: col('Estatus', r=>td(esc(r.estatus)), r=>r.estatus, 12),
+  permiso: col('Permiso', r=>td(esc(r.permiso)), r=>r.permiso, 10),
+  turno:   col('Turno', r=>td(r.r.turno||'—'), r=>r.r.turno, 12),
+  checadas:col('Checadas', r=>td(checadasTxt(r.r),'chk'), r=>r.r.checadas.map(CORE.hhmm).join(', '), 26),
+  entrada: col('Entrada', r=>td(horaTxt(r.r.entrada,r.r)), r=>hr(r.r.entrada), 8),
+  salida:  col('Salida', r=>td(horaTxt(r.r.salida,r.r)), r=>hr(r.r.salida), 8),
+  entTurno:col('Entrada tomada del turno', null, r=>r.r.estado==='estimado'?'Sí':'', 12, {soloXl:true}),
+  trabajo: col('Trabajado', r=>td(CORE.fmtDur(r.r.trabajadoMin)||'—','num'), r=>dur(r.r.trabajadoMin), 10, {n:true, hx:'Horas trabajadas'}),
+  pase:    col('Pase salida', r=>td(r.r.pase?H(r.r.pase):'—','num'), r=>r.r.pase||'', 10, {n:true, hx:'Pase de salida (h)'}),
+  aut:     col('Autorizadas', r=>td(H(r.sol),'num'), r=>r.sol, 10, {n:true, hx:'Horas autorizadas'}),
+  sol:     col('Solicitadas', r=>td(H(r.sol),'num'), r=>r.sol, 10, {n:true, hx:'Horas solicitadas'}),
+  reales:  col('Reales', r=>td(H(r.real),'num'), r=>num(r.real), 10, {n:true, hx:'Horas reales'}),
+  dif:     col('Dif.', r=>td(difTxt(r.dif),'num'), r=>num(r.dif), 10, {n:true, hx:'Diferencia'}),
+  trab:    col('Horas trabajadas', r=>td(H(r.trab),'num'), r=>num(r.trab), 10, {n:true}),
+  resultado:(tab,w=26)=>col('Resultado', r=>{ const [,l,c]=catDef(tab,r.cat); return td(`<span class="pill" style="--c:${c}">${l}</span>`); }, r=>catDef(tab,r.cat)[1], w),
+  obs:     col('Observación', r=>td((r.pend?`<b>Tiene ${H(r.pend)} h pendientes de autorizar.</b> `:'')+esc(r.r.nota),'obs'), r=>(r.pend?'Tiene '+r.pend+' h pendientes de autorizar. ':'')+r.r.nota, 60)
+};
+const colsCotejo=[K.ficha('cotejo'),K.nombre,K.planta,K.fecha,K.dia,K.turno,K.checadas,K.entrada,K.salida,K.entTurno,K.trabajo,K.pase,K.aut,K.reales,K.dif,K.resultado('cotejo'),K.obs];
+const COLS={
+  cotejo: colsCotejo,
+  guardias: [...colsCotejo.slice(0,-1), col('Límite '+CORE.LIMITE_GUARDIA+' h', r=>td(r.exceso?'<span class="flag-on">Rebasa '+CORE.LIMITE_GUARDIA+' h</span>':'Dentro'), r=>r.exceso?'Rebasa':'Dentro', 10), K.obs],
+  revisar: [K.ficha('revisar'),K.nombre,K.planta,K.area,K.fecha,K.dia,K.estatus,K.permiso,K.turno,K.checadas,K.entrada,K.salida,K.sol,K.reales,K.dif,K.resultado('revisar',24),K.obs],
+  descanso: [K.ficha('descanso'),K.nombre,K.planta,K.fecha,K.turno,K.checadas,K.entrada,K.salida,K.trab,
+    col('Autorizadas', r=>td(H(r.sol),'num'), r=>r.sol, 10, {n:true, hx:'Horas autorizadas'}),
+    col('Pendientes', r=>td(H(r.solRev),'num'), r=>r.solRev, 10, {n:true, hx:'Horas pendientes'}),
+    col('Solicitud descanso trabajado', r=>td(esc(r.solDescanso)||'—'), r=>r.solDescanso, 16),
+    K.resultado('descanso',24),
+    col('Pagos a revisar', r=>td(r.trab!=null?'Prima dominical y salario doble':'—'), r=>r.trab!=null?'Prima dominical (Art. 71) y salario doble (Art. 73)':'', 40),
+    K.obs],
+  festivo: [K.ficha('festivo'),K.nombre,K.planta,K.fecha,col('Festivo',null,r=>r.nombreFestivo,18,{soloXl:true}),col('Día',K.dia.html,null,0,{soloHtml:true}),
+    K.turno,K.checadas,K.entrada,K.salida,K.trab,
+    col('TE autorizada', r=>td(H(r.te),'num'), r=>r.te, 10, {n:true}),
+    col('Solicitud festivo', r=>td(esc(r.estatus)||'—'), r=>r.estatus, 14),
+    K.resultado('festivo',28),K.obs]
+};
+COLS.faltas=[K.ficha('faltas'),K.nombre,K.planta,
+  col('Fecha', r=>td(CORE.fmtDia(r.d)), r=>r.d, 11),
+  col('Motivo', K.resultado('faltas').html, r=>r.cat, 14),
+  col('Validación', r=>td(valFalta(r)?`<span class="flag-on">${valFalta(r)}</span>`:'OK'), r=>valFalta(r)||'OK', 26),
+  col('Notas', r=>td(esc(notaFalta(r)),'obs'), notaFalta, 60)];
+// Las faltas injustificadas van sin nota; Disciplina y Justificada llevan la descripción
+function notaFalta(r){ return r.cat==='Injustificada' ? '' : r.notas.join(' | '); }
+/* Pestaña con barra de categorías + tabla. extras: nota (texto), cifras(all), vacio (texto), cats (grupo de CATS), conBarra (booleano) */
+function rTablaCat(tab, columnas, extras){
+  const P=$('panel'); const all=datosTab(tab); const f=ST.filtro[tab]; const rows=f?all.filter(r=>r.cat===f):all;
+  const cats=extras.cats||tab, conBarra=extras.conBarra??true;
+  const cs=columnas.filter(c=>!c.soloXl);
+  P.innerHTML=`<p class="nota-legal">${extras.nota}</p>
+  ${extras.cifras?extras.cifras(all):''}
+  ${conBarra?barra(cats,all,null,tab):''}
+  ${tabla(cs.map(c=>`<th${c.n?' class="num"':''}>${c.h}</th>`).join(''),
+    rows.map(r=>`<tr>${cs.map(c=>c.html(r)).join('')}</tr>`).join(''), extras.vacio)}`;
+  if(conBarra) wireBarra(P,tab);
+}
+function sumaCampo(rows,k){ return rows.reduce((a,r)=>a+r[k],0); }
+function rCotejo(){
+  rTablaCat('cotejo', COLS.cotejo, {
+    nota:`Lunes a sábado, solo solicitudes <b>Autorizadas</b>. Horas reales = tiempo después del fin del turno asignado (y entrada anticipada de 1 h o más), en horas cerradas redondeadas hacia abajo. Los feriados se tratan como tiempo extra normal. Si falta la checada de entrada se toma la hora de inicio del turno reconocido (se muestra con *). Si falta la salida no se estima nada y el día se marca como Falta checada. Los guardias se revisan en su propia pestaña. <b>Planta 0</b> usa su propio horario (lunes 08:00 a 18:00, martes a viernes 08:00 a 17:30); si trabaja el sábado, todo lo laborado cuenta como tiempo extra. Los <b>pases de salida</b> se muestran solo como referencia y no se descuentan del tiempo extra; las <b>vacaciones e incapacidades</b> justifican la falta de checadas.`,
+    cifras:all=>{ const calc=all.filter(r=>r.real!=null), sSol=sumaCampo(calc,'sol'), sReal=sumaCampo(calc,'real');
+      return `<div class="cifras"><div><strong>${H(sSol)}</strong>horas autorizadas con checadas</div><div><strong>${H(sReal)}</strong>horas reales</div><div><strong>${H(sReal-sSol)}</strong>diferencia neta (reales menos autorizadas)</div><div><strong>${H(sumaCampo(all.filter(r=>r.cat==='sin_checadas'),'sol'))}</strong>horas autorizadas sin checadas</div></div>`; },
+    vacio:'No hay registros con este filtro.'});
+}
+function rGuardias(){
+  const L=CORE.LIMITE_GUARDIA;
+  rTablaCat('guardias', COLS.guardias, {cats:'cotejo',
+    nota:`Todos los guardias de seguridad, lunes a sábado, solo solicitudes <b>Autorizadas</b>. <b>Criterio interno vigente:</b> pueden tener hasta <b>${L} horas extra al día</b>; se marca cualquier día que lo rebase. No entran en la alerta semanal de la pestaña Alertas LFT. <b>Hecho legal:</b> el Art. 66 LFT limita el tiempo extra a 3 horas diarias y 3 veces por semana, y el Art. 68 ordena pagar al triple el excedente de 9 horas semanales; el criterio interno no modifica esa obligación de pago.`,
+    cifras:all=>{ const calc=all.filter(r=>r.real!=null);
+      return `<div class="cifras"><div><strong>${new Set(all.map(r=>r.e.num)).size}</strong>guardias con registros</div><div><strong>${H(sumaCampo(calc,'sol'))}</strong>horas autorizadas con checadas</div><div><strong>${H(sumaCampo(calc,'real'))}</strong>horas reales</div><div><strong>${all.filter(r=>r.exceso).length}</strong>días con más de ${L} h</div></div>`; },
+    vacio:'No hay registros de guardias con este filtro.'});
+}
+function rRevisar(){
+  const w=ST.R.weekDays;
+  rTablaCat('revisar', COLS.revisar, {
+    nota:`Solicitudes con fecha dentro de la semana (${CORE.fmtDia(w[0])} al ${CORE.fmtDia(w[6])}) que aún <b>no están autorizadas</b>: cualquier estatus distinto de Autorizado o Cancelado. Cada una se contrasta con las checadas para decidir su autorización; en domingo se compara contra las horas totales trabajadas. No cuentan en el cotejo autorizado hasta que se autoricen y se vuelva a cargar el reporte. <a href="https://hrm.people-cloud.com/user_notification#tabs-2" target="_blank" rel="noopener">Abrir autorizaciones en PeopleCloud</a>`,
+    cifras:all=>`<div class="cifras"><div><strong>${all.length}</strong>solicitudes pendientes</div><div><strong>${new Set(all.map(r=>r.e.num)).size}</strong>colaboradores</div><div><strong>${H(sumaCampo(all,'sol'))}</strong>horas pendientes</div><div><strong>${H(all.filter(r=>r.real!=null).reduce((a,r)=>a+Math.min(r.real,r.sol),0))}</strong>horas con respaldo en checadas</div><div><strong>${all.filter(r=>r.cat==='respaldada').length}</strong>listas para autorizar completas</div></div>`,
+    vacio:'No hay solicitudes pendientes de autorizar en esta semana.'});
+}
+function rDescanso(){
+  rTablaCat('descanso', COLS.descanso, {
+    nota:`Domingo, día de descanso. Se muestran todas las horas trabajadas, no solo el excedente. Se coteja contra las solicitudes de <b>Descanso trabajado</b> del domingo (y las de hora extra de ese día): con una autorizada el resultado es Con solicitud autorizada. <b>Art. 73 LFT</b>: al trabajar en su día de descanso se paga salario doble adicional al que corresponde por el descanso. <b>Art. 71 LFT</b>: quien trabaja en domingo tiene derecho a una prima adicional de al menos 25% sobre el salario de los días ordinarios. El día se asigna por la hora de entrada: un turno nocturno que entra el domingo en la noche cuenta como domingo.`,
+    vacio:'Nadie laboró el domingo de esta semana con el filtro actual.'});
+}
+function rFestivo(){
+  const fs=Object.entries(ST.R.festivos);
+  rTablaCat('festivo', COLS.festivo, {conBarra:fs.length>0,
+    nota:`${fs.length?'Festivo de la semana: <b>'+fs.map(([k,n])=>CORE.fmtDia(k)+' ('+esc(n)+')').join(', ')+'</b>.':'No hay día de descanso obligatorio en esta semana.'} <b>Art. 74 LFT</b>: días de descanso obligatorio. <b>Art. 75 LFT</b>: quien labora ese día tiene derecho, además del salario del día, a un salario doble por el servicio prestado. Se muestran todas las horas trabajadas del día; el tiempo extra de hora extra autorizado ese día sigue en el cotejo autorizado. El día se asigna por la hora de entrada.`,
+    cifras:all=>fs.length?`<div class="cifras"><div><strong>${all.filter(r=>r.trab!=null).length}</strong>colaboradores con checadas el festivo</div><div><strong>${all.filter(r=>r.cat==='con_solicitud').length}</strong>con festivo trabajado autorizado</div><div><strong>${all.filter(r=>r.cat==='sin_solicitud').length}</strong>laboraron sin solicitud</div></div>`:'',
+    vacio:fs.length?'Nadie laboró el festivo con el filtro actual.':'Esta semana no tiene día festivo obligatorio.'});
+}
+function rAlertas(P){
+  const all=datosTab('alertas');
+  const dias=ST.R.weekDays; const U=CORE.LIMITE_TRIPLES;
+  const nA=all.filter(r=>r.A.triples>U).length, nR=all.filter(r=>r.R.triples>U).length;
+  P.innerHTML=`<p class="nota-legal"><b>Criterio de la empresa</b> (igual que la herramienta Cálculo de Horas Extras de Mesa de Servicio y el Art. 66 LFT): los <b>primeros 3 días con tiempo extra</b> de lunes a sábado tienen hasta <b>3 horas dobles</b> por día (máximo 9 por semana) y el excedente de cada día es <b>triple</b>; desde el <b>cuarto día</b> con tiempo extra todas las horas son <b>triples</b>. La alerta aplica cuando alguien acumula <b>más de ${U} horas triples</b> en la semana con las horas <b>autorizadas</b>, igual que la herramienta, que se llena con lo autorizado. Las horas <b>reales</b> de las checadas se muestran solo como referencia; las diferencias entre autorizado y real se revisan en Cotejo autorizado. El <b>domingo</b> siempre es todo triple y también suma a la alerta (sus horas extra; el pago del día de descanso se revisa en Descanso trabajado). Cada celda muestra <b>autorizadas / reales</b>. Los guardias se revisan en su propia pestaña.</p>
+  <div class="cifras"><div><strong>${all.length}</strong>colaboradores con más de ${U} h triples</div><div><strong>${nR}</strong>de ellos también rebasan con horas reales</div></div>
+  ${tabla(`<th>Ficha</th><th>Nombre</th><th>Planta</th>${dias.map(d=>`<th class="num">${CORE.fmtDia(d)}</th>`).join('')}<th class="num">Total semana</th><th class="num">Dobles</th><th class="num">Triples</th><th class="num">Triples sobre ${U} h</th>`,
+    all.slice().sort((a,b)=>b.A.triples-a.A.triples).map(r=>{
+      const cel=(a,b,lim)=>`<span class="${a>lim?'flag-on':''}">${H(a)}</span> / ${H(b)}`;
+      return `<tr><td class="cat" style="--c:var(--risk)">${r.e.num}</td><td>${esc(r.e.nombre)}</td><td>${esc(r.e.planta)}</td>${r.aut.map((a,i)=>`<td class="num">${H(a)} / ${H(r.rea[i])}</td>`).join('')}<td class="num">${H(r.A.total)} / ${H(r.R.total)}</td><td class="num">${H(r.A.dobles)} / ${H(r.R.dobles)}</td><td class="num">${cel(r.A.triples,r.R.triples,U)}</td><td class="num">${H(Math.max(0,r.A.triples-U))} / ${H(Math.max(0,r.R.triples-U))}</td></tr>`; }).join(''),
+    'Nadie supera '+U+' horas triples en la semana con este filtro.')}`;
+}
+function rDetalle(P){
+  const rows=datosTab('detalle').slice().sort((a,b)=>a.planta.localeCompare(b.planta)||a.nombre.localeCompare(b.nombre));
+  const dias=ST.R.weekDays;
+  P.innerHTML=`<p class="nota-legal">Horas extra reales por día (número grande) y tiempo trabajado con entrada y salida (debajo). El domingo muestra las horas trabajadas totales. "Vac." indica vacaciones autorizadas e "Inc." incapacidad. En naranja, días sin checada de entrada donde se tomó el inicio del turno. "Falta" indica que no hay checada de salida; esos días no suman horas. Se toma el turno dominante de la semana; un horario que aparece un solo día se trata como día aislado.</p>
+  ${tabla(`<th>Ficha</th><th>Nombre</th><th>Planta</th><th>Turno dominante</th>${dias.map(d=>`<th>${CORE.fmtDia(d)}${ST.R.festivos[d]?' festivo':''}</th>`).join('')}<th class="num">Extra L-S</th><th class="num">Autorizadas L-S</th>`,
+    rows.map(e=>{
+      let tx=0, ta=0;
+      const cells=dias.map((d,i)=>{ const r=e.dias[d];
+        if(i<6 && r.extra!=null) tx+=r.extra;
+        if(r.estado==='vacaciones') return `<td class="dia-cell vac" title="Vacaciones autorizadas"><span class="x">Vac.</span></td>`;
+        if(r.estado==='incapacidad') return `<td class="dia-cell vac" title="Incapacidad"><span class="x">Inc.</span></td>`;
+        if(r.estado==='sin_checadas') return `<td class="dia-cell"><span class="w">—</span></td>`;
+        if(r.estado==='incidencia') return `<td class="dia-cell inc" title="${esc(r.nota)}"><span class="x">Falta</span><span class="w">${checadasTxt(r)}</span></td>`;
+        const x = i===6 ? Math.floor(r.trabajadoMin/60)+' h' : r.extra;
+        const t = (i===6?'Domingo (descanso): horas trabajadas totales. ':'')+(r.nota||'');
+        return `<td class="dia-cell ${r.estado==='estimado'?'estm':''}" title="${esc(t)}"><span class="x">${x}</span><span class="w">${CORE.fmtDur(r.trabajadoMin)} trab.</span><span class="w">${CORE.hhmm(r.entrada)}–${CORE.hhmm(r.salida)}</span></td>`; }).join('');
+      ta=ST.sol.filter(s=>s.tipoK==='te' && s.num===e.num && dias.slice(0,6).includes(s.fecha) && CORE.norm(s.estatus)==='autorizado').reduce((a,s)=>a+s.horas,0);
+      return `<tr><td>${e.num}</td><td>${esc(e.nombre)}</td><td>${esc(e.planta)}</td><td>${e.turnoDominante||'—'}</td>${cells}<td class="num"><b>${tx}</b></td><td class="num">${H(ta)}</td></tr>`; }).join(''),
+    'No hay colaboradores con este filtro.')}`;
+}
+function rExcluidos(P){
+  const rows=datosTab('excluidos');
+  P.innerHTML=`<p class="nota-legal">Colaboradores que no entran al cotejo y el motivo. La ficha 12261 no se excluye aunque sea administrativa: solo se revisan sus jueves (tiempo extra sin solicitud, o solicitud sin tiempo extra trabajado). <button class="btn sec" id="volver">Volver al cotejo</button></p>
+  ${tabla(`<th>Ficha</th><th>Nombre</th><th>Planta</th><th>Dispositivo</th><th>Turno PeopleCloud</th><th>Motivo</th>`,
+    rows.map(x=>`<tr><td>${x.num}</td><td>${esc(x.nombre)}</td><td>${esc(x.planta)}</td><td>${esc(x.dispositivo)}</td><td>${esc(x.turnoPC)}</td><td>${esc(x.motivo)}</td></tr>`).join(''),'Sin exclusiones.')}`;
+  $('volver').onclick=()=>{ ST.tab='cotejo'; render(); };
+}
+
+/* ===== Faltas y plantilla de ausentismo ===== */
+let CAT_AUS=null;
+function catAus(){
+  if(!CAT_AUS){ CAT_AUS={};
+    // Dentro del dashboard: catálogo vigente de la Google Sheet (ya con sesión iniciada).
+    try{ const cat=window.parent!==window && parent.catalogoParaRevisionNomina && parent.catalogoParaRevisionNomina();
+      if(cat && cat.length){ cat.forEach(x=>CAT_AUS[String(x.codigo).trim()]=String(x.estatus||'ALTA').trim().toUpperCase()); return CAT_AUS; } }catch(e){ console.error(e); }
+    try{ XLSX.utils.sheet_to_json(XLSX.read(PLANTILLA_B64,{type:'base64'}).Sheets.Catalogo_Empleados,{defval:''})
+      .forEach(x=>CAT_AUS[String(x.Numero_Empleado).trim()]=String(x.Estatus).trim().toUpperCase()); }catch(e){ console.error(e); } }
+  return CAT_AUS;
+}
+// Único aviso: empleado en BAJA según el catálogo de la plantilla
+function valFalta(r){
+  const est=catAus()[r.e.num];
+  if(!est) return ''; // fuera del catálogo también se incluye
+  if(est==='BAJA') return 'Empleado en BAJA';
+  return '';
+}
+function rFaltas(P){
+  const w=ST.R.weekDays;
+  rTablaCat('faltas', COLS.faltas, {
+    nota:`Faltas del ${CORE.fmtDia(w[0])} al ${CORE.fmtDia(w[6])} tomadas del reporte de solicitudes: solo solicitudes de <b>tipo Falta</b> o que digan "disciplina", de <b>Planta 1, 2 y 3</b> (solo se excluyen las canceladas; se incluyen aunque la ficha no esté en el catálogo). <b>Incapacidades, permisos, retardos, pases de salida, medio día y vacaciones quedan fuera.</b> <b>Motivo:</b> si dice "disciplina" es <b>Disciplina</b>; si el tipo o la descripción dice "justificada" es <b>Justificada</b>; el resto es <b>Injustificada</b>. En Notas va la descripción de la solicitud solo en <b>Disciplina</b> y <b>Justificada</b>; las Injustificadas van sin nota. La columna <b>Supervisor</b> sale vacía para llenarla a mano (es obligatoria en la app). Usa <b>Exportar plantilla</b>.`,
+    cifras:all=>`<div class="cifras"><div><strong>${all.length}</strong>faltas en la semana</div><div><strong>${new Set(all.map(r=>r.e.num)).size}</strong>colaboradores</div><div><strong>${all.filter(r=>valFalta(r)).length}</strong>filas por corregir antes de subir</div></div>`,
+    vacio:'No hay faltas en esta semana con el filtro actual.'});
+}
+$('btnPlantillaAus').addEventListener('click',async()=>{
+  if(!ST.R) return;
+  try{
+    const rows=ST.R.faltas.filter(r=>pasaPlanta(r.e)), w=ST.R.weekDays;
+    const zip=await JSZip.loadAsync(PLANTILLA_B64,{base64:true});
+    const ruta='xl/worksheets/sheet1.xml'; let xml=await zip.file(ruta).async('string');
+    const x=v=>String(v).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    // La ficha va como número, igual que en la plantilla llenada a mano
+    const cel=(ref,v)=>!v ? `<c r="${ref}" s="3"/>`
+      : ref[0]==='A' && /^\d+$/.test(v) ? `<c r="${ref}" s="3"><v>${v}</v></c>`
+      : `<c r="${ref}" s="3" t="inlineStr"><is><t xml:space="preserve">${x(v)}</t></is></c>`;
+    const filas=rows.map(r=>[r.e.num, r.d, r.cat, '', 'NO', '', notaFalta(r)]);
+    if(!filas.length) filas.push(['','','','','','','']); // al menos limpia la fila de ejemplo
+    filas.forEach((v,i)=>{
+      const n=i+2, fila=`<row r="${n}" spans="1:7">${v.map((val,j)=>cel('ABCDEFG'[j]+n,val)).join('')}</row>`;
+      const re=new RegExp('<row r="'+n+'"[^>]*?(/>|>[\\s\\S]*?</row>)');
+      xml = re.test(xml) ? xml.replace(re,()=>fila) : xml.replace('</sheetData>',()=>fila+'</sheetData>');
+    });
+    zip.file(ruta,xml);
+    const blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const pl=$('selPlanta').value;
+    const nombre=`Plantilla_ausentismo_${w[0]}_al_${w[6]}${pl?'_'+pl.replace(/[^a-z0-9]+/gi,'_'):''}.xlsx`;
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nombre; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    const malas=rows.filter(r=>valFalta(r)).length;
+    toast(`Plantilla descargada con ${rows.length} faltas.`+(malas?` ${malas} filas tienen algo por corregir (ver columna Validación).`:''), malas>0);
+  }catch(err){ console.error(err); toast('No se pudo generar la plantilla: '+(err.message||err),true); }
+});
+
+/* ===== Ajustes por colaborador ===== */
+function renderAjustes(){
+  $('ajustesBox').hidden=false;
+  const hs=ST.ajustes.horarios||[];
+  const nom=n=>{ const e=ST.R&&ST.R.activos.find(x=>x.num===n); return e?e.nombre:''; };
+  $('ajHorarios').innerHTML = hs.length ? `<table class="aj-tabla"><thead><tr><th>Ficha</th><th>Nombre</th><th>Horario</th><th>Aplica</th><th>Nota</th><th></th></tr></thead><tbody>${
+    hs.map((h,i)=>`<tr><td>${esc(h.num)}</td><td>${esc(h.nombre||nom(h.num))}</td><td>${esc(h.inicio)} a ${esc(h.fin)}</td><td>${h.desde||h.hasta?esc((h.desde||'…')+' al '+(h.hasta||'…')):'Siempre'}</td><td>${esc(h.nota||'')}</td><td><button type="button" data-del="${i}">Quitar</button></td></tr>`).join('')}</tbody></table>` : '<p class="aj-ayuda">Sin horarios específicos.</p>';
+  $('ajHorarios').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ ST.ajustes.horarios.splice(+b.dataset.del,1); guardarAjustes(); recalcular(); });
+  const det=ST.R?ST.R.activos.filter(e=>e.guardia).map(e=>e.num):[];
+  $('ajGuardiasDet').textContent = det.length+' guardias en la semana: '+det.join(', ');
+  if(document.activeElement!==$('ajGuardias')) $('ajGuardias').value=(ST.ajustes.guardiasExtra||[]).join(', ');
+  const cs=ST.ajustes.checadas||[];
+  $('ajChecadas').innerHTML = cs.length ? `<table class="aj-tabla"><thead><tr><th>Ficha</th><th>Nombre</th><th>Fecha</th><th>Hora</th><th>Nota</th><th></th></tr></thead><tbody>${
+    cs.map((c,i)=>`<tr><td>${esc(c.num)}</td><td>${esc(nom(c.num))}</td><td>${esc(CORE.fmtDia(c.fecha))}</td><td>${esc(c.hora)}</td><td>${esc(c.nota||'')}</td><td><button type="button" data-delc="${i}">Quitar</button></td></tr>`).join('')}</tbody></table>` : '<p class="aj-ayuda">Sin checadas manuales.</p>';
+  $('ajChecadas').querySelectorAll('[data-delc]').forEach(b=>b.onclick=()=>{ ST.ajustes.checadas.splice(+b.dataset.delc,1); guardarAjustes(); recalcular(); });
+  $('ajResumen').textContent='('+hs.length+' horarios específicos, '+cs.length+' checadas manuales, '+det.length+' guardias)';
+}
+$('acAgregar').addEventListener('click',()=>{
+  const num=$('acNum').value.trim(), fecha=$('acFecha').value, hora=$('acHora').value;
+  if(!num || !fecha || !hora){ toast('Indica ficha, fecha y hora de la checada.',true); return; }
+  ST.ajustes.checadas=ST.ajustes.checadas||[];
+  ST.ajustes.checadas.push({num, fecha, hora, nota:$('acNota').value.trim()});
+  guardarAjustes(); ['acNum','acFecha','acHora','acNota'].forEach(id=>$(id).value='');
+  recalcular(); toast('Checada agregada para la ficha '+num+' el '+CORE.fmtDia(fecha)+' a las '+hora+'.');
+});
+$('ajAgregar').addEventListener('click',()=>{
+  const num=$('ajNum').value.trim(), ini=$('ajIni').value, fin=$('ajFin').value;
+  if(!num || !ini || !fin){ toast('Indica ficha, entrada y fin de jornada.',true); return; }
+  const desde=$('ajDesde').value, hasta=$('ajHasta').value||$('ajDesde').value;
+  ST.ajustes.horarios=ST.ajustes.horarios||[];
+  ST.ajustes.horarios.push({num, inicio:ini, fin, desde, hasta: desde?hasta:'', nota:$('ajNota').value.trim()});
+  guardarAjustes(); ['ajNum','ajIni','ajFin','ajDesde','ajHasta','ajNota'].forEach(id=>$(id).value='');
+  recalcular(); toast('Horario agregado para la ficha '+num+'.');
+});
+$('ajGuardar').addEventListener('click',()=>{
+  ST.ajustes.guardiasExtra=$('ajGuardias').value.split(/[,\s]+/).map(s=>s.trim()).filter(Boolean);
+  guardarAjustes(); recalcular(); toast('Guardias actualizados.');
+});
+$('ajReset').addEventListener('click',()=>{
+  if(!confirm('¿Restablecer los ajustes iniciales? Se perderán los horarios, checadas manuales y guardias que agregaste.')) return;
+  ST.ajustes=JSON.parse(JSON.stringify(CORE.AJUSTES_INICIALES)); guardarAjustes(); recalcular();
+});
+
+/* ===== Exportación a Excel ===== */
+$('btnExcel').addEventListener('click',()=>{
+  if(!ST.R) return;
+  const R=ST.R, f=r=>pasaPlanta(r.e), dias=R.weekDays;
+  const wb=XLSX.utils.book_new();
+  const hoja=(nombre,aoa,anchos)=>{ const ws=XLSX.utils.aoa_to_sheet(aoa); ws['!cols']=anchos.map(w=>({wch:w})); ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(0,aoa.length-1),c:aoa[0].length-1}})}; XLSX.utils.book_append_sheet(wb,ws,nombre); };
+
+  const hojaCols=(nombre,cols,rows)=>{ const cs=cols.filter(c=>!c.soloHtml); hoja(nombre,[cs.map(c=>c.hx||c.h),...rows.filter(f).map(r=>cs.map(c=>c.xl(r)))],cs.map(c=>c.w)); };
+  hojaCols('Cotejo autorizado',COLS.cotejo,R.cotejo);
+  hojaCols('Guardias',COLS.guardias,R.guardias);
+  hojaCols('Pendientes de autorizar',COLS.revisar,R.revisar);
+  hojaCols('Descanso trabajado',COLS.descanso,R.descanso);
+  hojaCols('Festivo trabajado',COLS.festivo,R.festivo);
+  hojaCols('Faltas',COLS.faltas,R.faltas);
+  const dL=dias.slice(0,6);
+  hoja('Alertas LFT',[['Ficha','Nombre','Planta',...dias.flatMap(d=>[CORE.fmtDia(d)+' aut.',CORE.fmtDia(d)+' real']),'Total aut.','Total real','Dobles aut.','Dobles real','Triples aut.','Triples real','Triples sobre '+CORE.LIMITE_TRIPLES+' h aut.','Triples sobre '+CORE.LIMITE_TRIPLES+' h real'],
+    ...R.alertas.filter(f).map(r=>[+r.e.num||r.e.num,r.e.nombre,r.e.planta,...r.aut.flatMap((a,i)=>[a,r.rea[i]]),r.A.total,r.R.total,r.A.dobles,r.R.dobles,r.A.triples,r.R.triples,Math.max(0,r.A.triples-CORE.LIMITE_TRIPLES),Math.max(0,r.R.triples-CORE.LIMITE_TRIPLES)])],
+    [8,34,26,...dias.flatMap(()=>[11,11]),9,9,10,10,10,10,13,13]);
+  hoja('Horas por día',[['Ficha','Nombre','Planta','Turno dominante',...dias.flatMap(d=>[CORE.fmtDia(d)+' trabajadas',CORE.fmtDia(d)+' extra',CORE.fmtDia(d)+' estado']),'Extra L-S','Autorizadas L-S'],
+    ...R.activos.filter(pasaPlanta).map(e=>{ const ta=ST.sol.filter(s=>s.tipoK==='te' && s.num===e.num && dL.includes(s.fecha) && CORE.norm(s.estatus)==='autorizado').reduce((a,s)=>a+s.horas,0);
+      const tx=dL.reduce((a,d)=>a+(e.dias[d].extra||0),0);
+      return [+e.num||e.num,e.nombre,e.planta,e.turnoDominante,...dias.flatMap(d=>{const r=e.dias[d]; return [dur(r.trabajadoMin),num(r.extra),({completo:'Completo',estimado:'Entrada del turno',incidencia:'Falta checada',sin_checadas:'Sin checadas',vacaciones:'Vacaciones',incapacidad:'Incapacidad'})[r.estado]];}),tx,ta]; })],
+    [8,34,26,12,...dias.flatMap(()=>[10,8,11]),9,11]);
+  hoja('Detalle checadas',[['Ficha','Nombre','Planta','Fecha','Día','Turno','Checadas','Entrada','Salida','Estado','Horas trabajadas','Horas extra','Observación'],
+    ...R.activos.filter(pasaPlanta).flatMap(e=>dias.filter(d=>!['sin_checadas','vacaciones','incapacidad'].includes(e.dias[d].estado)).map(d=>{const r=e.dias[d]; return [+e.num||e.num,e.nombre,e.planta,d,CORE.fmtDia(d),r.turno,r.checadas.map(CORE.hhmm).join(', '),hr(r.entrada),hr(r.salida),({completo:'Completo',estimado:'Entrada del turno',incidencia:'Falta checada'})[r.estado],dur(r.trabajadoMin),num(r.extra),r.nota];}))],
+    [8,34,26,11,10,12,26,8,8,11,10,9,60]);
+  hoja('Excluidos',[['Ficha','Nombre','Planta','Dispositivo','Turno PeopleCloud','Motivo'],
+    ...R.excluidos.filter(pasaPlanta).map(x=>[+x.num||x.num,x.nombre,x.planta,x.dispositivo,x.turnoPC,x.motivo])],[8,34,26,20,24,60]);
+  const pl=$('selPlanta').value;
+  const nombre=`Cotejo_TE_${dias[0]}_al_${dias[6]}${pl?'_'+pl.replace(/[^a-z0-9]+/gi,'_'):''}.xlsx`;
+  XLSX.writeFile(wb,nombre);
+  toast('Excel descargado: '+nombre);
+});
+</script>
+</body></html>
