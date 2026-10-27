@@ -1571,7 +1571,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.26-v57";
+const APP_VERSION = "2026.10.26-v58";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -4184,11 +4184,14 @@ function renderKpisSemanales(){
     lineas.push(`${c.sm.incapacidades===1 ? 'Inició' : 'Iniciaron'} <b>${nPl(c.sm.incapacidades,'incapacidad','incapacidades')}</b>` + (c.sm.rt ? ` (${nPl(c.sm.rt,'riesgo de trabajo','riesgos de trabajo')}: ${rtPlanta})` : ', ningún riesgo de trabajo') + `. ${c.sm.activas===1 ? 'Sigue 1 activa' : `Siguen ${c.sm.activas} activas`} al ${fmtFecha(c.sm.corte)}.`);
   }
   document.getElementById('ks-resumen').innerHTML = lineas.map(l=>`<li>${l}</li>`).join('');
+  const resumenTxt = [...document.querySelectorAll('#ks-resumen li')].map(li=>li.textContent); // para el Excel
 
   // ---- C: % de ausentismo de las 12 semanas que terminan en el periodo elegido (o la última ya iniciada) ----
   const fin = idx >= 0 ? idx : Math.max(0, PERIODOS_NOMINA.findLastIndex(p=> p.inicio <= hoyISO()));
   const semanas = PERIODOS_NOMINA.slice(Math.max(0, fin-11), fin+1);
-  const valores = semanas.map(p=> pct1(AUSENCIAS.filter(a=> a.fecha && a.fecha>=p.inicio && a.fecha<=p.fin).length, activos.length*DIAS_LABORABLES_SEMANA));
+  const faltasSem = semanas.map(p=> AUSENCIAS.filter(a=> a.fecha && a.fecha>=p.inicio && a.fecha<=p.fin).length);
+  const valores = faltasSem.map(n=> pct1(n, activos.length*DIAS_LABORABLES_SEMANA));
+  const tendencia = semanas.map((p,i)=> [etiquetaPeriodo(p), faltasSem[i], valores[i]/100]);
   const etiquetasSem = semanas.map(p=>'P'+p.numero);
   document.getElementById('ks-tendencia').innerHTML = ksBarrasSVG(etiquetasSem, valores) + ksBarrasSVG(etiquetasSem, valores, true) +
     '<div class="small-muted" style="margin-top:6px;">% = faltas de la semana / (empleados activos de hoy × ' + DIAS_LABORABLES_SEMANA + ' días).</div>';
@@ -4197,12 +4200,14 @@ function renderKpisSemanales(){
   const panelRT = document.getElementById('ks-panel-rt');
   panelRT.hidden = !c.sm;
   panelRT.parentElement.style.gridTemplateColumns = c.sm ? '' : '1fr';
+  let sinRT = null;
   if(c.sm){
     const ultimoRT = {};
     ksIncapacidades().filter(i=> i.tipo==='RIESGO DE TRABAJO' && i.inicio<=c.sm.corte)
       .forEach(i=>{ if(!ultimoRT[i.planta] || i.inicio > ultimoRT[i.planta]) ultimoRT[i.planta] = i.inicio; });
     const plantas = [...new Set([...Object.keys(activosPlanta), ...Object.keys(ultimoRT)])].sort();
     document.getElementById('ks-rt-corte').textContent = `— al ${fmtFecha(c.sm.corte)}`;
+    sinRT = plantas.map(p=> [p, ultimoRT[p] ? diasISO(ultimoRT[p], c.sm.corte) - 1 : 'Sin RT registrados', ultimoRT[p] || '']);
     document.getElementById('ks-sin-rt').innerHTML = plantas.map(p=>{
       const d = ultimoRT[p] ? diasISO(ultimoRT[p], c.sm.corte) - 1 : null;
       return `<div class="${d!==null && d<30 ? 'malo' : ''}"><span class="small-muted">${escH(p)}</span><b>${d===null ? '—' : d}</b><span class="small-muted">${d===null ? 'sin RT registrados' : 'días'}</span></div>`;
@@ -4229,10 +4234,13 @@ function renderKpisSemanales(){
     const peor = mayorEsMejor ? prom - v : v - prom; // > 0 = peor que el promedio
     return peor <= 0 ? 'c-ok' : peor <= Math.abs(prom)*0.25 ? 'c-warn' : 'c-bad';
   };
+  const claseCelda = (p, val, prom, mayor)=> val ? claseCalor(val(p), prom, mayor) : (p.rt===0 ? 'c-ok' : p.rt===1 ? 'c-warn' : 'c-bad');
+  const PALABRA = { 'c-ok':'Verde', 'c-warn':'Ámbar', 'c-bad':'Rojo' };
+  const mapaCalor = [['Planta', ...colores.flatMap(([t])=>[t, 'Color'])],
+    ...plantasCalor.map(p=> [p.planta, ...colores.flatMap(([, txt, val, prom, mayor])=>[txt(p), PALABRA[claseCelda(p, val, prom, mayor)]])])];
   document.getElementById('ks-calor-head').innerHTML = '<th>Planta</th>' + colores.map(([t])=>`<th>${t}</th>`).join('');
   document.getElementById('ks-calor-body').innerHTML = plantasCalor.map(p=> `<tr><td>${escH(p.planta)}</td>` + colores.map(([, txt, val, prom, mayor])=>{
-    const clase = val ? claseCalor(val(p), prom, mayor) : (p.rt===0 ? 'c-ok' : p.rt===1 ? 'c-warn' : 'c-bad');
-    return `<td class="${clase}">${txt(p)}</td>`;
+    return `<td class="${claseCelda(p, val, prom, mayor)}">${txt(p)}</td>`;
   }).join('') + '</tr>').join('') || `<tr><td colspan="${colores.length+1}" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
 
   // ---- Detalle por planta (columnas de Capacitación/SM solo con datos y permiso) ----
@@ -4247,7 +4255,7 @@ function renderKpisSemanales(){
 
   const sinDatos = !c.ausencias.length && !(c.cap && c.cap.cursos) && !(c.sm && (c.sm.incapacidades || c.sm.dias));
   kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo: c.ausencias, capResumen: c.cap || null, smResumen: c.sm || null, sinDatos,
-    tablaPlantas: [cols.map(([t])=>t), ...filas] };
+    tablaPlantas: [cols.map(([t])=>t), ...filas], resumenTxt, tendencia, mapaCalor, sinRT };
   document.getElementById('ks-sin-datos').style.display = sinDatos ? 'block' : 'none';
 }
 document.getElementById('f-kpis-semanales-periodo').addEventListener('change', renderKpisSemanales);
@@ -4345,6 +4353,14 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
     hoja('Departamentos', [...r, ['Detalle por planta'], ...c.tablaPlantas], [34,14,14,14,16,14]);
   }
 
+  hoja('Resumen_escrito', [['Selección', seleccion], [], ...c.resumenTxt.map(t=>[t])], [120]);
+  const wsTend = XLSX.utils.aoa_to_sheet([['Semana','Faltas','% Ausentismo'], ...c.tendencia]);
+  c.tendencia.forEach((_, i)=>{ const celda = wsTend[XLSX.utils.encode_cell({r:i+1, c:2})]; if(celda) celda.z = '0.0%'; });
+  wsTend['!cols'] = [{wch:44},{wch:10},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsTend, 'Tendencia_12_semanas');
+  if(c.mapaCalor.length > 1) hoja('Mapa_calor', c.mapaCalor, [20, ...c.mapaCalor[0].slice(1).map(()=>13)]);
+  if(c.sinRT) hoja('Dias_sin_RT', [['Al ' + fmtFecha(c.smResumen.corte)], [], ['Planta','Días sin riesgo de trabajo','Último RT (inicio)'], ...c.sinRT], [20,26,18]);
+
   hoja('Por_Supervisor', [['Semana','Supervisor','Faltas','Empleados a su cargo (aprox.)','% Ausentismo (aprox.)'],
     ...filas(porSup, (sem, sup, v)=>{ const n = aCargo[sup] ? aCargo[sup].size : 0; return [sem, sup, v.faltas, n, porc(v.faltas, n*dias)]; })], [44,32,10,26,20]);
 
@@ -4360,6 +4376,9 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
     ['Servicio médico: incapacidades = registros cuya fecha de inicio cae en la selección; días = días de incapacidad que caen dentro de la selección; activas = empleados incapacitados al cierre de la selección (o a hoy si aún no termina).'],
     ['Por_Supervisor: la app no asigna empleados a un supervisor de forma fija (se captura en cada falta), así que "empleados a su cargo" es una APROXIMACIÓN: empleados distintos que alguna vez tuvieron una falta registrada con ese supervisor.'],
     ['TOTAL de la selección: el % de ausentismo se calcula sobre las semanas ya transcurridas a la fecha de exportación.'],
+    ['Tendencia_12_semanas: las 12 semanas que terminan en el periodo elegido (o en la última ya iniciada); mismo cálculo de % ausentismo por semana.'],
+    ['Mapa_calor: Verde = igual o mejor que el promedio de la empresa; Ámbar = hasta 25% peor; Rojo = más de 25% peor. Horas de capacitación y días de incapacidad se comparan por empleado activo. RT: 0 Verde, 1 Ámbar, 2 o más Rojo.'],
+    ['Dias_sin_RT: días desde el último riesgo de trabajo de cada planta hasta el cierre de la selección (o hoy).'],
   ], [110]);
 
   const num = c.periodoSel.match(/Periodo\s+(\d+)/);
