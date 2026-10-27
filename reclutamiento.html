@@ -5833,7 +5833,7 @@ function renderResumenRotacion(){
     datosPorAnio: datosEdadPorAnio, instancesArrayRef: chartsResumenEdadPorAnio,
     tipo: 'bar', idPrefijo: 'chartResumenEdadAnio', ordenFijo: [...RANGOS_EDAD.map(r=>r.label), 'Sin dato']
   });
-  const datosEscolaridadPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> e.escolaridad || 'Sin dato');
+  const datosEscolaridadPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> normalizarEscolaridad(e.escolaridad) || 'Sin dato'); // el catálogo trae "SECUNDARIA", "PREPARATORIA"…
   pintarGraficosPorAnio({
     wrapId: 'resumenEscolaridadPorAnioWrap', sinDatosId: 'resumenEscolaridadSinDatos',
     datosPorAnio: datosEscolaridadPorAnio, instancesArrayRef: chartsResumenEscolaridadPorAnio,
