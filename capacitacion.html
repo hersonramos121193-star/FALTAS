@@ -1194,7 +1194,9 @@
 <div class="toast" id="toast"></div>
 <div id="areaImpresion"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- SheetJS 0.20.3 oficial en vendor/ (la 0.18.5 tiene CVE-2023-30533 y CVE-2024-22363); si falta, CDN oficial con la misma firma -->
+<script src="vendor/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"></script>
+<script>if(!window.XLSX) document.write('<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"><\/script>');</script>
 <script src="sirce-catalogos.js"></script>
 <script>
 /* =========================================================
