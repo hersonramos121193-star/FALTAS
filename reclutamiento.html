@@ -453,6 +453,7 @@
   body.solo-lectura .subtabs button, body.solo-lectura .chevron-btn, body.solo-lectura #bajaPaginacion button,
   body.solo-lectura .toolbar select, body.solo-lectura .toolbar input,
   body.solo-lectura #buscarCriterio, body.solo-lectura #permanenciaFiltroAnio, body.solo-lectura #otraPruebaSelect{ pointer-events:auto; opacity:1; cursor:pointer; }
+  body.solo-lectura #btnExportarFaltasBaja{ pointer-events:auto; opacity:1; cursor:pointer; }
   body.solo-lectura::before{
     content:"👁️ Modo solo lectura — no se pueden guardar cambios";
     display:block; background:#1F3A6E; color:#fff; text-align:center;
@@ -623,6 +624,21 @@
         </thead>
         <tbody id="tblVacantes"></tbody>
       </table>
+    </div>
+    <div class="card" id="cardNuevosIngresos" style="margin-top:16px;">
+      <h2>Faltas de nuevos ingresos (primeros 90 días)</h2>
+      <div class="desc">Candidatos contratados con su número de empleado: faltas registradas en Ausentismo durante sus primeros 90 días y cuántos causaron baja antes de cumplirlos. Quien entró hace menos de 90 días se cuenta hasta hoy.</div>
+      <div class="grid two" style="margin-top:10px;">
+        <div>
+          <h3 style="font-size:13px;margin:0 0 6px;">Por fuente de reclutamiento</h3>
+          <table><thead><tr><th>Fuente</th><th>Contratados</th><th>Faltas prom.</th><th>Con faltas</th><th>Baja antes de 90 días</th></tr></thead><tbody id="tblIngresosFuente"></tbody></table>
+        </div>
+        <div>
+          <h3 style="font-size:13px;margin:0 0 6px;">Por vacante</h3>
+          <table><thead><tr><th>Vacante</th><th>Contratados</th><th>Faltas prom.</th><th>Con faltas</th><th>Baja antes de 90 días</th></tr></thead><tbody id="tblIngresosVacante"></tbody></table>
+        </div>
+      </div>
+      <div id="ingresosSinFicha" style="margin-top:14px;"></div>
     </div>
   </main>
 </div>
@@ -1115,6 +1131,19 @@
           </table>
         </div>
       </div>
+      <div class="card" id="cardFaltasBaja" style="margin-top:16px;">
+        <h2>Faltas antes de la baja</h2>
+        <div class="desc">Faltas registradas en Ausentismo del dashboard de RH durante los 30, 60 y 90 días previos a cada baja (solo dentro de ese periodo de trabajo). Ayuda a detectar abandonos que se venían anunciando.</div>
+        <div class="toolbar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 12px;">
+          <select id="faltasBajaAnio"></select>
+          <button class="btn ghost" id="btnExportarFaltasBaja">📤 Exportar lista</button>
+        </div>
+        <div id="faltasBajaKpi" class="conexion-estado-box sin-config" style="margin-bottom:10px;"></div>
+        <table>
+          <thead><tr><th>Clasificación</th><th>Motivo</th><th>Bajas</th><th>Faltas prom. 30 días</th><th>60 días</th><th>90 días</th><th>Con 3+ faltas en 30 días</th></tr></thead>
+          <tbody id="tblFaltasBaja"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- ========== SUBPESTAÑA: CALCULADORA ========== -->
@@ -1268,6 +1297,11 @@
     <div class="form-field">
       <label>Fecha en que se cubrió esta plaza</label>
       <input type="date" id="modalFechaCierre">
+    </div>
+    <div class="form-field">
+      <label>Número de empleado (opcional)</label>
+      <input type="text" id="modalFichaEmpleado" autocomplete="off" placeholder="Ficha de PeopleCloud">
+      <div class="desc" id="modalFichaSugerida" style="margin-top:4px;"></div>
     </div>
     <div class="empty-state" id="modalSinCandidatos" style="display:none;padding:16px;">
       Esta vacante no tiene candidatos disponibles sin asignar. Registra un candidato nuevo o revisa si ya todos están asignados a una plaza.
@@ -2030,6 +2064,7 @@ function applyFilters(){
 }
 
 function renderResumen(){
+  try{ renderNuevosIngresos(); }catch(e){ console.error('Faltas de nuevos ingresos:', e); }
   const vacantesFiltradas = applyFilters();
   const abiertas = vacantesFiltradas.filter(v => v.status==="Abierta" || v.status==="En proceso");
   const cerradas = vacantesFiltradas.filter(v => v.status==="Cerrada");
@@ -2777,10 +2812,17 @@ function seleccionarCandidatoCierre(candId){
   document.querySelectorAll('[id^="check_"]').forEach(el => el.innerHTML = '');
   document.getElementById('opcion_' + candId).classList.add('selected');
   document.getElementById('check_' + candId).innerHTML = '✓';
+  const c = (STATE.candidatos||[]).find(x=>x.id===candId);
+  const sug = c && sugerirFicha(c.nombre, document.getElementById('modalFechaCierre').value || hoyISO());
+  document.getElementById('modalFichaEmpleado').value = (c && c.codigoEmpleado) || '';
+  document.getElementById('modalFichaSugerida').innerHTML = sug
+    ? `En el catálogo: <a href="#" onclick="document.getElementById('modalFichaEmpleado').value='${sug.codigo}';return false;">${sug.codigo} — ${sug.nombre}</a> (alta ${sug.fechaAlta || '—'})` : '';
 }
 
 function cerrarModalCierre(){
   document.getElementById('modalCerrarVacante').classList.remove('active');
+  document.getElementById('modalFichaEmpleado').value = '';
+  document.getElementById('modalFichaSugerida').innerHTML = '';
   vacanteEnCierreId = null;
   candidatoSeleccionadoParaCierre = null;
 }
@@ -2811,6 +2853,8 @@ document.getElementById('btnConfirmarCierre').addEventListener('click', ()=>{
     c.historial = c.historial || [];
     c.historial.push({fecha, etapa: "Contratación", observaciones: "Asignado a cubrir plaza de: " + v.puesto, plazaDe: v.id});
     c.etapaActual = etapaVigente(c);
+    const ficha = document.getElementById('modalFichaEmpleado').value.trim().replace(/[^\w-]/g, '');
+    if(ficha) c.codigoEmpleado = ficha; // liga al candidato con su ficha para cruzar sus faltas
   }
 
   const total = totalPlazas(v);
@@ -5495,7 +5539,130 @@ function aniosDisponiblesBajas(){
   return [...anios].sort();
 }
 
+/* =========================================================
+   CRUCES CON FALTAS (Ausentismo del dashboard de RH)
+   ========================================================= */
+// Fechas de falta por ficha (las comparte el dashboard; abierta sola, la página no tiene faltas)
+function faltasPorFicha(){
+  const m = new Map();
+  const lista = dashboard() && dashboard().ausenciasParaReclutamiento ? dashboard().ausenciasParaReclutamiento() : [];
+  lista.forEach(a => { const k = claveFicha(a.codigo); if(!m.has(k)) m.set(k, []); m.get(k).push(a.fecha); });
+  return m;
+}
+const sumarDiasISO = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0,10); };
+const diasEntreISO = (a, b) => Math.round((new Date(a + 'T00:00:00Z') - new Date(b + 'T00:00:00Z')) / 86400000);
+const contarEntre = (fechas, desde, hasta) => (fechas||[]).filter(f => f >= desde && f <= hasta).length;
+const tituloCaso = t => t ? t.charAt(0).toUpperCase() + t.slice(1).toLowerCase() : t;
+
+// Cada baja con sus faltas en los 30/60/90 días previos, sin salirse del periodo (no cuenta faltas de un empleo anterior)
+let FALTAS_BAJA_ACTUAL = [];
+function bajasConFaltas(){
+  const faltas = faltasPorFicha();
+  const segPor = new Map((STATE.seguimientoBajas||[]).map(s=>[String(s.codigo), s]));
+  return (STATE.catalogoEmpleados||[]).filter(e => String(e.estatus||'').toUpperCase() === 'BAJA').map(e => {
+    const baja = efectivaFechaBaja(e.codigo);
+    if(!baja) return null;
+    const s = segPor.get(String(e.codigo)) || {};
+    const f = faltas.get(claveFicha(e.codigoBase || e.codigo)) || [];
+    const ventana = n => contarEntre(f, [sumarDiasISO(baja, -(n-1)), e.fechaAlta || ''].sort().pop(), baja);
+    return { ficha: e.codigoBase || e.codigo, nombre: e.nombre, planta: e.area, puesto: e.puesto, fechaBaja: baja,
+      clasificacion: tituloCaso(s.clasificacion) || 'Sin clasificar', motivo: s.motivo || 'Sin motivo', f30: ventana(30), f60: ventana(60), f90: ventana(90) };
+  }).filter(Boolean);
+}
+function renderFaltasAntesDeBaja(){
+  const sel = document.getElementById('faltasBajaAnio');
+  const todas = bajasConFaltas();
+  const anios = [...new Set(todas.map(b => b.fechaBaja.slice(0,4)))].sort().reverse();
+  const elegido = sel.value;
+  sel.innerHTML = '<option value="">Todos los años</option>' + anios.map(a => `<option>${a}</option>`).join('');
+  if(anios.includes(elegido)) sel.value = elegido;
+  const lista = todas.filter(b => !sel.value || b.fechaBaja.startsWith(sel.value));
+  FALTAS_BAJA_ACTUAL = lista;
+  const grupos = new Map();
+  lista.forEach(b => { const k = b.clasificacion + '|' + b.motivo; if(!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(b); });
+  const prom = (xs, c) => (xs.reduce((n, x) => n + x[c], 0) / xs.length).toFixed(1);
+  const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '—';
+  document.getElementById('tblFaltasBaja').innerHTML = [...grupos.entries()].sort().map(([k, xs]) => {
+    const [cl, mo] = k.split('|');
+    return `<tr><td>${cl}</td><td>${mo}</td><td>${xs.length}</td><td>${prom(xs,'f30')}</td><td>${prom(xs,'f60')}</td><td>${prom(xs,'f90')}</td><td>${pct(xs.filter(x => x.f30 >= 3).length, xs.length)}</td></tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);">Sin bajas en la selección.</td></tr>';
+  const ab = lista.filter(b => /abandono/i.test(b.motivo));
+  document.getElementById('faltasBajaKpi').textContent = ab.length
+    ? `De ${ab.length} baja(s) por Abandono, ${pct(ab.filter(b => b.f30 >= 3).length, ab.length)} tenía 3 o más faltas registradas en los 30 días previos.`
+    : 'Sin bajas por Abandono en la selección.';
+}
+document.getElementById('faltasBajaAnio').addEventListener('change', renderFaltasAntesDeBaja);
+document.getElementById('btnExportarFaltasBaja').addEventListener('click', () => {
+  if(!FALTAS_BAJA_ACTUAL.length){ alert('No hay bajas que exportar.'); return; }
+  const filas = FALTAS_BAJA_ACTUAL.map(b => ({ Ficha: b.ficha, Nombre: b.nombre, Planta: b.planta, Puesto: b.puesto, 'Fecha de baja': b.fechaBaja,
+    'Clasificación': b.clasificacion, Motivo: b.motivo, 'Faltas 30 días': b.f30, 'Faltas 60 días': b.f60, 'Faltas 90 días': b.f90 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas), 'Faltas antes de la baja');
+  XLSX.writeFile(wb, `faltas_antes_de_la_baja_${hoyISO()}.xlsx`);
+});
+
+// Ficha del catálogo cuyo nombre contiene todas las palabras del candidato, la de alta más cercana a la contratación
+function sugerirFicha(nombre, fecha){
+  const norm = t => quitarAcentos_(String(t||'').toUpperCase());
+  const palabras = norm(nombre).split(/\s+/).filter(t => t.length > 2);
+  if(!palabras.length) return null;
+  return (STATE.catalogoEmpleados||[]).filter(e => !e.codigoBase && palabras.every(t => norm(e.nombre).includes(t)))
+    .sort((a, b) => Math.abs(diasEntreISO(a.fechaAlta || '1900-01-01', fecha)) - Math.abs(diasEntreISO(b.fechaAlta || '1900-01-01', fecha)))[0] || null;
+}
+function asignarFichaCandidato(id, ficha){
+  const c = (STATE.candidatos||[]).find(x => x.id === id);
+  if(!c) return;
+  c.codigoEmpleado = String(ficha||'').trim().replace(/[^\w-]/g, '');
+  saveLocal(STATE);
+  renderNuevosIngresos();
+}
+// Contratados: faltas en sus primeros 90 días y si causaron baja antes de cumplirlos
+function contratacionesConFaltas(){
+  const faltas = faltasPorFicha(), hoy = hoyISO();
+  const periodosPor = new Map();
+  (STATE.catalogoEmpleados||[]).forEach(e => {
+    const k = claveFicha(e.codigoBase || e.codigo);
+    if(!periodosPor.has(k)) periodosPor.set(k, []);
+    periodosPor.get(k).push({ fechaAlta: e.fechaAlta || '', fechaBaja: String(e.estatus||'').toUpperCase() === 'BAJA' ? (efectivaFechaBaja(e.codigo) || '') : '' });
+  });
+  return (STATE.candidatos||[]).filter(c => !esDemo(c)).map(c => {
+    const fecha = (c.historial||[]).filter(h => h.etapa === 'Contratación').map(h => h.fecha).sort().pop();
+    if(!fecha) return null;
+    const v = (STATE.vacantes||[]).find(x => x.id === c.vacanteId) || {};
+    const fila = { c, fecha, fuente: c.fuente || 'Sin fuente', vacante: [v.puesto || c.puesto || 'Sin vacante', v.planta || c.planta].filter(Boolean).join(' · '), ficha: String(c.codigoEmpleado||'').trim() };
+    if(!fila.ficha) return fila;
+    // el periodo de la ficha que empezó cerca de la contratación (±30 días); si no aparece, desde la contratación
+    const p = (periodosPor.get(claveFicha(fila.ficha)) || []).filter(x => x.fechaAlta && Math.abs(diasEntreISO(x.fechaAlta, fecha)) <= 30)
+      .sort((a, b) => Math.abs(diasEntreISO(a.fechaAlta, fecha)) - Math.abs(diasEntreISO(b.fechaAlta, fecha)))[0];
+    const ingreso = p ? p.fechaAlta : fecha, limite = sumarDiasISO(ingreso, 89);
+    fila.faltas = contarEntre(faltas.get(claveFicha(fila.ficha)), ingreso, limite < hoy ? limite : hoy);
+    fila.bajaTemprana = !!(p && p.fechaBaja && p.fechaBaja <= limite);
+    return fila;
+  }).filter(Boolean);
+}
+function renderNuevosIngresos(){
+  const todos = contratacionesConFaltas(), con = todos.filter(x => x.ficha);
+  const tabla = (id, clave) => {
+    const g = new Map();
+    con.forEach(x => { if(!g.has(x[clave])) g.set(x[clave], []); g.get(x[clave]).push(x); });
+    document.getElementById(id).innerHTML = [...g.entries()].sort((a, b) => b[1].length - a[1].length).map(([k, xs]) =>
+      `<tr><td>${k}</td><td>${xs.length}</td><td>${(xs.reduce((n, x) => n + x.faltas, 0) / xs.length).toFixed(1)}</td><td>${Math.round(xs.filter(x => x.faltas > 0).length / xs.length * 100)}%</td><td>${Math.round(xs.filter(x => x.bajaTemprana).length / xs.length * 100)}%</td></tr>`).join('')
+      || '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);">Aún no hay contratados con número de empleado.</td></tr>';
+  };
+  tabla('tblIngresosFuente', 'fuente');
+  tabla('tblIngresosVacante', 'vacante');
+  const sin = todos.filter(x => !x.ficha);
+  document.getElementById('ingresosSinFicha').innerHTML = !sin.length ? '' : `
+    <div class="desc" style="margin-bottom:6px;">${sin.length} contratado(s) sin número de empleado: captúralo para incluirlos.</div>
+    <table><thead><tr><th>Candidato</th><th>Contratado</th><th>Vacante</th><th>Número de empleado</th></tr></thead><tbody>${sin.slice(0, 50).map(x => {
+      const sug = sugerirFicha(x.c.nombre, x.fecha);
+      return `<tr><td>${x.c.nombre}</td><td>${x.fecha}</td><td>${x.vacante}</td><td><input type="text" autocomplete="off" style="width:90px;" placeholder="Ficha" onchange="asignarFichaCandidato('${x.c.id}', this.value)">${sug
+        ? ` <button class="btn ghost" style="padding:3px 8px;font-size:11px;" title="${sug.nombre} · alta ${sug.fechaAlta || '—'}" onclick="asignarFichaCandidato('${x.c.id}','${sug.codigo}')">Usar ${sug.codigo}</button>` : ''}</td></tr>`;
+    }).join('')}</tbody></table>`;
+}
+
 function renderResumenRotacion(){
+  try{ renderFaltasAntesDeBaja(); }catch(e){ console.error('Faltas antes de la baja:', e); }
   const bajas = (STATE.catalogoEmpleados||[]).filter(e => (e.estatus||'').toUpperCase() === 'BAJA');
   const sinDatos = document.getElementById('resumenRotacionSinDatos');
   const contenido = document.getElementById('resumenRotacionContenido');

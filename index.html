@@ -1255,6 +1255,12 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
           <div class="kpi-delta" id="ks-sm-delta"></div>
           <div class="kpi-sub" id="ks-sm-sub">Cargando…</div>
         </div>
+        <div class="kpi" id="ks-card-rc" hidden>
+          <div class="kpi-label"><span class="kpi-ico-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 11h6"/></svg></span>Reclutamiento · bajas</div>
+          <div class="kpi-value" id="ks-rc">…</div>
+          <div class="kpi-delta" id="ks-rc-delta"></div>
+          <div class="kpi-sub" id="ks-rc-sub">Cargando…</div>
+        </div>
       </div>
 
       <div class="two-col">
@@ -1347,6 +1353,19 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 </div>
 
 <!-- Modal historial individual -->
+<dialog class="modal-bg" id="modal-trayectoria-bg">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="tray-titulo">Trayectoria</h3>
+      <button class="modal-close" onclick="cerrarTrayectoria()">&times;</button>
+    </div>
+    <div class="modal-body" id="tray-cuerpo"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="cerrarTrayectoria()">Cerrar</button>
+    </div>
+  </div>
+</dialog>
+
 <dialog class="modal-bg" id="modal-bg">
   <div class="modal">
     <div class="modal-head">
@@ -1580,7 +1599,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.27-v60";
+const APP_VERSION = "2026.10.27-v61";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1590,7 +1609,9 @@ const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "
 // link de "solo ver métricas" sin dar acceso a modificar datos.
 // Además, un usuario con rol "lectura" entra siempre en este modo (ver arrancarApp).
 let MODO_LECTURA = new URLSearchParams(location.search).get('modo') === 'lectura';
-function esModoLectura(){ return MODO_LECTURA; } // la usa reclutamiento.html (iframe) para no ofrecer guardar a usuarios de lectura
+function esModoLectura(){ return MODO_LECTURA; }
+// reclutamiento.html (iframe) cruza las faltas con las bajas y los nuevos ingresos: solo ficha, fecha y motivo
+function ausenciasParaReclutamiento(){ return AUSENCIAS.map(a=> ({ codigo: String(a.codigo), fecha: String(a.fecha).slice(0,10), motivo: a.motivo })); } // la usa reclutamiento.html (iframe) para no ofrecer guardar a usuarios de lectura
 // El catálogo ya no viene en este archivo (era público en GitHub): se descarga de la pestaña
 // Empleados_Base de la Google Sheet solo después de iniciar sesión.
 const EMPLEADOS = [];
@@ -2996,6 +3017,37 @@ function abrirModal(titulo, hist){
 }
 function cerrarModal(){ document.getElementById('modal-bg').close(); }
 
+// Trayectoria: cada periodo de alta/baja (misma ficha en reingresos) con las faltas que tuvo en él.
+// La clasificación y el motivo de la baja solo llegan a usuarios con el módulo reclutamiento.
+async function verTrayectoria(codigo){
+  const e = EMPLEADOS.find(x=> x.codigo === codigo);
+  document.getElementById('tray-titulo').textContent = `Trayectoria — ${e ? e.nombre : ''} #${codigo}`;
+  const cuerpo = document.getElementById('tray-cuerpo');
+  cuerpo.innerHTML = '<div class="small-muted">Cargando…</div>';
+  document.getElementById('modal-trayectoria-bg').showModal();
+  let r;
+  try{ r = await apiPost({action:'trayectoria', codigo}); }
+  catch(err){ cuerpo.innerHTML = `<div class="small-muted">No se pudo cargar: ${escH(err.message)}</div>`; return; }
+  const faltas = ausenciasDe(codigo).map(a=> String(a.fecha).slice(0,10));
+  const hoy = hoyISO();
+  const meses = (a, b)=>{ const m = Math.round((new Date(b) - new Date(a)) / 2629800000); return m >= 12 ? `${Math.floor(m/12)} a ${m%12} m` : `${m} m`; };
+  let enPeriodos = 0;
+  const filas = (r.periodos||[]).map(p=>{
+    const n = faltas.filter(f=> f >= (p.fechaAlta || '0000') && f <= (p.fechaBaja || hoy)).length;
+    enPeriodos += n;
+    const baja = [p.clasificacion, p.motivo, p.causa].filter(Boolean).map(escH).join(' · ');
+    return `<tr><td>${p.periodo}</td><td style="white-space:nowrap;">${p.fechaAlta ? fmtFecha(p.fechaAlta) : '—'}</td>
+      <td style="white-space:nowrap;">${p.fechaBaja ? fmtFecha(p.fechaBaja) : '<span class="badge badge-ok">Activo</span>'}${p.porConfirmar==='SI' ? ' <span class="badge badge-warn" title="Llegó del inventario; Reclutamiento aún no lo revisa">por confirmar</span>' : ''}</td>
+      <td>${p.fechaAlta ? meses(p.fechaAlta, p.fechaBaja || hoy) : '—'}</td><td>${escH([p.planta, p.puesto].filter(Boolean).join(' · ') || '—')}</td>
+      <td><b>${n}</b></td>${'motivo' in p ? `<td>${baja || '—'}</td>` : ''}</tr>`;
+  });
+  const conDetalle = (r.periodos||[]).some(p=> 'motivo' in p);
+  cuerpo.innerHTML = filas.length ? `<div class="small-muted" style="margin-bottom:10px;">${nPl(filas.length,'periodo','periodos')} con la misma ficha · ${nPl(faltas.length,'falta registrada','faltas registradas')}${faltas.length > enPeriodos ? ` (${faltas.length - enPeriodos} fuera de estos periodos)` : ''}</div>
+    <div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>Alta</th><th>Baja</th><th>Duración</th><th>Planta · puesto</th><th>Faltas</th>${conDetalle ? '<th>Baja: clasificación · motivo</th>' : ''}</tr></thead>
+    <tbody>${filas.join('')}</tbody></table></div>` : '<div class="small-muted">Sin periodos registrados.</div>';
+}
+function cerrarTrayectoria(){ document.getElementById('modal-trayectoria-bg').close(); }
+
 /* ============================================================
    EDITAR AUSENCIA
    ============================================================ */
@@ -3174,6 +3226,7 @@ function renderEmpleados(){
         <span class="depto-tag">${escH(e.depto)}</span>
         ${esBaja ? `<span class="depto-tag" style="background:var(--bad);color:#fff;">BAJA</span>` : ''}
         ${MODO_LECTURA ? '' : `<button class="icon-btn" onclick='abrirEditarEmpleado("${e.codigo}")' title="Editar empleado" style="font-size:11px;color:var(--navy-700);font-weight:600;">Editar</button>`}
+        <button class="icon-btn" onclick='verTrayectoria("${e.codigo}")' title="Altas, bajas y faltas de cada periodo" style="font-size:11px;color:var(--navy-700);font-weight:600;">Trayectoria</button>
         ${n>0 ? `<button class="icon-btn" onclick='abrirModal("${e.nombre.replace(/'/g,"")} — #${e.codigo}", ${JSON.stringify(ausenciasDe(e.codigo)).replace(/'/g,"&#39;")})' title="Ver historial de ausencias" style="font-size:11px;color:var(--navy-700);font-weight:600;">Ver historial</button>` : '<span class="small-muted" style="font-size:11px;">Sin faltas</span>'}
       </div>
     </div>`;
@@ -4045,7 +4098,7 @@ function etiquetaPeriodo(p){
   const rango = `${d0.getUTCDate()} al ${d1.getUTCDate()} de ${NOMBRES_MES[d1.getUTCMonth()]} ${d1.getUTCFullYear()}`;
   return `Periodo ${p.numero} — ${p.mes} (${rango})`;
 }
-[['modal-bg',cerrarModal],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado],['modal-resultado-plantilla-bg',cerrarModalResultadoPlantilla]].forEach(([id,cerrar])=>{
+[['modal-bg',cerrarModal],['modal-trayectoria-bg',cerrarTrayectoria],['modal-editar-bg',cerrarModalEditar],['modal-editar-emp-bg',cerrarModalEditarEmpleado],['modal-nuevo-emp-bg',cerrarModalNuevoEmpleado],['modal-resultado-plantilla-bg',cerrarModalResultadoPlantilla]].forEach(([id,cerrar])=>{
   const d = document.getElementById(id);
   d.addEventListener('click', (e)=>{ if(e.target===d) cerrar(); });
   d.addEventListener('cancel', (e)=>{ e.preventDefault(); cerrar(); });
@@ -4069,16 +4122,17 @@ function rangoFechasKpisSemanales(periodoEtiqueta){
 let ksDeptos = {}, ksTurno = 0;
 async function cargarDeptosKpis(){
   const turno = ++ksTurno;
-  const capOk = moduloPermitido('capacitacion'), smOk = moduloPermitido('serviciomedico');
-  ksDeptos = { cap: capOk ? null : undefined, sm: smOk ? null : undefined };
+  const capOk = moduloPermitido('capacitacion'), smOk = moduloPermitido('serviciomedico'), rcOk = moduloPermitido('reclutamiento');
+  ksDeptos = { cap: capOk ? null : undefined, sm: smOk ? null : undefined, rc: rcOk ? null : undefined };
   renderKpisSemanales();
-  const [cap, sm] = await Promise.allSettled([
+  const [cap, sm, rc] = await Promise.allSettled([
     capOk ? apiPost({action:'cap', capAction:'getAll'}) : undefined,
-    smOk ? apiPost({action:'sm', smAccion:'leer'}) : undefined
+    smOk ? apiPost({action:'sm', smAccion:'leer'}) : undefined,
+    rcOk ? apiPost({action:'rc', rcAccion:'leer'}) : undefined
   ]);
   if(turno !== ksTurno) return; // llegó una carga más nueva
   const valor = (ok, r)=> !ok ? undefined : r.status==='fulfilled' ? r.value : 'error';
-  ksDeptos = { cap: valor(capOk, cap), sm: valor(smOk, sm) };
+  ksDeptos = { cap: valor(capOk, cap), sm: valor(smOk, sm), rc: valor(rcOk, rc) };
   renderKpisSemanales();
 }
 const isoDe = v=> String(v ?? '').slice(0,10); // el Sheet manda 'yyyy-mm-dd' o fecha ISO completa
@@ -4091,7 +4145,7 @@ const nPl = (n, uno, varios)=> `${n} ${n===1 ? uno : varios}`;
 function ksCalcular(rango){
   const enRango = f=> f && f >= rango.inicio && f <= rango.fin;
   const porPlanta = {};
-  const obtenerPlanta = plantaEn(porPlanta, { faltas:0, capacitados:0, horas:0, incap:0, diasIncap:0, rt:0 });
+  const obtenerPlanta = plantaEn(porPlanta, { faltas:0, capacitados:0, horas:0, incap:0, diasIncap:0, rt:0, bajas:0 });
   const r = { porPlanta };
 
   r.ausencias = AUSENCIAS.filter(a=> enRango(a.fecha));
@@ -4127,6 +4181,20 @@ function ksCalcular(rango){
     const corte = rango.fin < hoyISO() ? rango.fin : hoyISO();
     const activas = corte < rango.inicio ? 0 : new Set(incaps.filter(i=> i.inicio<=corte && i.fin>=corte).map(i=>i.codigo)).size;
     r.sm = { incapacidades: iniciadas.length, dias, rt: iniciadas.filter(i=>i.tipo==='RIESGO DE TRABAJO').length, activas, corte };
+  }
+
+  if(ksListo(ksDeptos.rc)){
+    const d = ksDeptos.rc, corte = rango.fin < hoyISO() ? rango.fin : hoyISO();
+    const bajas = (d.periodos||[]).filter(p=> enRango(isoDe(p.fechaBaja)));
+    bajas.forEach(p=> obtenerPlanta(p.planta).bajas++);
+    const clase = p=> /^vol/i.test(p.clasificacion||'') ? 'vol' : /^forz/i.test(p.clasificacion||'') ? 'forz' : 'sin';
+    // vacante abierta al corte: ya se había abierto y no se había cerrado (las canceladas sin fecha de cierre no cuentan)
+    const abierta = v=> { const a = isoDe(v.fechaApertura), c = isoDe(v.fechaCierre);
+      return a && a <= corte && (c ? c > corte : v.status === 'Abierta' || v.status === 'En proceso'); };
+    r.rc = { bajas: bajas.length, voluntarias: bajas.filter(p=>clase(p)==='vol').length, forzadas: bajas.filter(p=>clase(p)==='forz').length,
+      sinClasificar: bajas.filter(p=>clase(p)==='sin').length, corte,
+      contrataciones: (d.candidatos||[]).filter(c=> (c.historial||[]).some(h=> h.etapa==='Contratación' && enRango(isoDe(h.fecha)))).length,
+      abiertas: (d.vacantes||[]).filter(abierta).length };
   }
   return r;
 }
@@ -4186,6 +4254,11 @@ function renderKpisSemanales(){
     document.getElementById('ks-sm-delta').innerHTML = previo ? deltaHTML(c.sm.incapacidades, previo.sm.incapacidades) : '';
     document.getElementById('ks-sm-sub').textContent = `${nPl(c.sm.dias,'día','días')} · ${nPl(c.sm.rt,'riesgo de trabajo','riesgos de trabajo')} · ${nPl(c.sm.activas,'activa','activas')} al ${fmtFecha(c.sm.corte)}`;
   }
+  if(tarjeta('rc', ksDeptos.rc)){
+    document.getElementById('ks-rc').textContent = c.rc.bajas;
+    document.getElementById('ks-rc-delta').innerHTML = previo ? deltaHTML(c.rc.bajas, previo.rc.bajas) : '';
+    document.getElementById('ks-rc-sub').textContent = `${nPl(c.rc.voluntarias,'voluntaria','voluntarias')} · ${nPl(c.rc.forzadas,'forzada','forzadas')}${c.rc.sinClasificar ? ' · ' + c.rc.sinClasificar + ' sin clasificar' : ''} · ${pct1(c.rc.bajas, activos.length)}% rotación · ${nPl(c.rc.contrataciones,'contratación','contrataciones')} · ${nPl(c.rc.abiertas,'vacante abierta','vacantes abiertas')}`;
+  }
 
   const listaPlantas = Object.values(c.porPlanta).sort((a,b)=> a.planta.localeCompare(b.planta));
   const pctPlanta = p=> activosPlanta[p.planta] ? pct1(p.faltas, activosPlanta[p.planta]*diasLab) : null;
@@ -4200,6 +4273,7 @@ function renderKpisSemanales(){
     const rtPlanta = listaPlantas.filter(p=>p.rt).map(p=>`${p.rt} en ${escH(p.planta)}`).join(', ');
     lineas.push(`${c.sm.incapacidades===1 ? 'Inició' : 'Iniciaron'} <b>${nPl(c.sm.incapacidades,'incapacidad','incapacidades')}</b>` + (c.sm.rt ? ` (${nPl(c.sm.rt,'riesgo de trabajo','riesgos de trabajo')}: ${rtPlanta})` : ', ningún riesgo de trabajo') + `. ${c.sm.activas===1 ? 'Sigue 1 activa' : `Siguen ${c.sm.activas} activas`} al ${fmtFecha(c.sm.corte)}.`);
   }
+  if(c.rc) lineas.push(`Hubo <b>${nPl(c.rc.bajas,'baja','bajas')}</b> (${nPl(c.rc.voluntarias,'voluntaria','voluntarias')}, ${nPl(c.rc.forzadas,'forzada','forzadas')}${c.rc.sinClasificar ? ', ' + c.rc.sinClasificar + ' sin clasificar' : ''}) y ${nPl(c.rc.contrataciones,'contratación','contrataciones')}; ${c.rc.abiertas===1 ? 'sigue abierta 1 vacante' : `siguen abiertas ${c.rc.abiertas} vacantes`} al ${fmtFecha(c.rc.corte)}.`);
   document.getElementById('ks-resumen').innerHTML = lineas.map(l=>`<li>${l}</li>`).join('');
   const resumenTxt = [...document.querySelectorAll('#ks-resumen li')].map(li=>li.textContent); // para el Excel
 
@@ -4264,14 +4338,15 @@ function renderKpisSemanales(){
   const cols = [['Planta', p=>p.planta], ['Faltas', p=>p.faltas]];
   if(c.cap) cols.push(['Capacitados', p=>p.capacitados], ['Horas cap.', p=>Math.round(p.horas*10)/10]);
   if(c.sm) cols.push(['Incapacidades', p=>p.incap], ['Días incap.', p=>p.diasIncap]);
+  if(c.rc) cols.push(['Bajas', p=>p.bajas]);
   const filas = listaPlantas.map(p=> cols.map(([,v])=>v(p)));
   document.getElementById('ks-planta-head').innerHTML = cols.map(([t])=>`<th>${t}</th>`).join('');
   document.getElementById('ks-planta-body').innerHTML = filas.length
     ? filas.map(f=>`<tr>${f.map(v=>`<td>${escH(v)}</td>`).join('')}</tr>`).join('')
     : `<tr><td colspan="${cols.length}" class="small-muted" style="text-align:center;padding:16px;">Sin datos para este periodo.</td></tr>`;
 
-  const sinDatos = !c.ausencias.length && !(c.cap && c.cap.cursos) && !(c.sm && (c.sm.incapacidades || c.sm.dias));
-  kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo: c.ausencias, capResumen: c.cap || null, smResumen: c.sm || null, sinDatos,
+  const sinDatos = !c.ausencias.length && !(c.cap && c.cap.cursos) && !(c.sm && (c.sm.incapacidades || c.sm.dias)) && !(c.rc && (c.rc.bajas || c.rc.contrataciones));
+  kpisSemanalesCache = { periodoSel, rango, ausenciasPeriodo: c.ausencias, capResumen: c.cap || null, smResumen: c.sm || null, rcResumen: c.rc || null, sinDatos,
     tablaPlantas: [cols.map(([t])=>t), ...filas], resumenTxt, tendencia, mapaCalor, sinRT };
   document.getElementById('ks-sin-datos').style.display = sinDatos ? 'block' : 'none';
 }
@@ -4361,12 +4436,14 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
     ...filas(porPlanta, (sem, planta, v)=>{ const n = activosPlanta[planta]||0; return [sem, planta, v.faltas, n, porc(v.faltas, n*dias)]; })], [44,20,10,20,14]);
 
   // Solo conteos por planta (sin nombres ni datos de salud), y solo de los módulos que el usuario puede ver.
-  if(c.capResumen || c.smResumen){
+  if(c.capResumen || c.smResumen || c.rcResumen){
     const r = [['Selección', seleccion], []];
     if(c.capResumen) r.push(['Capacitación'], ['Cursos impartidos', c.capResumen.cursos], ['Personas capacitadas', c.capResumen.personas],
       ['Horas-hombre', c.capResumen.horas], ['% aprobación', c.capResumen.aprobacion + '%'], []);
     if(c.smResumen) r.push(['Servicio médico'], ['Incapacidades iniciadas', c.smResumen.incapacidades], ['Días de incapacidad en el periodo', c.smResumen.dias],
       ['Riesgos de trabajo iniciados', c.smResumen.rt], ['Activas al ' + fmtFecha(c.smResumen.corte), c.smResumen.activas], []);
+    if(c.rcResumen) r.push(['Reclutamiento'], ['Bajas', c.rcResumen.bajas], ['Voluntarias', c.rcResumen.voluntarias], ['Forzadas', c.rcResumen.forzadas],
+      ['Sin clasificar', c.rcResumen.sinClasificar], ['Contrataciones', c.rcResumen.contrataciones], ['Vacantes abiertas al ' + fmtFecha(c.rcResumen.corte), c.rcResumen.abiertas], []);
     hoja('Departamentos', [...r, ['Detalle por planta'], ...c.tablaPlantas], [34,14,14,14,16,14]);
   }
 
