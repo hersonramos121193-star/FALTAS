@@ -1207,6 +1207,7 @@
             <div class="desc" style="margin:0;">Registra un colaborador que causó baja sin necesidad de subir el Excel. Si la baja es por Renuncia, se pedirá la causa.</div>
           </div>
           <button class="btn" id="btnAbrirAnadirBaja">+ Añadir baja</button>
+          <button class="btn secondary" id="btnAbrirReingreso" onclick="abrirModalReingreso()">+ Registrar reingreso</button>
         </div>
 
         <div class="upload-box">
@@ -1287,6 +1288,26 @@
   </main>
 </div>
 
+
+<div class="modal-overlay" id="modalReingreso">
+  <div class="modal-box">
+    <h3>Registrar reingreso</h3>
+    <div class="desc">Busca a la persona en todo el catálogo de Empleados (también quien se fue antes de 2025). Su baja anterior se conserva y se abre un periodo nuevo con la misma ficha.</div>
+    <div class="form-field">
+      <label>Número de empleado</label>
+      <input type="text" id="reingFicha" autocomplete="off" placeholder="Ficha" oninput="infoReingreso()">
+      <div class="desc" id="reingInfo" style="margin-top:4px;"></div>
+    </div>
+    <div class="form-field">
+      <label>Fecha de reingreso</label>
+      <input type="date" id="reingFecha">
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="cerrarModalReingreso()">Cancelar</button>
+      <button class="btn" id="btnGuardarReingreso" onclick="guardarReingreso()">Registrar reingreso</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modalCerrarVacante">
   <div class="modal-box">
@@ -1589,6 +1610,7 @@ const CAMPOS_PERIODO = ['fechaAlta','fechaBaja','planta','puesto','tipoEmpleado'
 const CAMPOS_REVISADO = ['fechaAlta','fechaBaja','clasificacion','motivo','causa','comentarios'];
 let LECTURA_OK = false;
 let ORIGINALES = new Map(); // ficha → periodos tal como están en el Sheet
+let EMPLEADOS_RC = [];      // catálogo completo, también quien no aparece en Rotación (para registrar reingresos)
 let OCULTOS = new Map();    // ficha → periodos con baja anterior a ROTACION_DESDE
 let HUELLAS = { personas: {} }; // última versión guardada de cada registro
 const claveFicha = c => String(c == null ? '' : c).trim().replace(/^0+(?=\d)/, '');
@@ -1655,6 +1677,7 @@ function estadoDesdeServidor(d){
         clasificacion: p.clasificacion||'', motivo: p.motivo||'', causa: p.causa||'', comentarios: p.comentarios||'', porConfirmar: p.porConfirmar||'' });
     });
   });
+  EMPLEADOS_RC = d.empleados || [];
   STATE.catalogoEmpleados = cat;
   STATE.seguimientoBajas = seg;
   STATE.catalogoEmpleadosActualizado = hoyISO();
@@ -5660,6 +5683,52 @@ function renderNuevosIngresos(){
       return `<tr><td>${x.c.nombre}</td><td>${x.fecha}</td><td>${x.vacante}</td><td><input type="text" autocomplete="off" style="width:90px;" placeholder="Ficha" onchange="asignarFichaCandidato('${x.c.id}', this.value)">${sug
         ? ` <button class="btn ghost" style="padding:3px 8px;font-size:11px;" title="${sug.nombre} · alta ${sug.fechaAlta || '—'}" onclick="asignarFichaCandidato('${x.c.id}','${sug.codigo}')">Usar ${sug.codigo}</button>` : ''}</td></tr>`;
     }).join('')}</tbody></table>`;
+}
+
+/* Reingreso de cualquier ficha del catálogo (también de quien se fue antes de 2025 y no aparece en Rotación).
+   Se guarda directo: todos sus periodos tal como están más el nuevo, ya confirmado. */
+function abrirModalReingreso(){
+  if(SOLO_LECTURA) return;
+  document.getElementById('reingFicha').value = '';
+  document.getElementById('reingFecha').value = hoyISO();
+  document.getElementById('reingInfo').textContent = '';
+  document.getElementById('modalReingreso').classList.add('active');
+}
+function cerrarModalReingreso(){ document.getElementById('modalReingreso').classList.remove('active'); }
+function infoReingreso(){
+  const k = claveFicha(document.getElementById('reingFicha').value);
+  const e = EMPLEADOS_RC.find(x => claveFicha(x.codigo) === k);
+  const ps = ORIGINALES.get(k) || [];
+  const ult = ps[ps.length - 1];
+  document.getElementById('reingInfo').textContent = !k ? '' : !e ? 'Esa ficha no está en el catálogo de Empleados.'
+    : `${e.nombre} · ${ult && ult.fechaBaja ? 'baja el ' + ult.fechaBaja : 'activo desde ' + ((ult && ult.fechaAlta) || '—')} · ${ps.length} periodo(s)`;
+  return { e, ps, ult };
+}
+async function guardarReingreso(){
+  if(SOLO_LECTURA) return;
+  const { e, ps, ult } = infoReingreso();
+  const fecha = document.getElementById('reingFecha').value;
+  if(!e){ alert('Captura una ficha que esté en el catálogo de Empleados.'); return; }
+  if(!ult || !ult.fechaBaja){ alert('Esa persona ya está activa: no hay una baja de la cual reingresar.'); return; }
+  if(!fecha || fecha <= ult.fechaBaja){ alert('La fecha de reingreso debe ser posterior a la baja del ' + ult.fechaBaja + '.'); return; }
+  const btn = document.getElementById('btnGuardarReingreso');
+  btn.disabled = true;
+  try{
+    await guardarCambios(); // primero lo que estuviera pendiente de guardar
+    const periodos = ps.map(p => { const o = { origen: p.origen || 'reclutamiento', porConfirmar: p.porConfirmar || '' }; CAMPOS_PERIODO.forEach(c => { o[c] = p[c] || ''; }); return o; });
+    periodos.push({ fechaAlta: fecha, fechaBaja: '', planta: e.area || '', puesto: e.puesto || '', tipoEmpleado: e.tipoEmpleado || '', origen: 'reclutamiento', porConfirmar: '' });
+    const datos = {};
+    CAMPOS_SOCIODEMO.forEach(c => { datos[c] = e[c] == null ? '' : e[c]; });
+    const r = await dashboard().apiPost({ action:'rc', rcAccion:'guardarPeriodos', empleados: [{ codigo: e.codigo, nombre: e.nombre, periodos, datos }] });
+    if(r.errores && r.errores.length){ alert('No se guardó: ' + r.errores[0].error); return; }
+    cerrarModalReingreso();
+    await cargarDesdeDashboard();
+    alert(`Reingreso registrado: ${e.nombre} vuelve a estar activo desde el ${fecha}.`);
+  }catch(err){
+    alert('No se pudo guardar: ' + (err.message || err));
+  }finally{
+    btn.disabled = false;
+  }
 }
 
 function renderResumenRotacion(){
