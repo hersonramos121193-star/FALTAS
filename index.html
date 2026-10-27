@@ -458,6 +458,18 @@ body:not(.sin-sesion) .login{display:none;}
 }
 
 .small-muted{font-size:11.5px;color:var(--ink-500);}
+/* Conexión */
+.con-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start;}
+.con-fila{display:flex;align-items:center;gap:12px;}
+.con-ico{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--paper);color:var(--ink-500);}
+.con-ico svg{width:22px;height:22px;}
+.con-ico.ok{background:var(--ok-bg);color:var(--ok);} .con-ico.aviso{background:var(--warn-bg);color:var(--warn);} .con-ico.mal{background:var(--bad-bg);color:var(--bad);}
+.con-titulo{font-size:14.5px;font-weight:700;}
+.con-pie{border-top:1px solid var(--line);margin-top:14px;padding-top:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.con-version{font-size:18px;font-weight:800;color:var(--navy-900);}
+.con-ini{width:44px;height:44px;font-size:14px;}
+.con-modulos{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.con-modulos span{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--navy-100);color:var(--navy-900);font-weight:600;}
 /* Kpis semanal */
 .ks-resumen{border-left:4px solid var(--gold-500);}
 #ks-resumen{margin:0;padding-left:18px;line-height:1.8;font-size:13.5px;}
@@ -1276,40 +1288,48 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 
     <!-- ============ CONEXIÓN ============ -->
     <section id="view-conexion" class="view hidden">
-      <div class="topbar">
+      <div class="topbar ejecutivo">
         <div>
-          <div class="pagetitle">Conexión con Google Sheets</div>
-          <div class="pagesub">Los datos se guardan en la nube, en una hoja de cálculo de Google que tú controlas</div>
+          <div class="kicker-gen">Configuración</div>
+          <div class="pagetitle">Conexión</div>
+          <div class="pagesub">Estado de la app y de tu acceso</div>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Versión de la app</div>
-        </div>
-        <div class="panel-body">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-            <div>
-              <div style="font-size:13px;color:var(--ink-700);">Versión instalada en <b>este</b> dispositivo:</div>
-              <div style="font-size:20px;font-weight:800;color:var(--navy-900);margin-top:2px;" id="app-version-tag">—</div>
+      <div class="con-grid">
+        <div class="panel">
+          <div class="panel-body">
+            <div class="con-fila">
+              <span class="con-ico" id="conn-status-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 01-.5-9A6 6 0 0118 9.5a4 4 0 01-.5 8.5z"/></svg></span>
+              <div>
+                <div class="con-titulo" id="conn-status-text">Conectando…</div>
+                <div class="small-muted" id="conn-detalle">—</div>
+              </div>
             </div>
-            <button class="btn btn-gold" id="btn-forzar-actualizacion">Forzar actualización ahora</button>
+            <div class="con-pie">
+              <div>
+                <div class="small-muted">Versión en este dispositivo</div>
+                <div class="con-version" id="app-version-tag">—</div>
+              </div>
+              <button class="btn btn-gold" id="btn-forzar-actualizacion">Forzar actualización</button>
+            </div>
+            <div class="help" style="margin-top:10px;">Si acabas de publicar cambios y la app no los muestra, presiona Forzar actualización: borra la copia guardada en este dispositivo y vuelve a cargar la versión más reciente.</div>
           </div>
-          <div class="help" style="margin-top:12px;">Si acabas de subir cambios nuevos a GitHub y esta app no los refleja, presiona este botón. Borra toda la copia guardada en este dispositivo y vuelve a cargar la versión más reciente desde internet.</div>
         </div>
-      </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <div class="panel-title">Estado de la conexión</div>
-        </div>
-        <div class="panel-body">
-          <div id="conn-status-box" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);margin-bottom:18px;">
-            <span id="conn-status-dot" style="width:10px;height:10px;border-radius:50%;background:var(--bad);flex-shrink:0;"></span>
-            <span id="conn-status-text" style="font-size:13px;font-weight:600;color:var(--ink-700);">Conectando…</span>
+        <div class="panel">
+          <div class="panel-body">
+            <div class="con-fila">
+              <span class="ini con-ini" id="ses-ini" aria-hidden="true">—</span>
+              <div>
+                <div class="con-titulo" id="ses-nombre" style="color:var(--navy-900);">—</div>
+                <div class="small-muted" id="ses-detalle">—</div>
+              </div>
+            </div>
+            <div class="small-muted" style="margin-top:14px;">Secciones que puedes ver</div>
+            <div class="con-modulos" id="ses-modulos"></div>
+            <div class="help" style="margin-top:10px;">Los permisos se cambian en la pestaña <b>Usuarios</b> de la Google Sheet y se aplican al volver a abrir la app.</div>
           </div>
-
-          <div class="help">La dirección del Apps Script ya viene configurada en la app. El acceso se controla con los usuarios de la pestaña <b>Usuarios</b> de la Google Sheet.</div>
         </div>
       </div>
     </section>
@@ -1551,7 +1571,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.26-v56";
+const APP_VERSION = "2026.10.26-v57";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -1722,9 +1742,11 @@ window.addEventListener('beforeunload', (e)=>{ if(PENDIENTES.length && !saliendo
 
 // Todo va por POST con el pase de sesión (nunca en la URL).
 function apiGet(action){ return apiPost({action}); }
+let ULTIMA_RESPUESTA = null;
 async function apiPost(payload){
   const url = getScriptUrl();
   if(!url) throw new Error('sin-configurar');
+  const t0 = performance.now();
   const r = await fetch(url, {
     method:'POST',
     headers:{'Content-Type':'text/plain;charset=utf-8'},
@@ -1733,6 +1755,7 @@ async function apiPost(payload){
   });
   if(!r.ok) throw new Error('http-'+r.status);
   const data = await r.json();
+  ULTIMA_RESPUESTA = { ms: performance.now() - t0, cuando: new Date() };
   if(data && data.error === 'SESION_INVALIDA'){
     cerrarSesionLocal('Tu sesión terminó o se desactivó tu usuario. Vuelve a iniciar sesión.');
     throw new Error('Sesión vencida');
@@ -1749,8 +1772,8 @@ function actualizarEstadoConexion(ok, mensaje){
   const banner = document.getElementById('dash-conn-banner');
   const color = ok==='aviso' ? 'var(--warn)' : ok ? 'var(--ok)' : 'var(--bad)';
   if(dotNav) dotNav.style.background = color;
-  if(dotBig) dotBig.style.background = color;
-  if(txt) txt.textContent = mensaje;
+  if(dotBig) dotBig.className = 'con-ico ' + (ok==='aviso' ? 'aviso' : ok ? 'ok' : 'mal');
+  if(txt){ txt.textContent = mensaje; txt.style.color = color; }
   if(banner) banner.classList.toggle('hidden', !!ok);
 }
 
@@ -4350,6 +4373,18 @@ document.getElementById('btn-exportar-kpis-periodo').addEventListener('click', a
 function renderConexion(){
   const vTag = document.getElementById('app-version-tag');
   if(vTag) vTag.textContent = APP_VERSION;
+  const u = ULTIMA_RESPUESTA;
+  document.getElementById('conn-detalle').textContent = u
+    ? `Respondió en ${(u.ms/1000).toFixed(1)} s · última respuesta ${u.cuando.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})}`
+    : 'Sin respuesta todavía';
+  if(!SESION) return;
+  const min = Math.max(0, Math.round((SESION.expira - Date.now())/60000));
+  document.getElementById('ses-ini').outerHTML = iniHTML(SESION.nombre || SESION.usuario).replace('class="ini"', 'class="ini con-ini" id="ses-ini"');
+  document.getElementById('ses-nombre').textContent = SESION.nombre || SESION.usuario;
+  document.getElementById('ses-detalle').textContent = `Rol: ${SESION.rol === 'edicion' ? 'edición' : 'solo lectura'} · la sesión vence en ${Math.floor(min/60)} h ${min%60} min`;
+  document.getElementById('ses-modulos').innerHTML = [...document.querySelectorAll('.navbtn')]
+    .filter(b=> b.style.display !== 'none' && moduloPermitido(b.dataset.view) && !(MODO_LECTURA && b.classList.contains('solo-edicion')))
+    .map(b=> `<span>${escH((b.querySelector('span') || b).textContent.trim())}</span>`).join('');
 }
 document.getElementById('btn-forzar-actualizacion').addEventListener('click', async ()=>{
   mostrarToast('Actualizando la app, un momento...');

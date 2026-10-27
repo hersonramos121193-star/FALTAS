@@ -8,29 +8,37 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
-  --bg:#E8ECEE; --panel:#FFFFFF; --ink:#16242C; --muted:#5A6A73; --line:#C9D2D7; --soft:#F3F5F6;
-  --steel:#2B5670; --steel-2:#3E7391;
+  --bg:#F4F6F8; --panel:#FFFFFF; --ink:#122E4A; --muted:#5B6675; --line:#DCE3EA; --soft:#F3F5F6;
+  --steel:#1A3A5C; --steel-2:#254D74; --gold:#C89B3C; --gold-claro:#D9B66A;
   --ok:#2E7A4E; --warn:#C48600; --orange:#C8631C; --risk:#B1352A; --riskdark:#7E1F18; --info:#3B6E8F; --neutral:#7B878E; --vac:#6A4F9E;
   --r:6px;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;font-variant-numeric:tabular-nums}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--steel-2);outline-offset:2px}
 .wrap{max-width:1480px;margin:0 auto;padding:0 20px 48px}
-header.top{background:var(--ink);color:#fff}
+header.top{background:var(--ink);color:#fff;border-bottom:3px solid var(--gold)}
 header.top .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-top:22px;padding-bottom:18px;flex-wrap:wrap}
-header.top h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em}
+header.top h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em}
+header.top .kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-claro);font-weight:700;margin-bottom:2px}
+.top-der{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.acciones-top{display:flex;gap:8px;flex-wrap:wrap}
+.acciones-top .btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.3)}
+.acciones-top .btn:hover{background:rgba(255,255,255,.16)}
 header.top p{margin:4px 0 0;color:#AFC0CA;font-size:13.5px}
 .semana-tag{font-size:13px;color:#D6E0E6;text-align:right}
-.semana-tag strong{display:block;font-size:20px;color:#fff;font-weight:700}
+.semana-tag strong{display:block;font-size:20px;color:var(--gold-claro);font-weight:700}
 
 .carga{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
 .drop{background:var(--panel);border:1.5px dashed var(--line);border-radius:var(--r);padding:14px 16px;cursor:pointer;display:flex;gap:12px;align-items:flex-start;transition:border-color .15s}
 .drop:hover,.drop.over{border-color:var(--steel-2)}
-.drop.ok{border-style:solid;border-color:var(--ok)}
-.drop.err{border-style:solid;border-color:var(--risk)}
+.drop.ok{border-style:solid;border-color:var(--line);border-left:5px solid var(--ok)}
+.drop.ok .n{font-size:0}
+.drop.ok .n::after{content:'✓';font-size:15px}
+.drop.err{border-style:solid;border-color:var(--line);border-left:5px solid var(--risk)}
 .drop input{display:none}
 .drop .n{flex:0 0 28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:700;color:var(--steel)}
 .drop.ok .n{background:var(--ok);color:#fff}
@@ -52,7 +60,20 @@ header.top p{margin:4px 0 0;color:#AFC0CA;font-size:13.5px}
 .excl{margin-top:10px;font-size:13px;color:var(--muted)}
 .excl button{background:none;border:0;padding:0;color:var(--steel);text-decoration:underline;cursor:pointer;font-weight:600}
 
+/* C: resumen de la semana (clic = abre la pestaña) */
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:16px}
+.resumen button{text-align:left;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--ink);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;cursor:pointer}
+.resumen button:hover{border-color:var(--steel-2)}
+.resumen .l{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.resumen strong{display:block;font-size:22px;color:var(--ink);line-height:1.25}
+.resumen .s{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:10px;background:#E7EDF3;color:var(--ink);font-weight:600}
+.resumen .rojo{border-left-color:var(--risk)} .resumen .rojo strong{color:var(--risk)} .resumen .rojo .s{background:#FBEAE6;color:var(--riskdark)}
+.resumen .ambar{border-left-color:var(--warn)} .resumen .ambar .s{background:#FBF1DD;color:#7a5600}
+.resumen .verde{border-left-color:var(--ok)} .resumen .verde .s{background:#E5F3EB;color:#22603c}
 nav.tabs{display:flex;gap:2px;margin-top:22px;border-bottom:2px solid var(--ink);overflow-x:auto}
+nav.tabs button svg{width:15px;height:15px;vertical-align:-3px;margin-right:5px}
+nav.tabs button .c.rojo{background:var(--risk);color:#fff} nav.tabs button .c.ambar{background:var(--warn);color:#fff}
+.ini{display:inline-flex;width:24px;height:24px;border-radius:50%;background:#E7EDF3;color:var(--ink);font-size:10.5px;font-weight:700;align-items:center;justify-content:center;margin-right:7px;vertical-align:middle}
 nav.tabs button{border:0;background:transparent;padding:10px 16px 9px;font-weight:600;color:var(--muted);cursor:pointer;border-radius:6px 6px 0 0;white-space:nowrap}
 nav.tabs button .c{display:inline-block;min-width:22px;margin-left:6px;padding:0 6px;border-radius:10px;background:var(--line);color:var(--ink);font-size:12px}
 nav.tabs button[aria-selected=true]{background:var(--ink);color:#fff}
@@ -125,10 +146,17 @@ td.cat{border-left:4px solid var(--c,#999)}
 <body>
 <header class="top"><div class="wrap">
   <div>
-    <h1>Cotejo de tiempo extra</h1>
+    <div class="kicker">Departamentos</div>
+    <h1>Revisión nómina · tiempo extra</h1>
     <p>Solicitudes de PeopleCloud HRM contra checadas reales, Grupo Metelmex</p>
   </div>
-  <div class="semana-tag" id="semanaTag" hidden>Semana analizada<strong id="semanaTxt"></strong></div>
+  <div class="top-der">
+    <div class="semana-tag" id="semanaTag" hidden>Semana analizada<strong id="semanaTxt"></strong></div>
+    <div class="acciones-top" id="accionesTop" hidden>
+      <button class="btn" id="btnPlantillaAus">Exportar plantilla</button>
+      <button class="btn" id="btnExcel">Exportar a Excel</button>
+    </div>
+  </div>
 </div></header>
 
 <main class="wrap">
@@ -148,9 +176,6 @@ td.cat{border-left:4px solid var(--c,#999)}
     <div class="ctl"><label for="txtBuscar">Buscar colaborador</label><input type="search" id="txtBuscar" placeholder="Ficha o nombre"></div>
     <div class="ctl"><label for="sel0830">Entrada 08:30 se toma como</label>
       <select id="sel0830"><option value="17">08:30 a 17:00</option><option value="18">08:30 a 18:00</option></select></div>
-    <span class="spacer"></span>
-    <button class="btn" id="btnPlantillaAus">Exportar plantilla</button>
-    <button class="btn" id="btnExcel">Exportar a Excel</button>
   </section>
   <p class="excl" id="exclTxt" hidden></p>
   <details class="ajustes" id="ajustesBox" hidden>
@@ -204,6 +229,7 @@ td.cat{border-left:4px solid var(--c,#999)}
   </section>
 
   <div id="app" hidden>
+    <div class="resumen" id="resumenSemana"></div>
     <nav class="tabs" role="tablist" id="tabs"></nav>
     <section class="panel" id="panel" role="tabpanel"></section>
   </div>
@@ -966,11 +992,18 @@ const CATS={
   alertas:[
     ['triples','Más de 4 h triples en la semana','var(--risk)','Criterio interno (igual que la herramienta de Mesa de Servicio): los primeros 3 días con tiempo extra tienen hasta 3 h dobles por día y el excedente es triple; desde el cuarto día con tiempo extra todo es triple; el domingo todo es triple. La alerta aplica con más de 4 h triples autorizadas; las horas reales se muestran solo como referencia.']]
 };
+const ICONO_TAB={ cotejo:'M4 12l5 5L20 6', guardias:'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z', revisar:'M12 8v5M12 16.5v.5M12 3a9 9 0 100 18 9 9 0 000-18z',
+  descanso:'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4', festivo:'M4 6h16v14H4zM4 10h16M12 13l1 2 2 .3-1.5 1.4.4 2.1L12 17.8l-1.9 1 .4-2.1L9 15.3l2-.3z', alertas:'M12 4l9 16H3zM12 10v4M12 17v.5',
+  detalle:'M8 7a3 3 0 106 0 3 3 0 00-6 0M5 20c0-3.5 2.7-6 6-6s6 2.5 6 6', faltas:'M8 7a3 3 0 106 0 3 3 0 00-6 0M4 20c0-3.5 2.7-6 6-6M16 14l5 5M21 14l-5 5', excluidos:'M5 12h14' };
+const svgTab=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONO_TAB[k]||''}"/></svg>`;
+const COLOR_CUENTA={ revisar:'rojo', alertas:'ambar' }; // pestañas que piden atención cuando tienen casos
 const TABS=[['cotejo','Cotejo autorizado'],['guardias','Guardias'],['revisar','Pendientes de autorizar'],['descanso','Descanso trabajado'],['festivo','Festivo trabajado'],['alertas','Alertas LFT'],['detalle','Detalle por colaborador'],['faltas','Faltas']];
 
 function toast(msg,err){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(t._h); t._h=setTimeout(()=>t.className='toast',4200); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 const H=x=>x==null?'—':(Math.round(x*100)/100).toString();
+function iniciales(nombre){ const p=String(nombre||'').trim().split(/\s+/).filter(Boolean);
+  return `<span class="ini" aria-hidden="true">${esc((p.length>1?p[0][0]+p[1][0]:(p[0]||'?').slice(0,2)).toUpperCase())}</span>`; }
 
 function leerArchivo(file){
   return new Promise((res,rej)=>{
@@ -1038,7 +1071,7 @@ function iniciar(){
   sel.innerHTML=mons.map(m=>`<option value="${m}">${CORE.fmtDia(m)} al ${CORE.fmtDia(CORE.addDays(m,6))} (${cuenta(m)} autorizadas)</option>`).join('');
   if(prev && mons.includes(prev)) sel.value=prev;
   else { let best=mons[0],bn=-1; mons.forEach(m=>{const n=cuenta(m); if(n>bn){bn=n;best=m;}}); sel.value=best; }
-  $('controles').hidden=false; $('bienvenida').hidden=true; $('app').hidden=false;
+  $('controles').hidden=false; $('accionesTop').hidden=false; $('bienvenida').hidden=true; $('app').hidden=false;
   recalcular();
 }
 function recalcular(){
@@ -1087,12 +1120,29 @@ function render(){
   $('exclTxt').innerHTML=`Fuera del análisis: <b>${ex.length}</b> colaboradores (Fletes Borja, turno administrativo, dispositivos externos sin solicitud${catVigente()?', administrativos del catálogo':''}). <button id="verExcl">Ver quiénes</button>`;
   $('verExcl').onclick=()=>{ ST.tab='excluidos'; render(); };
   const tabs=ST.che?[...TABS]:TABS.filter(([k])=>k==='faltas'); if(ST.tab==='excluidos') tabs.push(['excluidos','Excluidos']);
-  $('tabs').innerHTML=tabs.map(([k,l])=>`<button role="tab" aria-selected="${ST.tab===k}" data-t="${k}">${l}<span class="c">${datosTab(k).length}</span></button>`).join('');
+  $('tabs').innerHTML=tabs.map(([k,l])=>{ const n=datosTab(k).length;
+    return `<button role="tab" aria-selected="${ST.tab===k}" data-t="${k}">${svgTab(k)}${l}<span class="c ${n&&COLOR_CUENTA[k]||''}">${n}</span></button>`; }).join('');
+  renderResumen();
   $('tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ST.tab=b.dataset.t; render(); });
   const P=$('panel');
   renderAjustes();
   ({cotejo:rCotejo, guardias:rGuardias, revisar:rRevisar, descanso:rDescanso, festivo:rFestivo, alertas:rAlertas, detalle:rDetalle, excluidos:rExcluidos, faltas:rFaltas})[ST.tab](P);
   diagnostico(P, tabs);
+}
+// C: resumen de la semana con los mismos filtros (planta y búsqueda) que las pestañas
+function renderResumen(){
+  const tarjetas=[];
+  if(ST.che){
+    const calc=datosTab('cotejo').filter(r=>r.real!=null), sSol=sumaCampo(calc,'sol'), sReal=sumaCampo(calc,'real');
+    const rev=datosTab('revisar').length, ale=datosTab('alertas').length;
+    tarjetas.push(['cotejo','Horas extra autorizadas',H(sSol)+' h','checadas '+H(sReal)+' h', sReal+0.01<sSol?'ambar':'verde'],
+      ['revisar','Pendientes de autorizar',rev, rev?'por revisar':'al corriente', rev?'rojo':'verde'],
+      ['alertas','Alertas LFT',ale, ale?'revisar límites':'sin alertas', ale?'ambar':'verde']);
+  }
+  const fal=datosTab('faltas').length;
+  tarjetas.push(['faltas','Faltas detectadas',fal,'listas para plantilla','']);
+  $('resumenSemana').innerHTML=tarjetas.map(([k,l,v,sub,c])=>`<button type="button" class="${c}" data-t="${k}"><span class="l">${l}</span><strong>${v}</strong><span class="s">${sub}</span></button>`).join('');
+  $('resumenSemana').querySelectorAll('button').forEach(b=>b.onclick=()=>{ ST.tab=b.dataset.t; render(); });
 }
 /* Si la búsqueda no aparece en ninguna pestaña, explica por qué y en qué semana está */
 function diagnostico(P, tabs){
@@ -1146,7 +1196,7 @@ const td=(v,cls)=>`<td${cls?` class="${cls}"`:''}>${v}</td>`;
 const col=(h,html,xl,w,o={})=>({h,html,xl,w,...o});
 const K={
   ficha:   tab=>col('Ficha', r=>`<td class="cat" style="--c:${catDef(tab,r.cat)[2]}">${r.e.num}</td>`, r=>+r.e.num||r.e.num, 8),
-  nombre:  col('Nombre', r=>td(esc(r.e.nombre)), r=>r.e.nombre, 34),
+  nombre:  col('Nombre', r=>td(iniciales(r.e.nombre)+esc(r.e.nombre)), r=>r.e.nombre, 34),
   planta:  col('Planta', r=>td(esc(r.e.planta)), r=>r.e.planta, 26),
   area:    col('Área', r=>td(esc(r.area)), r=>r.area, 22),
   fecha:   col('Fecha', null, r=>r.d, 11, {soloXl:true}),
@@ -1269,7 +1319,7 @@ function rDetalle(P){
         const t = (i===6?'Domingo (descanso): horas trabajadas totales. ':'')+(r.nota||'');
         return `<td class="dia-cell ${r.estado==='estimado'?'estm':''}" title="${esc(t)}"><span class="x">${x}</span><span class="w">${CORE.fmtDur(r.trabajadoMin)} trab.</span><span class="w">${CORE.hhmm(r.entrada)}–${CORE.hhmm(r.salida)}</span></td>`; }).join('');
       ta=ST.sol.filter(s=>s.tipoK==='te' && s.num===e.num && dias.slice(0,6).includes(s.fecha) && CORE.norm(s.estatus)==='autorizado').reduce((a,s)=>a+s.horas,0);
-      return `<tr><td>${e.num}</td><td>${esc(e.nombre)}</td><td>${esc(e.planta)}</td><td>${e.turnoDominante||'—'}</td>${cells}<td class="num"><b>${tx}</b></td><td class="num">${H(ta)}</td></tr>`; }).join(''),
+      return `<tr><td>${e.num}</td><td>${iniciales(e.nombre)}${esc(e.nombre)}</td><td>${esc(e.planta)}</td><td>${e.turnoDominante||'—'}</td>${cells}<td class="num"><b>${tx}</b></td><td class="num">${H(ta)}</td></tr>`; }).join(''),
     'No hay colaboradores con este filtro.')}`;
 }
 function rExcluidos(P){
