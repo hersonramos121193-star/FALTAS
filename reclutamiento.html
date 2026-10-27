@@ -1630,7 +1630,8 @@ function estadoDesdeServidor(d){
       ps = [{fechaAlta: e.fechaAlta||'', fechaBaja: baja, planta: e.area, puesto: e.puesto, tipoEmpleado: e.tipoEmpleado, origen:'inventario', porConfirmar: baja ? 'SI' : ''}];
     }
     ORIGINALES.set(k, ps);
-    const visibles = ps.filter(p => !p.fechaBaja || p.fechaBaja >= ROTACION_DESDE);
+    // sin baja solo el periodo vigente; un ingreso anterior sin fecha de baja se guarda pero no se muestra
+    const visibles = ps.filter((p, i) => p.fechaBaja ? p.fechaBaja >= ROTACION_DESDE : i === ps.length - 1);
     OCULTOS.set(k, ps.filter(p => visibles.indexOf(p) === -1));
     if(!visibles.length) return; // dejó de trabajar aquí antes de 2025: no entra a Rotación
     const socio = {};
