@@ -144,6 +144,12 @@
 
   .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-bottom:18px;}
   .grid.two{grid-template-columns:1fr 1fr;}
+  .rot-filtros{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid #EDEEEF;}
+  .rot-filtros b{font-size:11px;color:var(--text-dim);letter-spacing:.4px;margin-right:2px;}
+  .rot-filtros button{padding:4px 11px;border:1px solid var(--silver-lt);border-radius:6px;background:#fff;font-size:12.5px;cursor:pointer;color:var(--text);}
+  .rot-filtros button.active{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .kpi.rot-pend{border-left-color:var(--warn);background:#FBF4E2;cursor:pointer;}
+  .kpi.rot-pend .value,.kpi.rot-pend .label,.kpi.rot-pend .delta{color:#8A6A12;}
   .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
   .card h2{font-size:14.5px;margin:0 0 4px;color:var(--navy);font-weight:700;}
   .card .desc{font-size:12px;color:var(--text-dim);margin-bottom:14px;}
@@ -1027,12 +1033,17 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
             <h2 style="margin-bottom:2px;">Resumen general de rotación de personal</h2>
-            <div class="desc" style="margin:0;">Vista consolidada calculada a partir del catálogo de empleados y la pestaña "Bajas y seguimiento". Presiona "Actualizar resumen" después de cargar o modificar datos de bajas.</div>
+            <div class="desc" style="margin:0;">Elige el año y el tipo de baja: todo el resumen y el Excel se ajustan a esa selección.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn" id="btnActualizarResumenRotacion">🔄 Actualizar resumen</button>
             <button class="btn secondary" id="btnExportarResumenRotacion">📤 Exportar a Excel</button>
           </div>
+        </div>
+        <div class="rot-filtros">
+          <b>AÑO</b><span id="rotFiltroAnio" style="display:contents;"></span>
+          <b style="margin-left:14px;">TIPO</b>
+          <span id="rotFiltroTipo" style="display:contents;"><button data-v="" class="active">Ambas</button><button data-v="Voluntaria">Voluntaria</button><button data-v="Forzada">Forzada</button></span>
         </div>
       </div>
 
@@ -1042,95 +1053,14 @@
 
       <div id="resumenRotacionContenido" style="display:none;">
         <div class="kpis" style="margin-bottom:18px;">
-          <div class="kpi"><div class="label">Total de bajas</div><div class="value" id="kpiResTotalBajas">–</div><div class="delta">en el catálogo cargado</div></div>
-          <div class="kpi"><div class="label">Voluntarias</div><div class="value" id="kpiResVoluntarias">–</div><div class="delta" id="kpiResVoluntariasPct">–</div></div>
-          <div class="kpi"><div class="label">Forzadas</div><div class="value" id="kpiResForzadas">–</div><div class="delta" id="kpiResForzadasPct">–</div></div>
-          <div class="kpi"><div class="label">Antigüedad promedio</div><div class="value" id="kpiResAntiguedad">–</div><div class="delta">al momento de la baja</div></div>
+          <div class="kpi"><div class="label">Bajas</div><div class="value" id="kpiRotBajas">–</div><div class="delta" id="kpiRotBajasDet">–</div></div>
+          <div class="kpi"><div class="label">% Rotación</div><div class="value" id="kpiRotPct">–</div><div class="delta" id="kpiRotPctDet">–</div></div>
+          <div class="kpi"><div class="label">Voluntarias</div><div class="value" id="kpiRotVol">–</div><div class="delta" id="kpiRotVolPct">–</div></div>
+          <div class="kpi"><div class="label">Forzadas</div><div class="value" id="kpiRotForz">–</div><div class="delta" id="kpiRotForzPct">–</div></div>
+          <div class="kpi rot-pend" id="kpiRotPend" title="Abrir Bajas y seguimiento con las bajas sin clasificar"><div class="label">Sin clasificar</div><div class="value" id="kpiRotSin">–</div><div class="delta" style="text-decoration:underline;">Clasificar ahora →</div></div>
         </div>
-
-        <div class="card">
-          <h2>% Rotación de personal por año</h2>
-          <div class="desc">Voluntaria vs. Forzada — bajas clasificadas del catálogo ÷ plantilla promedio capturada en la pestaña "Calculadora" (solo aparecen los años con plantilla capturada)</div>
-          <div class="chart-fixed-box h-220"><canvas id="chartResumenRotacion"></canvas></div>
-        </div>
-
-        <div class="card">
-          <h2>Permanencia al momento de la baja — por año y clasificación</h2>
-          <div class="desc">Antigüedad de las personas que causaron baja (requiere fecha de alta).</div>
-          <div id="resumenPermanenciaPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenPermanenciaSinDatos" style="display:none;">No hay bajas con fecha de alta capturada.</div>
-        </div>
-
-        <div class="card">
-          <h2>Causas de renuncia — por año y clasificación</h2>
-          <div class="desc">Solo bajas con Motivo = "Renuncia" y causa capturada. Un gráfico por año y clasificación (Voluntaria / Forzada).</div>
-          <div id="resumenCausasPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenCausasSinDatos" style="display:none;">No hay bajas con motivo "Renuncia" y causa capturada todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por año</h2>
-          <div class="desc">Total de bajas por año, con desglose Voluntaria / Forzada</div>
-          <div class="chart-fixed-box h-220"><canvas id="chartResumenAnio"></canvas></div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por tipo de empleado — por año y clasificación</h2>
-          <div class="desc">Operativo / Administrativo / Técnicos / Servicios</div>
-          <div id="resumenTipoPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenTipoSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por motivo — por año y clasificación</h2>
-          <div class="desc">Renuncia / Abandono / Término de contrato</div>
-          <div id="resumenMotivoPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenMotivoSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por planta — por año y clasificación</h2>
-          <div class="desc">Plantas con más rotación</div>
-          <div id="resumenPlantaPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenPlantaSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por puesto — por año y clasificación</h2>
-          <div class="desc">Top 10 puestos con más bajas de cada año y clasificación (el conteo del título es de esos 10; el Excel exportado trae todos los puestos). Muestra número de bajas, no % de rotación — para eso se necesitaría la plantilla activa por puesto, que este catálogo no trae.</div>
-          <div id="resumenPuestoPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenPuestoSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por rango de edad — por año y clasificación</h2>
-          <div class="desc">Edad cumplida al momento de la baja, calculada con la fecha de nacimiento. "Sin dato" = sin fecha de nacimiento capturada.</div>
-          <div id="resumenEdadPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenEdadSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por escolaridad — por año y clasificación</h2>
-          <div id="resumenEscolaridadPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenEscolaridadSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas por estado civil — por año y clasificación</h2>
-          <div id="resumenEstadoCivilPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenEstadoCivilSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-        </div>
-
-        <div class="card">
-          <h2>Bajas con y sin crédito INFONAVIT — por año y clasificación</h2>
-          <div class="desc">El descuento promedio se calcula por separado para cada tipo de descuento (no se pueden promediar porcentajes con pesos o factores).</div>
-          <div id="resumenInfonavitPorAnioWrap" class="grid two"></div>
-          <div class="empty-state" id="resumenInfonavitSinDatos" style="display:none;">No hay bajas cargadas todavía.</div>
-          <table style="margin-top:12px;max-width:560px;">
-            <thead><tr><th>Tipo de descuento</th><th>Personas con crédito</th><th>Descuento promedio</th></tr></thead>
-            <tbody id="tblResumenDescuentoInfonavit"></tbody>
-          </table>
-        </div>
+        <div class="grid two" id="rotTarjetas"></div>
+        <div class="desc">Gris = Voluntaria · Azul = Forzada · Amarillo = Sin clasificar. Las barras cuentan bajas; el % de rotación usa la plantilla promedio de la pestaña "Calculadora".</div>
       </div>
       <div class="card" id="cardFaltasBaja" style="margin-top:16px;">
         <h2>Faltas antes de la baja</h2>
@@ -5444,115 +5374,46 @@ document.getElementById('permanenciaFiltroAnio').addEventListener('change', rend
 /* =========================================================
    RESUMEN — vista consolidada de rotación de personal
    ========================================================= */
-let chartResumenRotacionInstance = null;
-let chartsResumenPermanenciaPorAnio = [];
-let chartResumenAnioInstance = null;
-let chartsResumenCausasPorAnio = []; // instancias dinámicas, una por año
-let chartsResumenTipoPorAnio = [];
-let chartsResumenMotivoPorAnio = [];
-let chartsResumenPlantaPorAnio = [];
-let chartsResumenPuestoPorAnio = [];
-let chartsResumenEdadPorAnio = [], chartsResumenEscolaridadPorAnio = [], chartsResumenEstadoCivilPorAnio = [], chartsResumenInfonavitPorAnio = [];
-let ULTIMO_RESUMEN_ROTACION = null; // snapshot de los datos agregados del Resumen, listo para exportar a Excel
+let CHARTS_ROT = [];
+let ROT_ANIO = null, ROT_TIPO = '', ROT_PERFIL = 'Tipo de empleado';
+let ULTIMO_RESUMEN_ROTACION = null; // lo que se ve en pantalla, listo para exportar a Excel
 
 const CLASIFICACIONES_RESUMEN = ['Voluntaria','Forzada','Sin clasificar'];
 const COLOR_CLASIFICACION = {Voluntaria:'#A7ADB3', Forzada:'#2F72B8', 'Sin clasificar':'#E0A339'};
+const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-/** Agrupa bajas por año de baja efectiva + clasificación, y luego por una clave (causa, tipo de empleado, motivo, planta, etc.).
- *  Devuelve {"AAAA · Clasificación": {clave: count}}. */
-function agruparBajasPorAnio(bajas, segPorCodigo, claveFn){
-  const resultado = {};
-  bajas.forEach(e=>{
-    const f = efectivaFechaBaja(e.codigo);
-    if(!f) return;
-    const seg = segPorCodigo[String(e.codigo)] || {};
-    const clasif = CLASIFICACIONES_RESUMEN.includes(seg.clasificacion) ? seg.clasificacion : 'Sin clasificar';
-    const grupo = f.slice(0,4) + ' · ' + clasif;
-    const clave = claveFn(e, seg);
-    if(clave === null || clave === undefined) return;
-    resultado[grupo] = resultado[grupo] || {};
-    resultado[grupo][clave] = (resultado[grupo][clave]||0) + 1;
+/** {clave: {Voluntaria, Forzada, 'Sin clasificar'}} de una lista de bajas ya filtrada. */
+function contarPorClasif(lista, claveFn){
+  const c = {};
+  lista.forEach(b => {
+    const k = claveFn(b);
+    if(k === null || k === undefined) return;
+    c[k] = c[k] || {};
+    c[k][b.clasif] = (c[k][b.clasif] || 0) + 1;
   });
-  return resultado;
+  return c;
 }
+const totalClasif = x => CLASIFICACIONES_RESUMEN.reduce((n, s) => n + (x[s] || 0), 0);
 
-/** Dibuja un gráfico por año y clasificación dentro de wrapId (datos de agruparBajasPorAnio).
- *  Cada año ocupa una fila: Voluntaria a la izquierda, Forzada a la derecha; "Sin clasificar" en una fila aparte. */
-function pintarGraficosPorAnio(config){
-  const {wrapId, sinDatosId, datosPorAnio, instancesArrayRef, tipo, idPrefijo, ordenarPorValor, ordenFijo} = config;
-  const wrap = document.getElementById(wrapId);
-  const sinDatos = document.getElementById(sinDatosId);
-  instancesArrayRef.length = 0;
-  wrap.innerHTML = '';
-
-  const tieneDatos = g => datosPorAnio[g] && Object.keys(datosPorAnio[g]).length;
-  const anios = [...new Set(Object.keys(datosPorAnio).filter(tieneDatos).map(g => g.slice(0,4)))].sort();
-  if(anios.length === 0){
-    sinDatos.style.display = 'block';
-    return;
-  }
-  sinDatos.style.display = 'none';
-
-  // celdas en orden de la cuadrícula de 2 columnas; null = hueco para que cada año quede en su propia fila
-  const celdas = [];
-  anios.forEach(anio=>{
-    const [vol, forz, sinClas] = CLASIFICACIONES_RESUMEN.map(c => anio + ' · ' + c);
-    if(tieneDatos(vol) || tieneDatos(forz)) celdas.push(tieneDatos(vol) ? vol : null, tieneDatos(forz) ? forz : null);
-    if(tieneDatos(sinClas)) celdas.push(sinClas, null);
-  });
-
-  celdas.forEach(grupo=>{
-    if(!grupo){ wrap.appendChild(document.createElement('div')); return; }
-    const [anio, clasif] = grupo.split(' · ');
-    const datosAnio = datosPorAnio[grupo];
-    let claves = Object.keys(datosAnio);
-    if(ordenarPorValor) claves = claves.sort((a,b)=>datosAnio[b]-datosAnio[a]);
-    if(ordenFijo) claves = ordenFijo.filter(k => k in datosAnio); // ej. rangos de edad en su orden natural
-    const total = Object.values(datosAnio).reduce((a,b)=>a+b,0);
-    const canvasId = idPrefijo + '_' + anio + '_' + clasif.replace(/\W/g,'');
-    const color = COLOR_CLASIFICACION[clasif];
-
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.boxShadow = 'none';
-    card.style.border = '1px solid #EDEEEF';
-    card.style.borderTop = '3px solid ' + color;
-    card.innerHTML = `<h2 style="font-size:14px;">${anio} · ${clasif} <span style="font-weight:400;color:var(--text-dim);">(${total} baja${total!==1?'s':''})</span></h2>
-      <div class="chart-fixed-box h-220"><canvas id="${canvasId}"></canvas></div>`;
-    wrap.appendChild(card);
-
-    const ctx = document.getElementById(canvasId);
-    let chart;
-    if(tipo === 'doughnut'){
-      chart = new Chart(ctx, {
-        type: 'doughnut',
-        data: { labels: claves, datasets: [{ data: claves.map(c=>datosAnio[c]), backgroundColor: PALETA_RESUMEN }] },
-        options: { maintainAspectRatio:false, plugins:{ legend:{position:'bottom', labels:{boxWidth:11,font:{size:10.5}}} } }
-      });
-    } else if(tipo === 'barh'){
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: claves, datasets: [{ data: claves.map(c=>datosAnio[c]), backgroundColor: color, borderRadius:4, maxBarThickness:26 }] },
-        options: {
-          indexAxis:'y', maintainAspectRatio:false, plugins:{ legend:{display:false} },
-          scales:{ x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#EEF0F2'}}, y:{grid:{display:false}, ticks:{font:{size:10.5}}} }
-        }
-      });
-    } else { // 'bar' vertical
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: claves, datasets: [{ data: claves.map(c=>datosAnio[c]), backgroundColor: color, borderRadius:5, maxBarThickness:50 }] },
-        options: {
-          maintainAspectRatio:false, plugins:{ legend:{display:false} },
-          scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#EEF0F2'}}, x:{grid:{display:false}} }
-        }
-      });
+/** Barras apiladas Voluntaria / Forzada / Sin clasificar en el canvas id. */
+function graficaRot(id, conteo, {orden, top, vertical, porcentaje} = {}){
+  const canvas = document.getElementById(id);
+  let claves = orden ? orden.filter(k => k in conteo) : Object.keys(conteo).sort((a, b) => totalClasif(conteo[b]) - totalClasif(conteo[a]));
+  if(top) claves = claves.slice(0, top);
+  canvas.parentElement.style.height = vertical ? '220px' : Math.max(110, claves.length * 26 + 40) + 'px';
+  const series = CLASIFICACIONES_RESUMEN.filter(s => claves.some(k => conteo[k][s]));
+  const ejeValor = { stacked:true, beginAtZero:true, ticks:{ precision:0, callback: porcentaje ? (v => v + '%') : undefined }, grid:{color:'#EEF0F2'} };
+  const ejeClave = { stacked:true, grid:{display:false}, ticks:{font:{size:10.5}} };
+  CHARTS_ROT.push(new Chart(canvas, {
+    type: 'bar',
+    data: { labels: claves, datasets: series.map(s => ({ label: s, data: claves.map(k => conteo[k][s] || 0), backgroundColor: COLOR_CLASIFICACION[s], borderRadius:3, maxBarThickness: vertical ? 40 : 22 })) },
+    options: {
+      indexAxis: vertical ? 'x' : 'y', maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label: c => `${c.dataset.label}: ${porcentaje ? c.raw + '%' : c.raw}`}} },
+      scales: vertical ? { x: ejeClave, y: ejeValor } : { x: ejeValor, y: ejeClave }
     }
-    instancesArrayRef.push(chart);
-  });
+  }));
 }
-
-const PALETA_RESUMEN = ['#2F72B8','#A7ADB3','#4FA3A0','#E0A339','#C1544B','#7C6FB0','#5B9BD5','#9CC3D5','#D98880','#82B366','#F0B27A','#AAB7B8','#B39DDB','#F1948A','#76D7C4','#F7DC6F'];
 
 function aniosDisponiblesBajas(){
   const anios = new Set();
@@ -5732,246 +5593,172 @@ async function guardarReingreso(){
   }
 }
 
+/** % de rotación de un año: bajas clasificadas ÷ plantilla promedio de la Calculadora (null sin plantilla). */
+function pctRotacionAnio(lista, anio, tipo){
+  const d = (STATE.rotacionData || {})[anio];
+  const promedio = d ? ((Number(d.inicio) || 0) + (Number(d.final) || 0)) / 2 : 0;
+  if(!promedio) return null;
+  return lista.filter(b => b.anio === anio && (tipo ? b.clasif === tipo : b.clasif !== 'Sin clasificar')).length / promedio * 100;
+}
+
 function renderResumenRotacion(){
   try{ renderFaltasAntesDeBaja(); }catch(e){ console.error('Faltas antes de la baja:', e); }
-  const bajas = (STATE.catalogoEmpleados||[]).filter(e => (e.estatus||'').toUpperCase() === 'BAJA');
+  CHARTS_ROT.forEach(c => c.destroy());
+  CHARTS_ROT = [];
+  const segPor = {};
+  (STATE.seguimientoBajas || []).forEach(s => segPor[String(s.codigo)] = s);
+  const todas = (STATE.catalogoEmpleados || []).filter(e => (e.estatus || '').toUpperCase() === 'BAJA').map(e => {
+    const f = efectivaFechaBaja(e.codigo);
+    if(!f) return null;
+    const seg = segPor[String(e.codigo)] || {};
+    const dias = esFechaValida(e.fechaAlta) ? Math.floor((new Date(f) - new Date(e.fechaAlta)) / 86400000) : null;
+    return { e, seg, f, anio: f.slice(0, 4), dias: dias >= 0 ? dias : null,
+      clasif: CLASIFICACIONES_RESUMEN.includes(seg.clasificacion) ? seg.clasificacion : 'Sin clasificar' };
+  }).filter(Boolean);
+
   const sinDatos = document.getElementById('resumenRotacionSinDatos');
   const contenido = document.getElementById('resumenRotacionContenido');
+  sinDatos.style.display = todas.length ? 'none' : 'block';
+  contenido.style.display = todas.length ? 'block' : 'none';
+  if(!todas.length){ ULTIMO_RESUMEN_ROTACION = null; return; }
 
-  if(bajas.length === 0){
-    sinDatos.style.display = 'block';
-    contenido.style.display = 'none';
-    return;
-  }
-  sinDatos.style.display = 'none';
-  contenido.style.display = 'block';
+  // ---- Filtros: año (por defecto el más reciente) y tipo ----
+  const anios = [...new Set(todas.map(b => b.anio))].sort();
+  if(ROT_ANIO !== '' && !anios.includes(ROT_ANIO)) ROT_ANIO = anios[anios.length - 1];
+  document.getElementById('rotFiltroAnio').innerHTML = anios.concat('').map(a =>
+    `<button data-v="${a}" class="${a === ROT_ANIO ? 'active' : ''}">${a || 'Todos'}</button>`).join('');
+  document.querySelectorAll('#rotFiltroTipo button').forEach(b => b.classList.toggle('active', b.dataset.v === ROT_TIPO));
+  const delAnio = todas.filter(b => !ROT_ANIO || b.anio === ROT_ANIO);
+  const lista = delAnio.filter(b => !ROT_TIPO || b.clasif === ROT_TIPO);
+  const etiquetaAnio = ROT_ANIO || (anios[0] + '–' + anios[anios.length - 1]);
 
-  const segs = STATE.seguimientoBajas || [];
-  const segPorCodigo = {};
-  segs.forEach(s=>segPorCodigo[String(s.codigo)] = s);
-
-  // ---- KPIs ----
-  const total = bajas.length;
-  let voluntarias = 0, forzadas = 0;
-  bajas.forEach(e=>{
-    const seg = segPorCodigo[String(e.codigo)];
-    if(seg && seg.clasificacion === 'Voluntaria') voluntarias++;
-    else if(seg && seg.clasificacion === 'Forzada') forzadas++;
-  });
-  document.getElementById('kpiResTotalBajas').textContent = total;
-  document.getElementById('kpiResVoluntarias').textContent = voluntarias;
-  document.getElementById('kpiResVoluntariasPct').textContent = total ? ((voluntarias/total)*100).toFixed(1)+'% del total' : '—';
-  document.getElementById('kpiResForzadas').textContent = forzadas;
-  document.getElementById('kpiResForzadasPct').textContent = total ? ((forzadas/total)*100).toFixed(1)+'% del total' : '—';
-
-  const permanenciaTodas = bajasParaPermanencia('');
-  if(permanenciaTodas.length){
-    const promedioDias = Math.round(permanenciaTodas.reduce((a,b)=>a+b.dias,0) / permanenciaTodas.length);
-    document.getElementById('kpiResAntiguedad').textContent = (promedioDias/365).toFixed(1) + ' años';
+  // ---- Indicadores ----
+  const n = s => delAnio.filter(b => b.clasif === s).length;
+  const vol = n('Voluntaria'), forz = n('Forzada'), sin = n('Sin clasificar');
+  const pctDe = x => delAnio.length ? Math.round(x / delAnio.length * 100) + '% del total' : '—';
+  document.getElementById('kpiRotBajas').textContent = lista.length;
+  document.getElementById('kpiRotBajasDet').textContent = etiquetaAnio + (ROT_TIPO ? ' · ' + ROT_TIPO.toLowerCase() + 's' : '');
+  document.getElementById('kpiRotVol').textContent = vol;
+  document.getElementById('kpiRotVolPct').textContent = pctDe(vol);
+  document.getElementById('kpiRotForz').textContent = forz;
+  document.getElementById('kpiRotForzPct').textContent = pctDe(forz);
+  document.getElementById('kpiRotSin').textContent = sin;
+  document.getElementById('kpiRotPend').style.display = sin ? '' : 'none';
+  let pct = null, pctDet = 'Captura la plantilla en "Calculadora"';
+  if(ROT_ANIO){
+    pct = pctRotacionAnio(todas, ROT_ANIO, ROT_TIPO);
+    const previo = pctRotacionAnio(todas, String(Number(ROT_ANIO) - 1), ROT_TIPO);
+    if(pct !== null) pctDet = previo === null ? 'sin plantilla del año anterior'
+      : `${pct <= previo ? '▼' : '▲'} ${Math.abs(pct - previo).toFixed(1)} pts vs ${Number(ROT_ANIO) - 1}`;
   } else {
-    document.getElementById('kpiResAntiguedad').textContent = '—';
+    const xs = anios.map(a => pctRotacionAnio(todas, a, ROT_TIPO)).filter(x => x !== null);
+    if(xs.length){ pct = xs.reduce((a, b) => a + b, 0) / xs.length; pctDet = `promedio anual de ${xs.length} año(s)`; }
   }
+  document.getElementById('kpiRotPct').textContent = pct === null ? '—' : pct.toFixed(1) + '%';
+  document.getElementById('kpiRotPctDet').textContent = pctDet;
 
-  // ---- % Rotación por año ----
-  // La plantilla (inicio/fin) sale de la Calculadora: el catálogo solo trae a quienes causaron baja,
-  // así que contarla desde ahí inflaba el %. Las bajas sí salen del catálogo clasificado.
-  const datosCalc = STATE.rotacionData || {};
-  const anios = Object.keys(datosCalc).sort();
-  const voluntariaData = [], forzadaData = [], etiquetasAnios = [];
-  anios.forEach(anio=>{
-    const promedio = ((Number(datosCalc[anio].inicio)||0) + (Number(datosCalc[anio].final)||0)) / 2;
-    const vol = bajasEnAnio(anio, 'Voluntaria');
-    const forz = bajasEnAnio(anio, 'Forzada');
-    if(!promedio) return; // sin plantilla capturada no se puede calcular el %
-    etiquetasAnios.push(anio);
-    voluntariaData.push(promedio ? +((vol/promedio)*100).toFixed(1) : 0);
-    forzadaData.push(promedio ? +((forz/promedio)*100).toFixed(1) : 0);
+  // ---- Conteos de cada tarjeta ----
+  const porMes = ROT_ANIO
+    ? contarPorClasif(lista, b => MESES_CORTOS[Number(b.f.slice(5, 7)) - 1])
+    : contarPorClasif(lista, b => b.anio);
+  if(ROT_ANIO && lista.length) MESES_CORTOS.forEach(m => { porMes[m] = porMes[m] || {}; }); // los 12 meses, también los que no tuvieron bajas
+  const rotacionPorAnio = {};
+  anios.forEach(a => {
+    const v = pctRotacionAnio(todas, a, 'Voluntaria'), f = pctRotacionAnio(todas, a, 'Forzada');
+    if(v === null) return;
+    rotacionPorAnio[a] = {};
+    if(ROT_TIPO !== 'Forzada') rotacionPorAnio[a].Voluntaria = +v.toFixed(1);
+    if(ROT_TIPO !== 'Voluntaria') rotacionPorAnio[a].Forzada = +f.toFixed(1);
   });
-  const ctxRot = document.getElementById('chartResumenRotacion');
-  if(chartResumenRotacionInstance) chartResumenRotacionInstance.destroy();
-  chartResumenRotacionInstance = new Chart(ctxRot, {
-    type: 'bar',
-    data: { labels: etiquetasAnios, datasets: [
-      { label:'Voluntaria', data: voluntariaData, backgroundColor:'#A7ADB3', borderRadius:5, maxBarThickness:60 },
-      { label:'Forzada', data: forzadaData, backgroundColor:'#2F72B8', borderRadius:5, maxBarThickness:60 }
-    ]},
-    options: {
-      maintainAspectRatio:false,
-      plugins:{ legend:{position:'top', labels:{boxWidth:12,font:{size:11}}}, tooltip:{callbacks:{label:(c)=>`${c.dataset.label}: ${c.parsed.y}%`}} },
-      scales:{ y:{beginAtZero:true, ticks:{callback:v=>v+'%'}, grid:{color:'#EEF0F2'}}, x:{grid:{display:false}} }
-    }
-  });
+  const conDias = lista.filter(b => b.dias !== null);
+  const promAnios = conDias.length ? (conDias.reduce((a, b) => a + b.dias, 0) / conDias.length / 365).toFixed(1) : null;
+  const PERFILES = {
+    'Tipo de empleado': { fn: b => tituloCaso((b.e.tipoEmpleado || '').trim()) || 'Sin especificar' },
+    'Escolaridad': { fn: b => normalizarEscolaridad(b.e.escolaridad) || 'Sin dato' }, // el catálogo trae "SECUNDARIA", "PREPARATORIA"…
+    'Estado civil': { fn: b => b.e.estadoCivil || 'Sin dato' },
+    'Crédito INFONAVIT': { fn: b => b.e.creditoInfonavit === 'SI' ? 'Con crédito' : b.e.creditoInfonavit === 'NO' ? 'Sin crédito' : 'Sin dato', orden: ['Con crédito','Sin crédito','Sin dato'] }
+  };
+  const temas = [
+    { titulo: ROT_ANIO ? 'Bajas por mes' : 'Bajas por año', col: ROT_ANIO ? 'Mes' : 'Año', hoja: 'Bajas por mes', conteo: porMes, op: { vertical: true, orden: ROT_ANIO ? MESES_CORTOS : anios } },
+    { titulo: '% Rotación por año', col: 'Año', hoja: 'Rotación por año', conteo: rotacionPorAnio, op: { vertical: true, orden: anios, porcentaje: true },
+      desc: 'Todos los años con plantilla capturada en "Calculadora" (no depende del año elegido).', vacio: 'Captura la plantilla de inicio y fin en "Calculadora".' },
+    { titulo: 'Motivo de la baja', col: 'Motivo', hoja: 'Bajas por motivo', conteo: contarPorClasif(lista, b => b.seg.motivo || 'Sin motivo') },
+    { titulo: 'Permanencia al momento de la baja', col: 'Rango de antigüedad', hoja: 'Permanencia', op: { orden: RANGOS_PERMANENCIA.map(r => r.label) },
+      conteo: contarPorClasif(conDias, b => RANGOS_PERMANENCIA.find(r => b.dias >= r.min && b.dias <= r.max).label),
+      desc: promAnios ? `Antigüedad promedio al irse: ${promAnios} años.` : 'Requiere fecha de alta.' },
+    { titulo: 'Planta', col: 'Planta', hoja: 'Bajas por planta', conteo: contarPorClasif(lista, b => (b.e.area || '').trim() || 'Sin especificar') },
+    { titulo: 'Puesto · top 10', col: 'Puesto', hoja: 'Bajas por puesto', conteo: contarPorClasif(lista, b => (b.e.puesto || '').trim() || 'Sin especificar'), op: { top: 10 },
+      desc: 'El Excel trae todos los puestos.' },
+    { titulo: 'Causas de renuncia', col: 'Causa', hoja: 'Causas de renuncia', conteo: contarPorClasif(lista, b => (b.seg.motivo === 'Renuncia' && b.seg.causa) ? b.seg.causa : null),
+      vacio: 'Sin renuncias con causa capturada.' },
+    { titulo: 'Rango de edad', col: 'Rango de edad', hoja: 'Bajas por edad', op: { orden: [...RANGOS_EDAD.map(r => r.label), 'Sin dato'] },
+      conteo: contarPorClasif(lista, b => rangoEdad(edadEnFecha(b.e.fechaNacimiento, b.f))), desc: 'Edad cumplida al momento de la baja.' }
+  ];
+  Object.entries(PERFILES).forEach(([t, p]) => temas.push({ perfil: t, titulo: t, col: t, hoja: 'Bajas por ' + t.toLowerCase().replace('crédito ', ''), conteo: contarPorClasif(lista, p.fn), op: { orden: p.orden } }));
 
-  // ---- Permanencia (todos los años) ----
-  const conteosPerm = RANGOS_PERMANENCIA.map(r => permanenciaTodas.filter(d => d.dias >= r.min && d.dias <= r.max).length);
-  const diasPorCodigo = {};
-  permanenciaTodas.forEach(d => diasPorCodigo[String(d.codigo)] = d.dias);
-  const datosPermanenciaPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=>{
-    const dias = diasPorCodigo[String(e.codigo)];
-    const r = dias === undefined ? null : RANGOS_PERMANENCIA.find(r => dias >= r.min && dias <= r.max);
-    return r ? r.label : null;
-  });
-  pintarGraficosPorAnio({
-    wrapId: 'resumenPermanenciaPorAnioWrap', sinDatosId: 'resumenPermanenciaSinDatos',
-    datosPorAnio: datosPermanenciaPorAnio, instancesArrayRef: chartsResumenPermanenciaPorAnio,
-    tipo: 'bar', idPrefijo: 'chartResumenPermanenciaAnio', ordenFijo: RANGOS_PERMANENCIA.map(r=>r.label)
-  });
-
-  // ---- Causas de renuncia — un gráfico independiente por año ----
-  const datosCausasPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e, seg) => (seg.motivo === 'Renuncia' && seg.causa) ? seg.causa : null);
-  pintarGraficosPorAnio({
-    wrapId: 'resumenCausasPorAnioWrap', sinDatosId: 'resumenCausasSinDatos',
-    datosPorAnio: datosCausasPorAnio, instancesArrayRef: chartsResumenCausasPorAnio,
-    tipo: 'barh', idPrefijo: 'chartResumenCausasAnio', ordenarPorValor: true
-  });
-
-  // ---- Bajas por año ----
-  const conteoAnio = {}; // anio -> {Voluntaria, Forzada}
-  bajas.forEach(e=>{
-    const f = efectivaFechaBaja(e.codigo);
-    if(!f) return;
-    const anio = f.slice(0,4);
-    const seg = segPorCodigo[String(e.codigo)];
-    conteoAnio[anio] = conteoAnio[anio] || {Voluntaria:0, Forzada:0, SinClasificar:0};
-    if(seg && seg.clasificacion === 'Voluntaria') conteoAnio[anio].Voluntaria++;
-    else if(seg && seg.clasificacion === 'Forzada') conteoAnio[anio].Forzada++;
-    else conteoAnio[anio].SinClasificar++;
-  });
-  const aniosOrdenados = Object.keys(conteoAnio).sort();
-  const ctxAnio = document.getElementById('chartResumenAnio');
-  if(chartResumenAnioInstance) chartResumenAnioInstance.destroy();
-  chartResumenAnioInstance = new Chart(ctxAnio, {
-    type: 'bar',
-    data: {
-      labels: aniosOrdenados,
-      datasets: [
-        { label:'Voluntaria', data: aniosOrdenados.map(a=>conteoAnio[a].Voluntaria), backgroundColor:'#A7ADB3', borderRadius:5, maxBarThickness:60 },
-        { label:'Forzada', data: aniosOrdenados.map(a=>conteoAnio[a].Forzada), backgroundColor:'#2F72B8', borderRadius:5, maxBarThickness:60 },
-        { label:'Sin clasificar', data: aniosOrdenados.map(a=>conteoAnio[a].SinClasificar), backgroundColor:'#E0A339', borderRadius:5, maxBarThickness:60 }
-      ]
-    },
-    options: {
-      maintainAspectRatio:false,
-      plugins:{ legend:{position:'top', labels:{boxWidth:12,font:{size:11}}} },
-      scales:{ x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, ticks:{precision:0}, grid:{color:'#EEF0F2'}} }
-    }
-  });
-
-  // ---- Bajas por tipo de empleado — un gráfico por año ----
-  const datosTipoPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=>{
-    const t = (e.tipoEmpleado||'').trim();
-    return t ? (t.charAt(0).toUpperCase() + t.slice(1).toLowerCase()) : 'Sin especificar';
-  });
-  pintarGraficosPorAnio({
-    wrapId: 'resumenTipoPorAnioWrap', sinDatosId: 'resumenTipoSinDatos',
-    datosPorAnio: datosTipoPorAnio, instancesArrayRef: chartsResumenTipoPorAnio,
-    tipo: 'doughnut', idPrefijo: 'chartResumenTipoAnio', ordenarPorValor: true
-  });
-
-  // ---- Bajas por motivo — un gráfico por año ----
-  const datosMotivoPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e, seg)=> seg.motivo || 'Sin motivo');
-  pintarGraficosPorAnio({
-    wrapId: 'resumenMotivoPorAnioWrap', sinDatosId: 'resumenMotivoSinDatos',
-    datosPorAnio: datosMotivoPorAnio, instancesArrayRef: chartsResumenMotivoPorAnio,
-    tipo: 'doughnut', idPrefijo: 'chartResumenMotivoAnio', ordenarPorValor: true
-  });
-
-  // ---- Bajas por planta — un gráfico por año ----
-  const datosPlantaPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> (e.area||'Sin especificar').trim() || 'Sin especificar');
-  pintarGraficosPorAnio({
-    wrapId: 'resumenPlantaPorAnioWrap', sinDatosId: 'resumenPlantaSinDatos',
-    datosPorAnio: datosPlantaPorAnio, instancesArrayRef: chartsResumenPlantaPorAnio,
-    tipo: 'barh', idPrefijo: 'chartResumenPlantaAnio', ordenarPorValor: true
-  });
-
-  // ---- Bajas por puesto — top 10 propio de cada año y clasificación (el Excel lleva todos los puestos) ----
-  const datosPuestoPorAnioCompleto = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> (e.puesto||'Sin especificar').trim() || 'Sin especificar');
-  const datosPuestoPorAnio = {};
-  Object.entries(datosPuestoPorAnioCompleto).forEach(([grupo, conteo])=>{
-    datosPuestoPorAnio[grupo] = Object.fromEntries(Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,10));
-  });
-  pintarGraficosPorAnio({
-    wrapId: 'resumenPuestoPorAnioWrap', sinDatosId: 'resumenPuestoSinDatos',
-    datosPorAnio: datosPuestoPorAnio, instancesArrayRef: chartsResumenPuestoPorAnio,
-    tipo: 'barh', idPrefijo: 'chartResumenPuestoAnio', ordenarPorValor: true
-  });
-
-  // ---- Datos sociodemográficos — un gráfico por año de cada uno ----
-  const datosEdadPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> rangoEdad(edadEnFecha(e.fechaNacimiento, efectivaFechaBaja(e.codigo))));
-  pintarGraficosPorAnio({
-    wrapId: 'resumenEdadPorAnioWrap', sinDatosId: 'resumenEdadSinDatos',
-    datosPorAnio: datosEdadPorAnio, instancesArrayRef: chartsResumenEdadPorAnio,
-    tipo: 'bar', idPrefijo: 'chartResumenEdadAnio', ordenFijo: [...RANGOS_EDAD.map(r=>r.label), 'Sin dato']
-  });
-  const datosEscolaridadPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> normalizarEscolaridad(e.escolaridad) || 'Sin dato'); // el catálogo trae "SECUNDARIA", "PREPARATORIA"…
-  pintarGraficosPorAnio({
-    wrapId: 'resumenEscolaridadPorAnioWrap', sinDatosId: 'resumenEscolaridadSinDatos',
-    datosPorAnio: datosEscolaridadPorAnio, instancesArrayRef: chartsResumenEscolaridadPorAnio,
-    tipo: 'doughnut', idPrefijo: 'chartResumenEscolaridadAnio', ordenarPorValor: true
-  });
-  const datosEstadoCivilPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=> e.estadoCivil || 'Sin dato');
-  pintarGraficosPorAnio({
-    wrapId: 'resumenEstadoCivilPorAnioWrap', sinDatosId: 'resumenEstadoCivilSinDatos',
-    datosPorAnio: datosEstadoCivilPorAnio, instancesArrayRef: chartsResumenEstadoCivilPorAnio,
-    tipo: 'doughnut', idPrefijo: 'chartResumenEstadoCivilAnio', ordenarPorValor: true
-  });
-  const datosInfonavitPorAnio = agruparBajasPorAnio(bajas, segPorCodigo, (e)=>
-    e.creditoInfonavit === 'SI' ? 'Con crédito' : e.creditoInfonavit === 'NO' ? 'Sin crédito' : 'Sin dato');
-  pintarGraficosPorAnio({
-    wrapId: 'resumenInfonavitPorAnioWrap', sinDatosId: 'resumenInfonavitSinDatos',
-    datosPorAnio: datosInfonavitPorAnio, instancesArrayRef: chartsResumenInfonavitPorAnio,
-    tipo: 'doughnut', idPrefijo: 'chartResumenInfonavitAnio', ordenFijo: ['Con crédito','Sin crédito','Sin dato']
-  });
-  // descuento promedio por tipo (todas las bajas con crédito y valor capturado, todos los años)
-  const descuentoPorTipo = {};
-  bajas.forEach(e=>{
-    const v = Number(e.valorDescuentoInfonavit);
-    if(e.creditoInfonavit !== 'SI' || !(v > 0)) return;
-    const t = e.tipoDescuentoInfonavit || 'Sin tipo';
-    descuentoPorTipo[t] = descuentoPorTipo[t] || {personas:0, suma:0};
-    descuentoPorTipo[t].personas++; descuentoPorTipo[t].suma += v;
+  // descuento INFONAVIT promedio por tipo (no se pueden promediar porcentajes con pesos o factores)
+  const descuento = {};
+  lista.forEach(b => {
+    const v = Number(b.e.valorDescuentoInfonavit);
+    if(b.e.creditoInfonavit !== 'SI' || !(v > 0)) return;
+    const t = b.e.tipoDescuentoInfonavit || 'Sin tipo';
+    descuento[t] = descuento[t] || { personas:0, suma:0 };
+    descuento[t].personas++; descuento[t].suma += v;
   });
   const formatoDescuento = (t, v) => t === 'Porcentaje' ? v.toFixed(1)+'%' : t === 'Cuota fija' ? '$'+v.toLocaleString('es-MX',{minimumFractionDigits:2, maximumFractionDigits:2}) : t === 'Factor VSM/UMI' ? v.toFixed(2)+' VSM/UMI' : v.toFixed(2);
-  const filasDescuento = Object.keys(descuentoPorTipo).map(t=>({tipo:t, personas:descuentoPorTipo[t].personas, promedio: descuentoPorTipo[t].suma/descuentoPorTipo[t].personas}));
-  document.getElementById('tblResumenDescuentoInfonavit').innerHTML = filasDescuento.length
-    ? filasDescuento.map(f=>`<tr><td>${f.tipo}</td><td>${f.personas}</td><td>${formatoDescuento(f.tipo, f.promedio)}</td></tr>`).join('')
-    : '<tr><td colspan="3" class="empty-state">Sin descuentos INFONAVIT capturados.</td></tr>';
+  const filasDescuento = Object.keys(descuento).map(t => ({ 'Tipo de descuento': t, 'Personas con crédito': descuento[t].personas, 'Descuento promedio': +(descuento[t].suma / descuento[t].personas).toFixed(2) }));
 
-  // ---- Guarda todo lo calculado para poder exportarlo a Excel tal cual se ve en pantalla ----
+  // ---- Tarjetas: una por tema; los 4 datos de perfil comparten una con selector ----
+  const visibles = temas.filter(t => !t.perfil || t.perfil === ROT_PERFIL);
+  document.getElementById('rotTarjetas').innerHTML = visibles.map((t, i) => {
+    const vacio = !Object.keys(t.conteo).length;
+    const selector = t.perfil ? `<select id="rotPerfil" style="float:right;font-size:12px;">${Object.keys(PERFILES).map(x => `<option${x === ROT_PERFIL ? ' selected' : ''}>${x}</option>`).join('')}</select>` : '';
+    const tabla = t.perfil === 'Crédito INFONAVIT' ? `<table style="margin-top:10px;"><thead><tr><th>Tipo de descuento</th><th>Personas con crédito</th><th>Descuento promedio</th></tr></thead><tbody>${
+      filasDescuento.map(f => `<tr><td>${f['Tipo de descuento']}</td><td>${f['Personas con crédito']}</td><td>${formatoDescuento(f['Tipo de descuento'], f['Descuento promedio'])}</td></tr>`).join('')
+      || '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);">Sin descuentos INFONAVIT capturados.</td></tr>'}</tbody></table>` : '';
+    return `<div class="card" style="margin:0;">${selector}<h2 style="font-size:14px;">${t.perfil ? 'Perfil de quien se va' : t.titulo}</h2>
+      ${t.desc ? `<div class="desc" style="margin-bottom:6px;">${t.desc}</div>` : ''}
+      ${vacio ? `<div class="empty-state" style="padding:24px 10px;">${t.vacio || 'Sin bajas en la selección.'}</div>` : `<div class="chart-fixed-box"><canvas id="rotChart${i}"></canvas></div>`}${tabla}</div>`;
+  }).join('');
+  visibles.forEach((t, i) => { if(Object.keys(t.conteo).length) graficaRot('rotChart' + i, t.conteo, t.op); });
+  const sel = document.getElementById('rotPerfil');
+  if(sel) sel.addEventListener('change', () => { ROT_PERFIL = sel.value; renderResumenRotacion(); });
+
   ULTIMO_RESUMEN_ROTACION = {
-    kpis: { total, voluntarias, forzadas, antiguedadPromedioAnios: permanenciaTodas.length ? +(Math.round(permanenciaTodas.reduce((a,b)=>a+b.dias,0)/permanenciaTodas.length)/365).toFixed(2) : null },
-    rotacionPorAnio: etiquetasAnios.map((a,i)=>({anio:a, voluntariaPct:voluntariaData[i], forzadaPct:forzadaData[i]})),
-    permanencia: RANGOS_PERMANENCIA.map((r,i)=>({rango:r.label, bajas:conteosPerm[i], pct: permanenciaTodas.length ? +((conteosPerm[i]/permanenciaTodas.length)*100).toFixed(1) : 0})),
-    permanenciaPorAnio: datosPermanenciaPorAnio,
-    causasPorAnio: datosCausasPorAnio,
-    bajasPorAnio: conteoAnio,
-    tipoPorAnio: datosTipoPorAnio,
-    motivoPorAnio: datosMotivoPorAnio,
-    plantaPorAnio: datosPlantaPorAnio,
-    puestoPorAnio: datosPuestoPorAnioCompleto,
-    edadPorAnio: datosEdadPorAnio,
-    escolaridadPorAnio: datosEscolaridadPorAnio,
-    estadoCivilPorAnio: datosEstadoCivilPorAnio,
-    infonavitPorAnio: datosInfonavitPorAnio,
-    descuentoInfonavit: filasDescuento.map(f=>({'Tipo de descuento': f.tipo, 'Personas con crédito': f.personas, 'Descuento promedio': +f.promedio.toFixed(2)}))
+    anio: ROT_ANIO,
+    kpis: [
+      { Indicador: 'Selección', Valor: etiquetaAnio + ' · ' + (ROT_TIPO || 'Voluntaria y forzada') },
+      { Indicador: 'Bajas', Valor: lista.length },
+      { Indicador: '% Rotación', Valor: pct === null ? '' : +pct.toFixed(1) },
+      { Indicador: 'Detalle % rotación', Valor: pctDet },
+      { Indicador: 'Voluntarias', Valor: vol }, { Indicador: 'Forzadas', Valor: forz }, { Indicador: 'Sin clasificar', Valor: sin },
+      { Indicador: 'Antigüedad promedio al momento de la baja (años)', Valor: promAnios === null ? '' : +promAnios }
+    ],
+    temas, descuento: filasDescuento
   };
 }
 
-/* =========================================================
-   EXPORTAR RESUMEN DE ROTACIÓN A EXCEL (para graficar manualmente)
-   ========================================================= */
-/** Convierte {clave: {subclave: valor}} en filas planas [{Año/Grupo, Subclave, Valor}] listas para una hoja de Excel. */
-function filasDesdeAgrupadoPorAnio(agrupado, nombreColGrupo, nombreColClave){
-  const filas = [];
-  Object.keys(agrupado).sort().forEach(grupo=>{
-    const [anio, clasif] = grupo.split(' · ');
-    Object.keys(agrupado[grupo]).sort((a,b)=>agrupado[grupo][b]-agrupado[grupo][a]).forEach(clave=>{
-      filas.push({ [nombreColGrupo]: anio, 'Clasificación': clasif || '', [nombreColClave]: clave, 'Bajas': agrupado[grupo][clave] });
-    });
-  });
-  return filas;
-}
+document.getElementById('rotFiltroAnio').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if(!b) return;
+  ROT_ANIO = b.dataset.v; renderResumenRotacion();
+});
+document.getElementById('rotFiltroTipo').addEventListener('click', ev => {
+  const b = ev.target.closest('button'); if(!b) return;
+  ROT_TIPO = b.dataset.v; renderResumenRotacion();
+});
+// "Sin clasificar" lleva a Bajas y seguimiento ya filtrado
+document.getElementById('kpiRotPend').addEventListener('click', () => {
+  document.querySelector('#view-rotacion .subtabs button[data-sub3="bajas"]').click();
+  document.getElementById('bajaFiltroClasificacion').value = '__sin__';
+  const selAnio = document.getElementById('bajaFiltroAnio');
+  selAnio.value = [...selAnio.options].some(o => o.value === ROT_ANIO) ? ROT_ANIO : '';
+  paginaBajas = 1;
+  renderBajasSeguimiento();
+});
 
+/* =========================================================
+   EXPORTAR RESUMEN DE ROTACIÓN A EXCEL — lo que está en pantalla (año y tipo elegidos)
+   ========================================================= */
 document.getElementById('btnExportarResumenRotacion').addEventListener('click', ()=>{
   if(!ULTIMO_RESUMEN_ROTACION){
     alert('Primero presiona "Actualizar resumen" (o entra a la pestaña Resumen) para generar los datos a exportar.');
@@ -5979,65 +5766,19 @@ document.getElementById('btnExportarResumenRotacion').addEventListener('click', 
   }
   const d = ULTIMO_RESUMEN_ROTACION;
   const wb = XLSX.utils.book_new();
-
-  // Hoja 1: KPIs generales
-  const hojaKpis = [
-    {Indicador:'Total de bajas', Valor: d.kpis.total},
-    {Indicador:'Bajas voluntarias', Valor: d.kpis.voluntarias},
-    {Indicador:'Bajas forzadas', Valor: d.kpis.forzadas},
-    {Indicador:'% Voluntarias del total', Valor: d.kpis.total ? +((d.kpis.voluntarias/d.kpis.total)*100).toFixed(1) : 0},
-    {Indicador:'% Forzadas del total', Valor: d.kpis.total ? +((d.kpis.forzadas/d.kpis.total)*100).toFixed(1) : 0},
-    {Indicador:'Antigüedad promedio al momento de la baja (años)', Valor: d.kpis.antiguedadPromedioAnios ?? ''}
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaKpis), 'KPIs generales');
-
-  // Hoja 2: % Rotación por año
-  const hojaRotacion = d.rotacionPorAnio.map(r=>({Año:r.anio, '% Rotación Voluntaria':r.voluntariaPct, '% Rotación Forzada':r.forzadaPct, '% Rotación Total': +(r.voluntariaPct + r.forzadaPct).toFixed(1)}));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaRotacion.length?hojaRotacion:[{Año:'',
-    '% Rotación Voluntaria':'','% Rotación Forzada':'','% Rotación Total':''}]), 'Rotación por año');
-
-  // Hoja 3: Bajas por año (Voluntaria/Forzada/Sin clasificar)
-  const hojaBajasAnio = Object.keys(d.bajasPorAnio).sort().map(a=>({
-    Año:a, Voluntaria:d.bajasPorAnio[a].Voluntaria, Forzada:d.bajasPorAnio[a].Forzada, 'Sin clasificar':d.bajasPorAnio[a].SinClasificar,
-    Total: d.bajasPorAnio[a].Voluntaria + d.bajasPorAnio[a].Forzada + d.bajasPorAnio[a].SinClasificar
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaBajasAnio), 'Bajas por año');
-
-  // Hoja 4: Permanencia (antigüedad al momento de la baja)
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(d.permanencia.map(p=>({'Rango de antigüedad':p.rango, 'Bajas':p.bajas, '% del total':p.pct}))), 'Permanencia');
-  const filasPermAnio = filasDesdeAgrupadoPorAnio(d.permanenciaPorAnio, 'Año', 'Rango de antigüedad');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasPermAnio.length?filasPermAnio:[{Año:'',Clasificación:'','Rango de antigüedad':'',Bajas:''}]), 'Permanencia por año');
-
-  // Hoja 5: Causas de renuncia por año
-  const filasCausas = filasDesdeAgrupadoPorAnio(d.causasPorAnio, 'Año', 'Causa');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasCausas.length?filasCausas:[{Año:'',Causa:'',Bajas:''}]), 'Causas de renuncia');
-
-  // Hoja 6: Bajas por tipo de empleado y año
-  const filasTipo = filasDesdeAgrupadoPorAnio(d.tipoPorAnio, 'Año', 'Tipo de empleado');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasTipo.length?filasTipo:[{Año:'','Tipo de empleado':'',Bajas:''}]), 'Bajas por tipo empleado');
-
-  // Hoja 7: Bajas por motivo y año
-  const filasMotivo = filasDesdeAgrupadoPorAnio(d.motivoPorAnio, 'Año', 'Motivo');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasMotivo.length?filasMotivo:[{Año:'',Motivo:'',Bajas:''}]), 'Bajas por motivo');
-
-  // Hoja 8: Bajas por planta y año
-  const filasPlanta = filasDesdeAgrupadoPorAnio(d.plantaPorAnio, 'Año', 'Planta');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasPlanta.length?filasPlanta:[{Año:'',Planta:'',Bajas:''}]), 'Bajas por planta');
-
-  // Hoja 9: Bajas por puesto y año (todos los puestos, no solo el top 10 que se grafica en pantalla)
-  const filasPuesto = filasDesdeAgrupadoPorAnio(d.puestoPorAnio, 'Año', 'Puesto');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasPuesto.length?filasPuesto:[{Año:'',Puesto:'',Bajas:''}]), 'Bajas por puesto');
-
-  // Hojas 10–13: datos sociodemográficos por año + descuento INFONAVIT promedio por tipo
-  [['edadPorAnio','Rango de edad','Bajas por edad'], ['escolaridadPorAnio','Escolaridad','Bajas por escolaridad'],
-   ['estadoCivilPorAnio','Estado civil','Bajas por estado civil'], ['infonavitPorAnio','Crédito INFONAVIT','Bajas por INFONAVIT']].forEach(([clave, col, hoja])=>{
-    const filas = filasDesdeAgrupadoPorAnio(d[clave] || {}, 'Año', col);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas.length ? filas : [{Año:'', [col]:'', Bajas:''}]), hoja);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(d.kpis), 'Indicadores');
+  d.temas.forEach(t => {
+    const orden = (t.op && t.op.orden) ? t.op.orden.filter(k => k in t.conteo) : Object.keys(t.conteo).sort((a, b) => totalClasif(t.conteo[b]) - totalClasif(t.conteo[a]));
+    const filas = orden.map(k => {
+      const f = { [t.col]: k };
+      CLASIFICACIONES_RESUMEN.forEach(s => { if(t.hoja !== 'Rotación por año' || s !== 'Sin clasificar') f[s] = t.conteo[k][s] || 0; });
+      f.Total = +CLASIFICACIONES_RESUMEN.reduce((n, s) => n + (t.conteo[k][s] || 0), 0).toFixed(1);
+      return f;
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas.length ? filas : [{ [t.col]: '', Total: '' }]), t.hoja.slice(0, 31));
   });
-  const filasDesc = d.descuentoInfonavit || [];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filasDesc.length ? filasDesc : [{'Tipo de descuento':'', 'Personas con crédito':'', 'Descuento promedio':''}]), 'Descuento INFONAVIT');
-
-  XLSX.writeFile(wb, 'Resumen_Rotacion_Personal_' + hoyISO() + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(d.descuento.length ? d.descuento : [{'Tipo de descuento':'', 'Personas con crédito':'', 'Descuento promedio':''}]), 'Descuento INFONAVIT');
+  XLSX.writeFile(wb, 'Resumen_Rotacion_' + (d.anio || 'todos') + '_' + hoyISO() + '.xlsx');
 });
 
 document.getElementById('btnActualizarResumenRotacion').addEventListener('click', renderResumenRotacion);
