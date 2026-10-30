@@ -2307,7 +2307,8 @@ function populateVacanteSelect(){
   const cEdit = candidatoEnEdicionId ? STATE.candidatos.find(c=>c.id===candidatoEnEdicionId) : null;
   const disponibles = STATE.vacantes.filter(v => v.status === "Abierta" || v.status === "En proceso" || (cEdit && v.id === cEdit.vacanteId));
   sel.innerHTML = '<option value="">Selecciona una vacante…</option>' +
-    disponibles.map(v=>`<option value="${v.id}">${v.puesto} — ${v.planta}</option>`).join('');
+    // la fecha de apertura distingue vacantes del mismo puesto y planta
+    disponibles.map(v=>`<option value="${v.id}">${v.puesto} — ${v.planta} — abierta ${formatoFechaLegible(v.fechaApertura)}</option>`).join('');
   if(actual && disponibles.some(v=>v.id===actual)) sel.value = actual;
 }
 
