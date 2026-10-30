@@ -2921,7 +2921,10 @@ function verDetalleCandidato(id){
   document.getElementById('detObsMovimiento').value = '';
   renderTimeline(c);
   cargarSeccionPsicometriaCandidato(c);
-  document.getElementById('candidatoDetalle').style.display='block';
+  const detalle = document.getElementById('candidatoDetalle');
+  detalle.style.display='block';
+  // El expediente se dibuja debajo de toda la lista: sin esto parecía que "Ver historial" no abría nada
+  detalle.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 function renderTimeline(c){
