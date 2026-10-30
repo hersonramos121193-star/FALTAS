@@ -2504,9 +2504,13 @@ function renderCatalogos(){
   sel.innerHTML = [...vistos.values()].sort().map(p => `<option value="${escapeHtml(p)}"${elegidos.has(normTxt(p)) ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
   // listas para elegir: en "Registrar curso" el agente se guarda por nombre (así se ve aunque luego se borre del catálogo)
   const nombreCurso = (id) => (cursos.find(c => String(c.ID) === String(id)) || {}).Nombre || id;
-  const nombreAgente = (id) => (agentePorId(id) || {}).Nombre || id;
+  // un mismo agente puede tener varios instructores: el texto lleva el instructor para distinguirlos
+  const etiquetaAgente = (a) => a.Instructor ? `${a.Nombre} — ${a.Instructor}` : a.Nombre;
+  const nombreAgente = (id) => { const a = agentePorId(id); return a ? etiquetaAgente(a) : id; };
   poblarSelect(document.getElementById('cCatalogoCurso'), cursos.map(c => String(c.ID)), nombreCurso);
-  poblarSelect(document.getElementById('cAgente'), agentes.map(a => a.Nombre));
+  const selAgente = document.getElementById('cAgente');
+  poblarSelect(selAgente, agentes.map(a => a.Nombre));
+  agentes.forEach((a, i) => { selAgente.options[i + 1].textContent = etiquetaAgente(a); });
   poblarSelect(document.getElementById('ccAgente'), agentes.map(a => String(a.ID)), nombreAgente);
 }
 
@@ -2533,12 +2537,13 @@ document.getElementById('cCatalogoCurso').addEventListener('change', (e)=>{
   seleccionarOpcion('cObjetivo', cc.ObjetivoClave);
   marcarRadio('aplicaSirce', cc.AplicaSIRCE === 'NO' ? 'NO' : 'SI');
   const ag = agentePorId(cc.AgenteID);
-  if(ag){ document.getElementById('cAgente').value = ag.Nombre; aplicarAgente(ag); }
+  if(ag){ document.getElementById('cAgente').selectedIndex = (STATE.agentes || []).indexOf(ag) + 1; aplicarAgente(ag); }
   document.getElementById('cVencimiento').checked = Number(cc.VigenciaMeses) > 0;
   recalcularVencimiento();
   actualizarSeccionesCurso();
 });
-document.getElementById('cAgente').addEventListener('change', (e)=> aplicarAgente(agentePorNombre(e.target.value)));
+// por posición y no por nombre: con el nombre repetido siempre se tomaba el primer agente y su instructor
+document.getElementById('cAgente').addEventListener('change', (e)=> aplicarAgente((STATE.agentes || [])[e.target.selectedIndex - 1]));
 ['cFecha', 'cFechaFin'].forEach(id => document.getElementById(id).addEventListener('change', recalcularVencimiento));
 
 // ---------- vez más reciente de cada curso (base de reentrenamiento y cumplimiento) ----------
