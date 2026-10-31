@@ -4750,8 +4750,10 @@ function filtrarBajas(){
   const estatus = document.getElementById('bajaFiltroEstatus').value;
   const empleadosBaja = (STATE.catalogoEmpleados||[]).filter(e => (e.estatus||'').toUpperCase() === estatus);
 
+  // más recientes primero: bajas por fecha de baja efectiva, reingresos (activos) por fecha de alta; sin fecha al final
+  const fechaOrden = e => (estatus === 'ALTA' ? (esFechaValida(e.fechaAlta) ? e.fechaAlta : '') : efectivaFechaBaja(e.codigo)) || '';
   return empleadosBaja.filter(e=>{
-    if(busq && !((e.nombre||'').toLowerCase().includes(busq) || String(e.codigo).toLowerCase().includes(busq))) return false;
+    if(busq &&!((e.nombre||'').toLowerCase().includes(busq) || String(e.codigo).toLowerCase().includes(busq))) return false;
     const seg = (STATE.seguimientoBajas||[]).find(s=>String(s.codigo)===String(e.codigo)) || {};
     if(clasifFiltro === '__sin__' && seg.clasificacion) return false;
     if(clasifFiltro && clasifFiltro !== '__sin__' && seg.clasificacion !== clasifFiltro) return false;
@@ -4773,7 +4775,9 @@ function filtrarBajas(){
     }
     if(infonavit && e.creditoInfonavit !== infonavit) return false;
     return true;
-  });
+  }).map(e=>({e, f: fechaOrden(e)}))
+    .sort((a,b)=> b.f.localeCompare(a.f) || String(a.e.codigo).localeCompare(String(b.e.codigo), 'es', {numeric:true}))
+    .map(x=>x.e);
 }
 
 function renderBajasSeguimiento(){
