@@ -490,6 +490,18 @@
   .card{overflow-x:auto;} /* tablas anchas se desplazan dentro de su tarjeta, no toda la página */
   .subtabs{flex-wrap:wrap;} /* en celular las pestañas internas bajan de renglón */
   .badge-confirmar{display:inline-block;margin-top:3px;padding:1px 7px;border-radius:99px;background:#FBF1DD;color:#8a6420;font-size:10.5px;font-weight:700;white-space:nowrap;}
+
+  /* ---------- v78: mismo encabezado y pestañas que el resto del dashboard de RH ---------- */
+  .sidebar{border-bottom:0;padding:18px 22px 0;}
+  .sidebar-brand h1{font-size:21px;font-weight:800;letter-spacing:-.3px;}
+  .sidebar-status{font-size:12px;background:rgba(255,255,255,.1);border-radius:999px;padding:5px 12px;}
+  .sidebar-nav{background:#F4F6F8;border-top:3px solid #C89B3C;margin:8px -22px 0;padding:14px 22px 0;gap:6px;}
+  .sidebar-item{color:#6B7B8C;font-weight:600;font-size:14px;border-radius:10px 10px 0 0;padding:10px 18px;}
+  .sidebar-item:hover{background:transparent;color:#122E4A;}
+  .sidebar-item.active{background:#fff;color:#122E4A;font-weight:600;}
+  .sidebar-item .icon{display:inline-flex;width:auto;opacity:.75;}
+  .sidebar-item .icon svg{width:16px;height:16px;}
+  .sidebar-item.active .icon{opacity:1;color:#C89B3C;}
 </style>
 </head>
 <body>
@@ -518,15 +530,15 @@
 
   <nav class="sidebar-nav">
     <div class="sidebar-section-title">General</div>
-    <div class="sidebar-item active" data-view="resumen"><span class="icon">📊</span>Resumen</div>
-    <div class="sidebar-item" data-view="carga"><span class="icon">📁</span>Vacantes</div>
-    <div class="sidebar-item" data-view="catalogo"><span class="icon">👤</span>Catálogo de Candidatos</div>
+    <div class="sidebar-item active" data-view="resumen"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Resumen</div>
+    <div class="sidebar-item" data-view="carga"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Vacantes</div>
+    <div class="sidebar-item" data-view="catalogo"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M18 14.5a6.5 6.5 0 013.5 5.5"/></svg></span>Catálogo de Candidatos</div>
 
     <div class="sidebar-section-title">Reportes</div>
-    <div class="sidebar-item" data-view="rotacion"><span class="icon">🔄</span>Rotación de personal</div>
+    <div class="sidebar-item" data-view="rotacion"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 00-14.9-4M4 4v4h4M4 13a8 8 0 0014.9 4M20 20v-4h-4"/></svg></span>Rotación de personal</div>
 
     <div class="sidebar-section-title">Configuración</div>
-    <div class="sidebar-item" data-view="psicometrias"><span class="icon">🧠</span>Psicometrías</div>
+    <div class="sidebar-item" data-view="psicometrias"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M9 13l2 2 4-4"/></svg></span>Psicometrías</div>
   </nav>
 </aside>
 
