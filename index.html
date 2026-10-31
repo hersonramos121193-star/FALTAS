@@ -247,12 +247,6 @@ tbody tr:hover{background:var(--paper);}
 .modal-close{background:none;border:none;cursor:pointer;color:var(--ink-500);font-size:20px;line-height:1;padding:2px 6px;}
 .modal-body{padding:20px 22px;}
 .modal-foot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;}
-/* saludo al entrar con el avatar del usuario */
-.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;line-height:1;}
-.saludo-avatar{width:96px;height:96px;font-size:52px;margin:6px auto 12px;}
-.saludo-galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:10px;margin-top:14px;}
-.saludo-galeria button{width:56px;height:56px;font-size:30px;border:2px solid transparent;cursor:pointer;}
-.saludo-galeria button:hover,.saludo-galeria button:focus-visible{border-color:var(--navy-900);transform:scale(1.08);}
 
 .toast-wrap{position:fixed;inset:auto 22px 22px auto;margin:0;border:0;padding:0;background:transparent;overflow:visible;z-index:200;display:flex;flex-direction:column;gap:8px;}
 .toast{background:var(--navy-900);color:#fff;padding:11px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;animation:slidein .2s ease;}
@@ -1385,24 +1379,6 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
   </div>
 </dialog>
 
-<!-- Saludo al entrar: avatar del usuario y galería para elegirlo -->
-<dialog class="modal-bg" id="modal-saludo-bg">
-  <div class="modal" style="text-align:center;">
-    <div class="modal-body">
-      <h3 id="saludo-titulo" style="margin:4px 0 0;font-size:19px;color:var(--navy-900);"></h3>
-      <div id="saludo-avatar"></div>
-      <div id="saludo-elegir" class="hidden">
-        <div style="font-size:13px;color:var(--ink-500);">Elige tu avatar</div>
-        <div class="saludo-galeria" id="saludo-galeria"></div>
-      </div>
-    </div>
-    <div class="modal-foot" style="justify-content:center;">
-      <button class="btn btn-ghost" id="saludo-cambiar" onclick="verGaleriaAvatar()">Cambiar avatar</button>
-      <button class="btn" onclick="cerrarSaludo()">Continuar</button>
-    </div>
-  </div>
-</dialog>
-
 <!-- Modal editar ausencia -->
 <dialog class="modal-bg" id="modal-editar-bg">
   <div class="modal">
@@ -1623,7 +1599,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.10.31-v75";
+const APP_VERSION = "2026.10.31-v76";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -4572,11 +4548,10 @@ document.getElementById('login-form').addEventListener('submit', async (ev)=>{
         return;
       }
     }
-    SESION = { token: r.token, usuario: r.usuario, nombre: r.nombre, rol: r.rol, modulos: r.modulos || '', avatar: r.avatar || '', expira: r.expira };
+    SESION = { token: r.token, usuario: r.usuario, nombre: r.nombre, rol: r.rol, modulos: r.modulos || '', expira: r.expira };
     localStorage.setItem(CLAVE_SESION, JSON.stringify(SESION));
     document.body.classList.remove('sin-sesion');
     arrancarApp();
-    mostrarSaludo(); // solo al iniciar sesión, no en cada recarga
   }catch(e){
     err.textContent = /http-|fetch|network|timeout|abort/i.test(e.message) ? 'No se pudo conectar. Revisa tu internet e intenta de nuevo.' : e.message.replace(/^Error:\s*/,'');
   }finally{
@@ -4584,54 +4559,6 @@ document.getElementById('login-form').addEventListener('submit', async (ev)=>{
     btn.textContent = loginClaveTemporal ? 'Guardar contraseña y entrar' : 'Entrar';
   }
 });
-
-/* ============================================================
-   SALUDO Y AVATAR (se guarda en la columna "avatar" de la pestaña Usuarios)
-   ============================================================ */
-const AVATARES = [
-  {id:'leon', emoji:'🦁', color:'#FBE3B0'}, {id:'tigre', emoji:'🐯', color:'#F9D2B4'}, {id:'zorro', emoji:'🦊', color:'#F6C9B8'},
-  {id:'panda', emoji:'🐼', color:'#DDE3E8'}, {id:'koala', emoji:'🐨', color:'#E3E7EA'}, {id:'rana', emoji:'🐸', color:'#CDEBD5'},
-  {id:'buho', emoji:'🦉', color:'#E8DACB'}, {id:'pinguino', emoji:'🐧', color:'#CFE2EC'}, {id:'tortuga', emoji:'🐢', color:'#D2EBDF'},
-  {id:'pulpo', emoji:'🐙', color:'#F2D0DC'}, {id:'mariposa', emoji:'🦋', color:'#D3E0F7'}, {id:'abeja', emoji:'🐝', color:'#F8E7B5'},
-  {id:'cactus', emoji:'🌵', color:'#D6EAD3'}, {id:'girasol', emoji:'🌻', color:'#F7E3AE'}, {id:'cohete', emoji:'🚀', color:'#D5DAEE'},
-  {id:'engrane', emoji:'⚙️', color:'#DFE3E7'}];
-let saludoTimer = null;
-function avatarHTML(a, clase){ return `<span class="avatar ${clase}" style="background:${a.color}">${a.emoji}</span>`; }
-function mostrarSaludo(){
-  const a = AVATARES.find(x=> x.id === SESION.avatar);
-  document.getElementById('saludo-titulo').textContent = `¡Hola, ${(SESION.nombre || SESION.usuario).split(' ')[0]}!`;
-  document.getElementById('saludo-avatar').innerHTML = a ? avatarHTML(a, 'saludo-avatar') : '';
-  document.getElementById('saludo-cambiar').classList.toggle('hidden', !a);
-  document.getElementById('saludo-elegir').classList.add('hidden');
-  const dlg = document.getElementById('modal-saludo-bg');
-  if(!dlg.open) dlg.showModal();
-  clearTimeout(saludoTimer);
-  if(a) saludoTimer = setTimeout(cerrarSaludo, 4000);
-  else verGaleriaAvatar();
-}
-function verGaleriaAvatar(){
-  clearTimeout(saludoTimer);
-  document.getElementById('saludo-cambiar').classList.add('hidden');
-  document.getElementById('saludo-galeria').innerHTML = AVATARES.map(a=>
-    `<button type="button" class="avatar" style="background:${a.color}" title="${a.id}" onclick="elegirAvatar('${a.id}')">${a.emoji}</button>`).join('');
-  document.getElementById('saludo-elegir').classList.remove('hidden');
-}
-async function elegirAvatar(id){
-  try{
-    const r = await apiPost({action:'guardarAvatar', avatar:id});
-    if(!r || !r.ok) throw new Error(r && r.error);
-    SESION.avatar = id;
-    localStorage.setItem(CLAVE_SESION, JSON.stringify(SESION));
-    mostrarSaludo();
-  }catch(e){
-    mostrarToast('No se pudo guardar el avatar (¿falta actualizar Apps Script?)', true);
-  }
-}
-function cerrarSaludo(){
-  clearTimeout(saludoTimer);
-  const dlg = document.getElementById('modal-saludo-bg');
-  if(dlg.open) dlg.close();
-}
 
 (function init(){
   try{ localStorage.removeItem('mmx_script_url'); }catch(e){} // la URL ya viene en el archivo
