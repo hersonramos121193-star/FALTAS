@@ -157,6 +157,12 @@
   table{width:100%;border-collapse:collapse;font-size:13px;}
   th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;color:var(--text-dim);padding:8px 10px;border-bottom:2px solid #EDEEEF;}
   td{padding:9px 10px;border-bottom:1px solid #F1F2F3;}
+  tbody tr:hover td{background:#F7F9FB;}
+  /* etapa del candidato como etiqueta: azul en proceso, ámbar por cerrar, verde contratado, gris descartado */
+  .etapa-tag{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap;background:#E6EEF8;color:#1F4E8C;}
+  .etapa-tag.cierre{background:#FBF1DD;color:#8A6420;}
+  .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
+  .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
   tr:hover td{background:#F7F9FA;}
 
   .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;}
@@ -2058,7 +2064,7 @@ function renderResumen(){
         <td><strong>${v.puesto}</strong></td>
         <td>${v.planta}</td>
         <td>${v.solicitante}</td>
-        <td>${v.fechaApertura}</td>
+        <td>${formatoFechaLegible(v.fechaApertura)}</td>
         <td>${dias}</td>
         <td><span class="semaforo ${sem.clase}"><span class="sq"></span>${sem.texto}</span></td>
         <td>${cubiertas} / ${total}</td>
@@ -2515,7 +2521,7 @@ function refreshCargaLists(){
         <td><button class="chevron-btn" id="chev_${v.id}" onclick="toggleDetalleVacante('${v.id}')">▸</button></td>
         <td><strong>${v.puesto}</strong>${v.origenLocal?'<span class="badge-local">MANUAL</span>':''}</td>
         <td>${v.planta}</td>
-        <td>${v.fechaApertura}</td>
+        <td>${formatoFechaLegible(v.fechaApertura)}</td>
         <td>${dias}</td>
         <td><span class="semaforo ${sem.clase}"><span class="sq"></span>${sem.texto}</span></td>
         <td>${cubiertas} / ${total} ${cubiertas>0?'<span style="color:var(--text-dim);font-size:11px;">cubiertas</span>':''}</td>
@@ -2557,7 +2563,7 @@ function refreshCargaLists(){
         <td><button class="chevron-btn" id="chev_${v.id}" onclick="toggleDetalleVacante('${v.id}')">▸</button></td>
         <td><strong>${v.puesto}</strong>${v.origenLocal?'<span class="badge-local">MANUAL</span>':''}</td>
         <td>${v.planta}</td>
-        <td>${v.fechaApertura}</td>
+        <td>${formatoFechaLegible(v.fechaApertura)}</td>
         <td>${v.fechaCierre || '—'}</td>
         <td>${promedio !== null ? promedio + ' d (prom. ' + totalPlazas(v) + ' plaza' + (totalPlazas(v)>1?'s':'') + ')' : '—'}</td>
         <td>${contratados.length ? contratados.map(n=>`<strong>${n}</strong>`).join(', ') : '<span style="color:var(--text-dim);">No especificado</span>'}</td>
@@ -2586,7 +2592,7 @@ function refreshCargaLists(){
       return `<tr>
         <td><strong>${v.puesto}</strong>${v.origenLocal?'<span class="badge-local">MANUAL</span>':''}</td>
         <td>${v.planta}</td>
-        <td>${v.fechaApertura}</td>
+        <td>${formatoFechaLegible(v.fechaApertura)}</td>
         <td>${v.fechaCierre || '—'}</td>
         <td>${v.motivoCancelacion || '<span style="color:var(--text-dim);">No especificado</span>'}</td>
         <td class="row-actions">
@@ -2722,7 +2728,7 @@ function abrirModalCierre(vacanteId){
       <div class="candidato-opcion" id="opcion_${c.id}" onclick="seleccionarCandidatoCierre('${c.id}')">
         <div>
           <div class="nombre">${c.nombre}</div>
-          <div class="etapa">${c.etapaActual} · postulado ${c.fechaPostulacion}</div>
+          <div class="etapa">${etiquetaEtapa(c.etapaActual)} · postulado ${formatoFechaLegible(c.fechaPostulacion)}</div>
         </div>
         <div id="check_${c.id}"></div>
       </div>
@@ -3051,7 +3057,7 @@ function verCandidatosDeVacante(vacanteId){
   const cands = candidatosDeVacante(vacanteId);
   const idsCubren = new Set(plazasCubiertas(v).map(p=>p.candidatoId));
   document.getElementById('vacDetPuesto').textContent = v.puesto;
-  document.getElementById('vacDetInfo').textContent = `${v.planta} · Solicitante: ${v.solicitante} · Abierta desde ${v.fechaApertura} (${diasDesde(v.fechaApertura)} días) · Plazas: ${plazasCubiertas(v).length}/${totalPlazas(v)}`;
+  document.getElementById('vacDetInfo').textContent = `${v.planta} · Solicitante: ${v.solicitante} · Abierta desde ${formatoFechaLegible(v.fechaApertura)} (${diasDesde(v.fechaApertura)} días) · Plazas: ${plazasCubiertas(v).length}/${totalPlazas(v)}`;
 
   const tbody = document.getElementById('tblCandidatosDeVacante');
   const empty = document.getElementById('emptyVacCand');
@@ -3065,8 +3071,8 @@ function verCandidatosDeVacante(vacanteId){
       return `<tr style="cursor:pointer;" onclick="verCandidatoEnVacante('${c.id}')">
         <td><strong>${c.nombre}</strong>${cubre?'<span class="badge-local" style="background:#E6F3EB;color:var(--ok);">PLAZA CUBIERTA</span>':''}</td>
         <td>${c.fuente}</td>
-        <td>${c.fechaPostulacion}</td>
-        <td>${c.etapaActual}</td>
+        <td>${formatoFechaLegible(c.fechaPostulacion)}</td>
+        <td>${etiquetaEtapa(c.etapaActual)}</td>
         <td>${diasProceso}</td>
         <td class="row-actions"><button onclick="event.stopPropagation();verCandidatoEnVacante('${c.id}')">Ver historial</button></td>
       </tr>`;
@@ -3135,8 +3141,8 @@ function renderCatalogo(){
       <td>${vac ? vac.puesto : '—'}</td>
       <td>${vac ? vac.planta : '—'}</td>
       <td>${c.fuente}</td>
-      <td>${c.fechaPostulacion}</td>
-      <td>${c.etapaActual}</td>
+      <td>${formatoFechaLegible(c.fechaPostulacion)}</td>
+      <td>${etiquetaEtapa(c.etapaActual)}</td>
       <td>${diasProceso}</td>
       <td class="row-actions"><button onclick="event.stopPropagation();irAListadoCandidatosYVerDetalle('${c.id}')">Ver historial</button><button onclick="event.stopPropagation();editarCandidato('${c.id}')">Editar</button><button onclick="event.stopPropagation();eliminarCandidato('${c.id}')" style="color:var(--crit);border-color:var(--crit);">Eliminar</button></td>
     </tr>`;
@@ -3544,6 +3550,8 @@ function parsearFechaPresentacion(texto){
   if(!mes || !dia || !anio) return null;
   return `${anio}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
 }
+const CLASE_ETAPA = { 'Exámenes médicos':'cierre', 'Oferta':'cierre', 'Contratación':'contratado', 'Descartado':'descartado' };
+function etiquetaEtapa(etapa){ return etapa ? `<span class="etapa-tag ${CLASE_ETAPA[etapa] || ''}">${etapa}</span>` : '—'; }
 function formatoFechaLegible(iso){
   if(!iso) return '—';
   const [a,m,d] = iso.split('-');
