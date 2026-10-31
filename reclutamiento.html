@@ -1186,6 +1186,16 @@
               <option value="BAJA">Bajas</option><option value="ALTA">Activos (reingresos)</option>
             </select>
           </div>
+          <div><label>Mes de baja</label><select id="bajaFiltroMes"><option value="">Todos</option></select></div>
+          <div><label>Área</label><select id="bajaFiltroArea"><option value="">Todas</option></select></div>
+          <div><label>Puesto</label><select id="bajaFiltroPuesto"><option value="">Todos</option></select></div>
+          <div><label>Motivo</label><select id="bajaFiltroMotivo"><option value="">Todos</option></select></div>
+          <div><label>Causa (si renuncia)</label><select id="bajaFiltroCausa"><option value="">Todas</option></select></div>
+          <div><label>Antigüedad</label><select id="bajaFiltroAntiguedad"><option value="">Todas</option></select></div>
+          <div><label>INFONAVIT</label>
+            <select id="bajaFiltroInfonavit"><option value="">Todos</option><option value="SI">Sí</option><option value="NO">No</option></select>
+          </div>
+          <div style="align-self:flex-end;"><button type="button" class="btn ghost" id="bajaLimpiarFiltros">Limpiar filtros</button></div>
         </div>
         <div style="overflow-x:auto;">
           <table style="min-width:1950px;font-size:12px;">
@@ -4703,6 +4713,27 @@ function poblarFiltroAnioBajas(){
   const lista = [...anios].sort().reverse();
   sel.innerHTML = '<option value="">Todos</option>' + lista.map(a=>`<option value="${a}">${a}</option>`).join('');
   if(lista.includes(actual)) sel.value = actual;
+  poblarFiltrosExtraBajas();
+}
+
+// Listas de los demás filtros de Bajas y seguimiento: solo con valores que existen en las bajas
+function llenarSelectBajas(id, opciones, textoTodos){
+  const sel = document.getElementById(id);
+  const actual = sel.value;
+  sel.innerHTML = `<option value="">${textoTodos}</option>` +
+    opciones.map(([v, t])=>`<option value="${String(v).replace(/"/g,'&quot;')}">${t}</option>`).join('');
+  if(opciones.some(([v])=>String(v)===actual)) sel.value = actual;
+}
+function poblarFiltrosExtraBajas(){
+  const bajas = (STATE.catalogoEmpleados||[]).filter(e=>(e.estatus||'').toUpperCase()==='BAJA');
+  const segs = bajas.map(e=>(STATE.seguimientoBajas||[]).find(s=>String(s.codigo)===String(e.codigo)) || {});
+  const distintos = valores => [...new Set(valores.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es')).map(v=>[v, v]);
+  llenarSelectBajas('bajaFiltroMes', MESES_NOMBRE.map((m,i)=>[String(i+1).padStart(2,'0'), m]), 'Todos');
+  llenarSelectBajas('bajaFiltroArea', distintos(bajas.map(e=>e.area)), 'Todas');
+  llenarSelectBajas('bajaFiltroPuesto', distintos(bajas.map(e=>e.puesto)), 'Todos');
+  llenarSelectBajas('bajaFiltroMotivo', [...distintos(segs.map(s=>s.motivo)), ['__sin__','Sin motivo']], 'Todos');
+  llenarSelectBajas('bajaFiltroCausa', [...distintos(segs.map(s=>s.causa)), ['__sin__','Renuncia sin causa']], 'Todas');
+  llenarSelectBajas('bajaFiltroAntiguedad', RANGOS_PERMANENCIA.map((r,i)=>[String(i), r.label]), 'Todas');
 }
 
 const BAJAS_POR_PAGINA = 40;
@@ -4712,6 +4743,9 @@ function filtrarBajas(){
   const busq = (document.getElementById('bajaBuscar').value || '').trim().toLowerCase();
   const clasifFiltro = document.getElementById('bajaFiltroClasificacion').value;
   const anioFiltro = document.getElementById('bajaFiltroAnio').value;
+  const val = id => document.getElementById(id).value;
+  const mes = val('bajaFiltroMes'), area = val('bajaFiltroArea'), puesto = val('bajaFiltroPuesto');
+  const motivo = val('bajaFiltroMotivo'), causa = val('bajaFiltroCausa'), antig = val('bajaFiltroAntiguedad'), infonavit = val('bajaFiltroInfonavit');
 
   const estatus = document.getElementById('bajaFiltroEstatus').value;
   const empleadosBaja = (STATE.catalogoEmpleados||[]).filter(e => (e.estatus||'').toUpperCase() === estatus);
@@ -4725,6 +4759,19 @@ function filtrarBajas(){
       const fBaja = efectivaFechaBaja(e.codigo);
       if(!fBaja || fBaja.slice(0,4) !== anioFiltro) return false;
     }
+    if(mes){
+      const fBaja = efectivaFechaBaja(e.codigo);
+      if(!fBaja || fBaja.slice(5,7) !== mes) return false;
+    }
+    if(area && (e.area||'') !== area) return false;
+    if(puesto && (e.puesto||'') !== puesto) return false;
+    if(motivo === '__sin__' ? !!seg.motivo : (motivo && seg.motivo !== motivo)) return false;
+    if(causa === '__sin__' ? !(seg.motivo === 'Renuncia' && !seg.causa) : (causa && seg.causa !== causa)) return false;
+    if(antig !== ''){
+      const r = RANGOS_PERMANENCIA[antig], dias = calcularColumnasAutomaticasBaja(e).antiguedad;
+      if(typeof dias !== 'number' || dias < r.min || dias > r.max) return false;
+    }
+    if(infonavit && e.creditoInfonavit !== infonavit) return false;
     return true;
   });
 }
@@ -4826,6 +4873,13 @@ document.getElementById('bajaBuscar').addEventListener('input', ()=>{ paginaBaja
 document.getElementById('bajaFiltroClasificacion').addEventListener('change', ()=>{ paginaBajas=1; renderBajasSeguimiento(); });
 document.getElementById('bajaFiltroAnio').addEventListener('change', ()=>{ paginaBajas=1; renderBajasSeguimiento(); });
 document.getElementById('bajaFiltroEstatus').addEventListener('change', ()=>{ paginaBajas=1; renderBajasSeguimiento(); });
+['bajaFiltroMes','bajaFiltroArea','bajaFiltroPuesto','bajaFiltroMotivo','bajaFiltroCausa','bajaFiltroAntiguedad','bajaFiltroInfonavit'].forEach(id=>
+  document.getElementById(id).addEventListener('change', ()=>{ paginaBajas=1; renderBajasSeguimiento(); }));
+document.getElementById('bajaLimpiarFiltros').addEventListener('click', ()=>{
+  document.getElementById('bajaBuscar').value = '';
+  document.querySelectorAll('select[id^="bajaFiltro"]').forEach(s=>{ s.value = s.id === 'bajaFiltroEstatus' ? 'BAJA' : ''; });
+  paginaBajas = 1; renderBajasSeguimiento();
+});
 
 /* =========================================================
    AUTOLLENAR CALCULADORA desde el catálogo + seguimiento de bajas
