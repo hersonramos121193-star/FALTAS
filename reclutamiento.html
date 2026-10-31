@@ -1881,6 +1881,7 @@ document.querySelectorAll('.subtabs button[data-sub]').forEach(btn=>{
     // solo dentro de la vista de este botón: antes ocultaba también los paneles de la otra vista
     // (Vacantes quedaba en blanco al regresar desde Candidatos)
     const vista = btn.closest('.view');
+    if(vista.id === 'view-catalogo') ubicarExpediente(false);
     vista.querySelectorAll('.subtabs button').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     vista.querySelectorAll('.sub-panel').forEach(p=>p.style.display='none');
@@ -2343,7 +2344,12 @@ document.getElementById('btnGuardarCand').addEventListener('click', ()=>{
   renderResumen();
   alert('Candidato registrado y vinculado a la vacante seleccionada. También quedó disponible en el Catálogo de Candidatos.');
 });
-document.getElementById('btnLimpiarCand').addEventListener('click', limpiarFormCandidato);
+document.getElementById('btnLimpiarCand').addEventListener('click', ()=>{
+  // editando desde Vacantes, "Limpiar" cancela la edición y regresa al expediente
+  const id = expedienteEnVacante && candidatoEnEdicionId;
+  limpiarFormCandidato();
+  if(id) verCandidatoEnVacante(id);
+});
 
 /* =========================================================
    EDITAR DATOS DE UN CANDIDATO (nombre, teléfono, vacante, fuente,
@@ -2371,6 +2377,13 @@ function editarCandidato(id){
   document.getElementById('cEtapa').closest('.form-field').style.display = 'none';
   document.querySelector('#sub-nuevoCandidato h2').textContent = 'Editar candidato: ' + c.nombre;
   document.getElementById('btnGuardarCand').textContent = 'Guardar cambios';
+  if(expedienteEnVacante){
+    document.getElementById('candidatoDetalle').style.display='none';
+    const form = document.getElementById('sub-nuevoCandidato');
+    form.style.display='block';
+    form.scrollIntoView({behavior:'smooth', block:'start'});
+    return;
+  }
   switchToView('catalogo');
   document.querySelector('#view-catalogo .subtabs button[data-sub="nuevoCandidato"]').click();
 }
@@ -2411,7 +2424,7 @@ function guardarEdicionCandidato(nombre, vacanteId, fecha){
   limpiarFormCandidato();
   refreshCargaLists();
   renderResumen();
-  irAListadoCandidatosYVerDetalle(c.id);
+  if(expedienteEnVacante) verCandidatoEnVacante(c.id); else irAListadoCandidatosYVerDetalle(c.id);
   alert('Datos del candidato actualizados.');
 }
 
@@ -2926,6 +2939,8 @@ function verDetalleCandidato(id){
   detalle.style.display='block';
   // El expediente se dibuja debajo de toda la lista: sin esto parecía que "Ver historial" no abría nada
   detalle.scrollIntoView({behavior:'smooth', block:'start'});
+  // abierto desde Vacantes: la tabla de candidatos de la vacante refleja el cambio (ej. la etapa)
+  if(expedienteEnVacante && vacanteCandidatosId) verCandidatosDeVacante(vacanteCandidatosId);
 }
 
 function renderTimeline(c){
@@ -3024,9 +3039,15 @@ document.getElementById('detFuente').addEventListener('change', ()=>{
 /* =========================================================
    VER CANDIDATOS DE UNA VACANTE (desde el listado de vacantes)
    ========================================================= */
+let vacanteCandidatosId = null; // vacante cuyo listado de candidatos está abierto en Vacantes
 function verCandidatosDeVacante(vacanteId){
   const v = STATE.vacantes.find(v=>v.id===vacanteId);
   if(!v) return;
+  if(vacanteId !== vacanteCandidatosId && expedienteEnVacante){
+    document.getElementById('candidatoDetalle').style.display='none';
+    document.getElementById('sub-nuevoCandidato').style.display='none';
+  }
+  vacanteCandidatosId = vacanteId;
   const cands = candidatosDeVacante(vacanteId);
   const idsCubren = new Set(plazasCubiertas(v).map(p=>p.candidatoId));
   document.getElementById('vacDetPuesto').textContent = v.puesto;
@@ -3041,19 +3062,34 @@ function verCandidatosDeVacante(vacanteId){
     tbody.innerHTML = cands.map(c=>{
       const diasProceso = diasEnProceso(c);
       const cubre = idsCubren.has(c.id);
-      return `<tr style="cursor:pointer;" onclick="irAListadoCandidatosYVerDetalle('${c.id}')">
+      return `<tr style="cursor:pointer;" onclick="verCandidatoEnVacante('${c.id}')">
         <td><strong>${c.nombre}</strong>${cubre?'<span class="badge-local" style="background:#E6F3EB;color:var(--ok);">PLAZA CUBIERTA</span>':''}</td>
         <td>${c.fuente}</td>
         <td>${c.fechaPostulacion}</td>
         <td>${c.etapaActual}</td>
         <td>${diasProceso}</td>
-        <td class="row-actions"><button onclick="event.stopPropagation();irAListadoCandidatosYVerDetalle('${c.id}')">Ver historial</button></td>
+        <td class="row-actions"><button onclick="event.stopPropagation();verCandidatoEnVacante('${c.id}')">Ver historial</button></td>
       </tr>`;
     }).join('');
   }
   document.getElementById('vacanteCandidatosPanel').style.display='block';
 }
+// El expediente y el formulario "Editar datos" son los mismos en Catálogo y en Vacantes: solo se mueven de lugar
+let expedienteEnVacante = false;
+function ubicarExpediente(enVacante){
+  if(enVacante === expedienteEnVacante) return;
+  expedienteEnVacante = enVacante;
+  const det = document.getElementById('candidatoDetalle'), form = document.getElementById('sub-nuevoCandidato');
+  if(enVacante){ document.getElementById('vacanteCandidatosPanel').append(det, form); }
+  else { const cat = document.getElementById('sub-verCatalogo'); cat.appendChild(det); cat.after(form); }
+}
+function verCandidatoEnVacante(candId){
+  ubicarExpediente(true);
+  document.getElementById('sub-nuevoCandidato').style.display='none';
+  verDetalleCandidato(candId);
+}
 function irAListadoCandidatosYVerDetalle(candId){
+  ubicarExpediente(false);
   switchToView('catalogo');
   document.querySelectorAll('#view-catalogo .subtabs button').forEach(b=>b.classList.remove('active'));
   document.querySelector('.subtabs button[data-sub="verCatalogo"]').classList.add('active');
