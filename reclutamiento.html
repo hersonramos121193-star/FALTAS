@@ -163,6 +163,13 @@
   .etapa-tag.cierre{background:#FBF1DD;color:#8A6420;}
   .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
   .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
+  /* avance por requisición (Resumen) */
+  .tabla-avance th{white-space:normal;line-height:1.25;vertical-align:bottom;}
+  .tabla-avance td.n{text-align:center;font-weight:700;color:#1F4E8C;}
+  .tabla-avance td.n.cero{color:#C3CAD1;font-weight:400;}
+  .tabla-avance tbody tr{cursor:pointer;}
+  .avance-barra{height:7px;background:#EDEEEF;border-radius:4px;overflow:hidden;margin-top:4px;min-width:70px;}
+  .avance-barra i{display:block;height:100%;background:#2E7D4F;border-radius:4px;}
   tr:hover td{background:#F7F9FA;}
 
   .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;}
@@ -583,6 +590,17 @@
       <div class="kpi"><div class="label">Tiempo prom. de cobertura</div><div class="value" id="kpiTTF">–</div><div class="delta">días, vacantes cerradas</div></div>
       <div class="kpi"><div class="label">Contratados (mes)</div><div class="value" id="kpiContratados">–</div><div class="delta">altas confirmadas</div></div>
       <div class="kpi"><div class="label">Vacantes &gt; 30 días</div><div class="value" id="kpiCriticas">–</div><div class="delta">requieren atención</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2>Avance por requisición</h2>
+      <div class="desc">Requisiciones abiertas y en proceso: planta, plazas cubiertas y cuántos candidatos están hoy en cada etapa. Clic en una fila para ver sus candidatos.</div>
+      <div style="overflow-x:auto;">
+        <table class="tabla-avance">
+          <thead><tr id="avanceHead"></tr></thead>
+          <tbody id="tblAvanceReq"></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="grid">
@@ -2097,6 +2115,8 @@ function renderResumen(){
     }).join('');
   }
 
+  renderAvanceRequisiciones(abiertas);
+
   // alertas
   const top = [...abiertas].sort((a,b)=>diasDesde(b.fechaApertura)-diasDesde(a.fechaApertura)).slice(0,6);
   document.getElementById('alertList').innerHTML = top.length ? top.map(v=>{
@@ -2186,6 +2206,42 @@ document.getElementById('fStatus').addEventListener('change', renderResumen);
 document.getElementById('fFuente').addEventListener('change', renderResumen);
 document.getElementById('btnRefresh').addEventListener('click', ()=>{ STATE = loadLocal(); renderResumen(); refreshCargaLists(); });
 /** Exporta a Excel las vacantes y candidatos que cumplen los filtros actuales del Resumen. */
+// Avance por requisición: candidatos de cada vacante según su etapa ACTUAL (el embudo ya muestra el acumulado)
+const ETAPAS_AVANCE = () => ORDEN_ETAPAS.concat('Descartado');
+function avanceRequisicion(v){
+  const cands = candidatosDeVacante(v.id), porEtapa = {};
+  ETAPAS_AVANCE().forEach(e => { porEtapa[e] = cands.filter(c => c.etapaActual === e).length; });
+  return { cubiertas: plazasCubiertas(v).length, total: totalPlazas(v), porEtapa, nCand: cands.length };
+}
+function renderAvanceRequisiciones(abiertas){
+  const etapas = ETAPAS_AVANCE();
+  document.getElementById('avanceHead').innerHTML = '<th>Puesto</th><th>Planta</th><th>Apertura</th><th>Avance</th>' +
+    etapas.map(e => `<th style="text-align:center;">${e}</th>`).join('') + '<th style="text-align:center;">Total</th>';
+  const tbody = document.getElementById('tblAvanceReq');
+  if(!abiertas.length){
+    tbody.innerHTML = `<tr><td colspan="${etapas.length + 5}" class="empty-state">No hay requisiciones abiertas que coincidan con los filtros.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = [...abiertas].sort((a,b)=> diasDesde(b.fechaApertura) - diasDesde(a.fechaApertura)).map(v => {
+    const a = avanceRequisicion(v), sem = semaforoInfo(diasDesde(v.fechaApertura));
+    const pct = a.total ? Math.round(a.cubiertas * 100 / a.total) : 0;
+    return `<tr onclick="irACandidatosDeVacante('${v.id}')" title="Ver candidatos de esta requisición">
+      <td><strong>${v.puesto}</strong></td>
+      <td style="white-space:nowrap;">${v.planta}</td>
+      <td style="white-space:nowrap;">${formatoFechaLegible(v.fechaApertura)}<div><span class="semaforo ${sem.clase}"><span class="sq"></span>${diasDesde(v.fechaApertura)} días</span></div></td>
+      <td style="white-space:nowrap;">${a.cubiertas} / ${a.total} plazas<div class="avance-barra"><i style="width:${pct}%"></i></div></td>
+      ${etapas.map(e => `<td class="n${a.porEtapa[e] ? '' : ' cero'}">${a.porEtapa[e]}</td>`).join('')}
+      <td class="n">${a.nCand}</td>
+    </tr>`;
+  }).join('');
+}
+function irACandidatosDeVacante(id){
+  switchToView('carga');
+  document.querySelector('#view-carga .subtabs button[data-sub="listadoVac"]').click();
+  verCandidatosDeVacante(id);
+  document.getElementById('vacanteCandidatosPanel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
 document.getElementById('btnExport').addEventListener('click', ()=>{
   const vacs = applyFilters();
   const ids = new Set(vacs.map(v=>v.id));
@@ -2201,7 +2257,13 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
       'Etapa actual': c.etapaActual, 'Días en proceso': diasEnProceso(c),
       'Veredicto psicometría': c.veredictoPsicometria ? c.veredictoPsicometria.veredicto : '' };
   });
+  const hojaAvance = vacs.filter(v => v.status === 'Abierta' || v.status === 'En proceso').map(v => {
+    const a = avanceRequisicion(v);
+    return { Puesto: v.puesto, Planta: v.planta, Apertura: v.fechaApertura, 'Días abierta': diasDesde(v.fechaApertura),
+      'Plazas cubiertas': a.cubiertas, 'Plazas totales': a.total, ...a.porEtapa, 'Total candidatos': a.nCand };
+  });
   const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaAvance.length ? hojaAvance : [{Puesto:''}]), 'Avance por requisición');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaVac.length ? hojaVac : [{Puesto:''}]), 'Vacantes');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaCand.length ? hojaCand : [{Candidato:''}]), 'Candidatos');
   XLSX.writeFile(wb, 'Reclutamiento_' + hoyISO() + '.xlsx');
