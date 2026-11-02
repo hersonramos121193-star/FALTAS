@@ -552,7 +552,7 @@
       <select id="fPlanta">
         <option value="">Todas</option>
         <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-        <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option>
+        <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
       </select>
     </div>
     <div>
@@ -688,7 +688,7 @@
           <select id="vPlanta">
             <option value="">Selecciona…</option>
             <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option>
+            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
           </select>
         </div>
         <div class="form-field"><label>Solicitante *</label><input type="text" id="vSolicitante" placeholder="Nombre del jefe/depto que solicita"></div>
@@ -785,7 +785,7 @@
       <select id="catEtapa">
         <option value="">Todas</option>
         <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-        <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option>
+        <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option>
         <option>Contratación</option><option>Descartado</option>
       </select>
     </div>
@@ -829,7 +829,7 @@
             <label>Mover a nueva etapa</label>
             <select id="detNuevaEtapa">
               <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-              <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Contratación</option>
+              <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option><option>Contratación</option>
               <option>Descartado</option>
             </select>
           </div>
@@ -971,7 +971,7 @@
         <div class="form-field"><label>Etapa actual</label>
           <select id="cEtapa">
             <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-            <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Contratación</option>
+            <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option><option>Contratación</option>
             <option>Descartado</option>
           </select>
         </div>
@@ -1017,7 +1017,7 @@
           <select id="critPlanta">
             <option value="">Selecciona…</option>
             <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option>
+            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
           </select>
         </div>
       </div>
@@ -1434,7 +1434,7 @@
     </div>
     <datalist id="abModalAreaLista">
       <option value="Planta 1"></option><option value="Planta 2"></option><option value="Planta 3"></option><option value="Planta 4"></option>
-      <option value="Planta III"></option><option value="Niveladora"></option><option value="Corporativo"></option>
+      <option value="Planta III"></option><option value="Niveladora"></option><option value="Corporativo"></option><option value="Ventas"></option>
       <option value="GM"></option><option value="ZR"></option><option value="OP"></option><option value="FB"></option><option value="IZR"></option>
     </datalist>
     <div class="form-grid" style="grid-template-columns:1fr 1fr;">
@@ -1868,7 +1868,7 @@ function semaforoInfo(dias){
 function pillClass(status){
   return {"Abierta":"abierta","En proceso":"proceso","Cerrada":"cerrada","Cancelada":"cancelada"}[status] || "abierta";
 }
-const ORDEN_ETAPAS = ["Prueba práctica","Exámenes médicos","Entrevista RH","Entrevista jefe directo","Examen psicométrico","Oferta","Contratación"];
+const ORDEN_ETAPAS = ["Prueba práctica","Exámenes médicos","Entrevista RH","Entrevista jefe directo","Examen psicométrico","Oferta","Papelería","Contratación"];
 
 function candidatosDeVacante(vId){
   return STATE.candidatos.filter(c => c.vacanteId === vId);
@@ -3572,7 +3572,7 @@ function parsearFechaPresentacion(texto){
   if(!mes || !dia || !anio) return null;
   return `${anio}-${String(mes).padStart(2,'0')}-${String(dia).padStart(2,'0')}`;
 }
-const CLASE_ETAPA = { 'Exámenes médicos':'cierre', 'Oferta':'cierre', 'Contratación':'contratado', 'Descartado':'descartado' };
+const CLASE_ETAPA = { 'Exámenes médicos':'cierre', 'Oferta':'cierre', 'Papelería':'cierre', 'Contratación':'contratado', 'Descartado':'descartado' };
 function etiquetaEtapa(etapa){ return etapa ? `<span class="etapa-tag ${CLASE_ETAPA[etapa] || ''}">${etapa}</span>` : '—'; }
 function formatoFechaLegible(iso){
   if(!iso) return '—';
