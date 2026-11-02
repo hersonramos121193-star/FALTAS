@@ -164,6 +164,7 @@
   .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
   .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
   /* avance por requisición (Resumen) */
+  .funnel-bar.descartado{background:#A9B2BB !important;}
   .tabla-avance th{white-space:normal;line-height:1.25;vertical-align:bottom;}
   .tabla-avance td.n{text-align:center;font-weight:700;color:#1F4E8C;}
   .tabla-avance td.n.cero{color:#C3CAD1;font-weight:400;}
@@ -605,8 +606,10 @@
 
     <div class="grid">
       <div class="card">
-        <h2>Embudo de conversión</h2>
-        <div class="desc">Candidatos por etapa del pipeline (acumulado, todas las vacantes filtradas)</div>
+        <h2>Candidatos por etapa actual</h2>
+        <div class="desc">Cada candidato cuenta solo en la etapa de su último movimiento registrado.</div>
+        <div style="margin:4px 0 12px;"><label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;">Requisición</label>
+          <select id="funnelVacante" style="width:100%;max-width:520px;"></select></div>
         <div class="funnel" id="funnelWrap"></div>
       </div>
       <div class="card">
@@ -803,7 +806,7 @@
       <select id="catEtapa">
         <option value="">Todas</option>
         <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-        <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option>
+        <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option>
         <option>Contratación</option><option>Descartado</option>
       </select>
     </div>
@@ -847,7 +850,7 @@
             <label>Mover a nueva etapa</label>
             <select id="detNuevaEtapa">
               <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-              <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option><option>Contratación</option>
+              <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option><option>Contratación</option>
               <option>Descartado</option>
             </select>
           </div>
@@ -989,7 +992,7 @@
         <div class="form-field"><label>Etapa actual</label>
           <select id="cEtapa">
             <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option>
-            <option>Entrevista jefe directo</option><option>Examen psicométrico</option><option>Oferta</option><option>Papelería</option><option>Contratación</option>
+            <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option><option>Contratación</option>
             <option>Descartado</option>
           </select>
         </div>
@@ -1886,7 +1889,8 @@ function semaforoInfo(dias){
 function pillClass(status){
   return {"Abierta":"abierta","En proceso":"proceso","Cerrada":"cerrada","Cancelada":"cancelada"}[status] || "abierta";
 }
-const ORDEN_ETAPAS = ["Prueba práctica","Exámenes médicos","Entrevista RH","Entrevista jefe directo","Examen psicométrico","Oferta","Papelería","Contratación"];
+// "Entrevista jefe directo" se retiró en v84: los movimientos viejos con esa etapa se conservan en el historial
+const ORDEN_ETAPAS = ["Prueba práctica","Exámenes médicos","Entrevista RH","Examen psicométrico","Papelería","Oferta","Contratación"];
 
 function candidatosDeVacante(vId){
   return STATE.candidatos.filter(c => c.vacanteId === vId);
@@ -1953,18 +1957,21 @@ document.querySelectorAll('#view-psicometrias .subtabs button').forEach(btn=>{
 let chartTTFInstance = null, chartFuenteInstance = null, chartCerradasPlantaInstance = null, chartCerradasMesInstance = null;
 let chartTiempoTotalVacanteInstance = null, chartTiempoPorEtapaInstance = null;
 
+// Embudo (v84): cada candidato cuenta solo en su etapa actual (su último movimiento), no en todas las que ya pasó
 function buildFunnelData(vacantesFiltradas){
   const idsFiltrados = new Set(vacantesFiltradas.map(v=>v.id));
   const candsRelevantes = STATE.candidatos.filter(c => idsFiltrados.has(c.vacanteId));
-  return ORDEN_ETAPAS.map(etapa => ({
+  return ORDEN_ETAPAS.concat('Descartado').map(etapa => ({
     etapa,
-    total: candsRelevantes.filter(c => etapaMaxAlcanzadaIdx(c) >= ORDEN_ETAPAS.indexOf(etapa)).length
+    total: candsRelevantes.filter(c => etapaVigente(c) === etapa).length
   }));
 }
-/** Etapa más avanzada a la que llegó el candidato según su historial. Así un "Descartado" sigue
- *  contando en el embudo hasta donde llegó (antes desaparecía por completo, incluso de la primera etapa). */
-function etapaMaxAlcanzadaIdx(c){
-  return Math.max(ORDEN_ETAPAS.indexOf(c.etapaActual), ...(c.historial||[]).map(h=>ORDEN_ETAPAS.indexOf(h.etapa)));
+// Lista "Requisición" del embudo: las vacantes que pasan los filtros del Resumen
+function poblarSelectEmbudo(vacantesFiltradas){
+  const sel = document.getElementById('funnelVacante'), actual = sel.value;
+  sel.innerHTML = '<option value="">Todas las requisiciones filtradas</option>' + vacantesFiltradas.map(v =>
+    `<option value="${v.id}">${v.puesto} — ${v.planta} — abierta ${formatoFechaLegible(v.fechaApertura)}</option>`).join('');
+  if(vacantesFiltradas.some(v => v.id === actual)) sel.value = actual;
 }
 function buildTTFPorPlanta(vacantesFiltradas){
   const porPlanta = {};
@@ -2129,15 +2136,7 @@ function renderResumen(){
   }).join('') : `<div class="empty-state">Sin vacantes abiertas registradas.</div>`;
 
   // funnel
-  const funnel = buildFunnelData(vacantesFiltradas);
-  const maxF = Math.max(...funnel.map(f=>f.total), 1);
-  document.getElementById('funnelWrap').innerHTML = funnel.map(f=>{
-    const pct = Math.round((f.total/maxF)*100);
-    return `<div class="funnel-row">
-      <div class="stage-label">${f.etapa}</div>
-      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.max(pct,4)}%">${f.total}</div></div>
-    </div>`;
-  }).join('');
+  renderEmbudo(vacantesFiltradas);
 
   // charts — TTF y fuentes
   const ctx1 = document.getElementById('chartTTF');
@@ -2206,6 +2205,22 @@ document.getElementById('fStatus').addEventListener('change', renderResumen);
 document.getElementById('fFuente').addEventListener('change', renderResumen);
 document.getElementById('btnRefresh').addEventListener('click', ()=>{ STATE = loadLocal(); renderResumen(); refreshCargaLists(); });
 /** Exporta a Excel las vacantes y candidatos que cumplen los filtros actuales del Resumen. */
+function renderEmbudo(vacantesFiltradas){
+  vacantesFiltradas = vacantesFiltradas || applyFilters();
+  poblarSelectEmbudo(vacantesFiltradas);
+  const elegida = document.getElementById('funnelVacante').value;
+  const funnel = buildFunnelData(elegida ? vacantesFiltradas.filter(v => v.id === elegida) : vacantesFiltradas);
+  const maxF = Math.max(...funnel.map(f=>f.total), 1);
+  document.getElementById('funnelWrap').innerHTML = funnel.map(f=>{
+    const pct = Math.round((f.total/maxF)*100);
+    return `<div class="funnel-row">
+      <div class="stage-label">${f.etapa}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar${f.etapa === 'Descartado' ? ' descartado' : ''}" style="width:${Math.max(pct,4)}%">${f.total}</div></div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('funnelVacante').addEventListener('change', ()=> renderEmbudo());
+
 // Avance por requisición: candidatos de cada vacante según su etapa ACTUAL (el embudo ya muestra el acumulado)
 const ETAPAS_AVANCE = () => ORDEN_ETAPAS.concat('Descartado');
 function avanceRequisicion(v){
@@ -3046,7 +3061,7 @@ function renderTimeline(c){
           <div class="tl-edit-form">
             <input type="date" id="editFecha_${h._idx}" value="${h.fecha}">
             <select id="editEtapa_${h._idx}">
-              ${ORDEN_ETAPAS.concat(["Descartado"]).map(e=>`<option ${e===h.etapa?'selected':''}>${e}</option>`).join('')}
+              ${(ORDEN_ETAPAS.concat(["Descartado"]).includes(h.etapa) ? [] : [h.etapa]).concat(ORDEN_ETAPAS, ["Descartado"]).map(e=>`<option ${e===h.etapa?'selected':''}>${e}</option>`).join('')}
             </select>
             <input type="text" id="editObs_${h._idx}" placeholder="Observaciones" value="${(h.observaciones||'').replace(/"/g,'&quot;')}">
             <button class="save" onclick="guardarEdicionMovimiento('${c.id}', ${h._idx})">Guardar</button>
