@@ -163,14 +163,38 @@
   .etapa-tag.cierre{background:#FBF1DD;color:#8A6420;}
   .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
   .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
-  /* avance por requisición (Resumen) */
   .funnel-bar.descartado{background:#A9B2BB !important;}
-  .tabla-avance th{white-space:normal;line-height:1.25;vertical-align:bottom;}
-  .tabla-avance td.n{text-align:center;font-weight:700;color:#1F4E8C;}
-  .tabla-avance td.n.cero{color:#C3CAD1;font-weight:400;}
-  .tabla-avance tbody tr{cursor:pointer;}
-  .avance-barra{height:7px;background:#EDEEEF;border-radius:4px;overflow:hidden;margin-top:4px;min-width:70px;}
-  .avance-barra i{display:block;height:100%;background:#2E7D4F;border-radius:4px;}
+  /* Resumen general y estatus por requisición (v85) */
+  .kpis.resumen-kpis{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+  .resumen-kpis .kpi:nth-child(1){border-left-color:var(--silver);}
+  .resumen-kpis .kpi:nth-child(2){border-left-color:var(--navy);}
+  .resumen-kpis .kpi:nth-child(3){border-left-color:var(--teal);}
+  .resumen-kpis .kpi:nth-child(4){border-left-color:#C89B3C;}
+  .resumen-kpis .kpi:nth-child(4) .value{color:#C89B3C;}
+  .resumen-kpis .kpi:nth-child(5){border-left-color:var(--teal-dk);}
+  .resumen-kpis .kpi:nth-child(6){border-left-color:var(--ok);}
+  .resumen-kpis .kpi:nth-child(7){border-left-color:var(--crit);}
+  .tabla-estatus thead th{background:var(--navy);color:#fff;border-bottom:0;padding:10px;}
+  .tabla-estatus tbody tr{cursor:pointer;}
+  .tabla-estatus tbody tr:nth-child(even) td{background:#F7F8F9;}
+  .tabla-estatus td{vertical-align:middle;}
+  .tabla-estatus .planta{font-size:11.5px;color:var(--text-dim);}
+  .tabla-estatus .num{text-align:center;font-size:17px;font-weight:700;color:var(--navy);}
+  .tabla-estatus .num small{display:block;font-size:10.5px;font-weight:400;color:var(--text-dim);}
+  .tabla-estatus tfoot td{background:#EDEEEF;font-weight:700;color:var(--navy);border-top:2px solid var(--silver-lt);}
+  .pill-etapa{display:inline-block;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:600;color:#fff;margin:2px 4px 2px 0;white-space:nowrap;}
+  .pill-etapa.evaluacion{background:#A7ADB3;}
+  .nota-vac{font-size:11px;color:#B07F1E;font-style:italic;margin-top:2px;}
+  .avance-cel{display:flex;align-items:center;gap:10px;min-width:150px;}
+  .avance-barra{flex:1;height:9px;background:#EDEEEF;border-radius:5px;overflow:hidden;}
+  .avance-barra i{display:block;height:100%;background:var(--teal);border-radius:5px;}
+  .avance-cel b{min-width:38px;text-align:right;color:var(--navy);}
+  .nota-estatus{font-size:11.5px;color:var(--text-dim);font-style:italic;margin-top:10px;line-height:1.6;}
+  .barra-etapas{display:flex;height:30px;border-radius:6px;overflow:hidden;background:#EDEEEF;margin-top:8px;}
+  .barra-etapas i{display:flex;align-items:center;justify-content:center;color:#fff;font-style:normal;font-size:12px;font-weight:700;min-width:18px;}
+  .leyenda-etapas{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12px;color:var(--text);}
+  .leyenda-etapas span{display:inline-flex;align-items:center;gap:6px;}
+  .leyenda-etapas span i{width:11px;height:11px;border-radius:2px;display:inline-block;}
   tr:hover td{background:#F7F9FA;}
 
   .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff;}
@@ -585,23 +609,35 @@
   </div>
 
   <main>
-    <div class="kpis">
-      <div class="kpi"><div class="label">Vacantes abiertas</div><div class="value" id="kpiAbiertas">–</div><div class="delta">activas en todas las plantas</div></div>
-      <div class="kpi"><div class="label">Candidatos en pipeline</div><div class="value" id="kpiCandidatos">–</div><div class="delta">en proceso actualmente</div></div>
+    <div class="kpis resumen-kpis">
+      <div class="kpi"><div class="label">Requisiciones activas</div><div class="value" id="kpiAbiertas">–</div><div class="delta">abiertas y en proceso</div></div>
+      <div class="kpi"><div class="label">Vacantes solicitadas</div><div class="value" id="kpiPlazas">–</div><div class="delta">plazas de las requisiciones activas</div></div>
+      <div class="kpi"><div class="label">Candidatos en proceso</div><div class="value" id="kpiCandidatos">–</div><div class="delta">sin descartados ni contratados</div></div>
+      <div class="kpi"><div class="label">Avance general</div><div class="value" id="kpiAvance">–</div><div class="delta">plazas cubiertas y candidatos por etapa</div></div>
       <div class="kpi"><div class="label">Tiempo prom. de cobertura</div><div class="value" id="kpiTTF">–</div><div class="delta">días, vacantes cerradas</div></div>
       <div class="kpi"><div class="label">Contratados (mes)</div><div class="value" id="kpiContratados">–</div><div class="delta">altas confirmadas</div></div>
       <div class="kpi"><div class="label">Vacantes &gt; 30 días</div><div class="value" id="kpiCriticas">–</div><div class="delta">requieren atención</div></div>
     </div>
 
     <div class="card" style="margin-bottom:22px;">
-      <h2>Avance por requisición</h2>
-      <div class="desc">Requisiciones abiertas y en proceso: planta, plazas cubiertas y cuántos candidatos están hoy en cada etapa. Clic en una fila para ver sus candidatos.</div>
+      <h2>Estatus por requisición</h2>
+      <div class="desc">Requisiciones abiertas y en proceso. Clic en una fila para ver sus candidatos.</div>
       <div style="overflow-x:auto;">
-        <table class="tabla-avance">
-          <thead><tr id="avanceHead"></tr></thead>
+        <table class="tabla-estatus">
+          <thead><tr><th>Puesto / Planta</th><th style="text-align:center;">Vacantes</th><th>Etapa actual</th><th style="text-align:center;">Candidatos en proceso</th><th>Avance</th></tr></thead>
           <tbody id="tblAvanceReq"></tbody>
+          <tfoot id="tfAvanceReq"></tfoot>
         </table>
       </div>
+      <div class="nota-estatus" id="notaEstatus"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2>Candidatos por etapa</h2>
+      <div class="desc">Candidatos en proceso de las requisiciones filtradas, según su etapa actual.</div>
+      <div class="barra-etapas" id="barraEtapas"></div>
+      <div class="leyenda-etapas" id="leyendaEtapas"></div>
+      <div class="nota-estatus" id="notaEtapas"></div>
     </div>
 
     <div class="grid">
@@ -2221,34 +2257,80 @@ function renderEmbudo(vacantesFiltradas){
 }
 document.getElementById('funnelVacante').addEventListener('change', ()=> renderEmbudo());
 
-// Avance por requisición: candidatos de cada vacante según su etapa ACTUAL (el embudo ya muestra el acumulado)
+// Estatus por requisición (v85): candidatos de cada vacante según su etapa ACTUAL y avance hacia cubrir sus plazas
 const ETAPAS_AVANCE = () => ORDEN_ETAPAS.concat('Descartado');
+const COLOR_ETAPA = { 'Prueba práctica':'#C89B3C', 'Exámenes médicos':'#2F72B8', 'Entrevista RH':'#A7ADB3', 'Examen psicométrico':'#1F3A6E',
+  'Papelería':'#3E7C8C', 'Oferta':'#2E5F6C', 'Contratación':'#3E8C63' };
+const colorEtapa = e => COLOR_ETAPA[e] || '#6B7278'; // etapas retiradas (ej. "Entrevista jefe directo") en gris
+const textoEtapa = e => e === 'Entrevista RH' ? '#152A52' : '#fff';
+const ordenEtapa = e => ORDEN_ETAPAS.indexOf(e) + 1 || 99;
+// Valor de cada etapa hacia la contratación: Prueba práctica = 0 … Contratación = 1; una etapa retirada vale 0
+const pesoEtapa = e => Math.max(0, ORDEN_ETAPAS.indexOf(e)) / (ORDEN_ETAPAS.length - 1);
+const enProceso = c => { const e = etapaVigente(c); return e !== 'Descartado' && e !== 'Contratación'; };
 function avanceRequisicion(v){
   const cands = candidatosDeVacante(v.id), porEtapa = {};
-  ETAPAS_AVANCE().forEach(e => { porEtapa[e] = cands.filter(c => c.etapaActual === e).length; });
-  return { cubiertas: plazasCubiertas(v).length, total: totalPlazas(v), porEtapa, nCand: cands.length };
+  ETAPAS_AVANCE().forEach(e => { porEtapa[e] = cands.filter(c => etapaVigente(c) === e).length; });
+  const proceso = cands.filter(enProceso);
+  // etapas con gente en proceso, en orden del proceso; las retiradas al final
+  const etapasProceso = [...new Set(proceso.map(etapaVigente))].sort((a, b) => ordenEtapa(a) - ordenEtapa(b))
+    .map(e => [e, proceso.filter(c => etapaVigente(c) === e).length]);
+  const cubiertas = plazasCubiertas(v).length, total = totalPlazas(v);
+  // los mejores candidatos en proceso cubren solo las plazas que faltan: muchos en la primera etapa no inflan el avance
+  const faltan = Math.max(0, total - cubiertas);
+  const aporte = proceso.map(c => pesoEtapa(etapaVigente(c))).sort((a, b) => b - a).slice(0, faltan).reduce((s, x) => s + x, 0);
+  const avance = total ? Math.min(1, (cubiertas + aporte) / total) : 0;
+  return { cubiertas, total, porEtapa, nCand: cands.length, nProceso: proceso.length, etapasProceso, avance };
 }
 function renderAvanceRequisiciones(abiertas){
-  const etapas = ETAPAS_AVANCE();
-  document.getElementById('avanceHead').innerHTML = '<th>Puesto</th><th>Planta</th><th>Apertura</th><th>Avance</th>' +
-    etapas.map(e => `<th style="text-align:center;">${e}</th>`).join('') + '<th style="text-align:center;">Total</th>';
-  const tbody = document.getElementById('tblAvanceReq');
-  if(!abiertas.length){
-    tbody.innerHTML = `<tr><td colspan="${etapas.length + 5}" class="empty-state">No hay requisiciones abiertas que coincidan con los filtros.</td></tr>`;
+  const lista = abiertas.map(v => ({ v, a: avanceRequisicion(v) }));
+  const plazas = lista.reduce((s, x) => s + x.a.total, 0);
+  const avanceGral = plazas ? lista.reduce((s, x) => s + x.a.avance * x.a.total, 0) / plazas : 0;
+  const nProceso = lista.reduce((s, x) => s + x.a.nProceso, 0);
+  const pct = x => Math.round(x * 100) + '%';
+  document.getElementById('kpiPlazas').textContent = plazas;
+  // mismo conteo que la tabla: solo requisiciones activas (antes sumaba también candidatos de vacantes cerradas)
+  document.getElementById('kpiCandidatos').textContent = nProceso;
+  document.getElementById('kpiAvance').textContent = lista.length ? pct(avanceGral) : '–';
+  document.getElementById('notaEstatus').innerHTML = 'Proceso: ' + ORDEN_ETAPAS.join(' › ') +
+    '.<br>Avance: 100% = todas las vacantes contratadas; cada candidato suma según las etapas concluidas.';
+  renderBarraEtapas(lista);
+  const tbody = document.getElementById('tblAvanceReq'), tfoot = document.getElementById('tfAvanceReq');
+  if(!lista.length){
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay requisiciones abiertas que coincidan con los filtros.</td></tr>';
+    tfoot.innerHTML = '';
     return;
   }
-  tbody.innerHTML = [...abiertas].sort((a,b)=> diasDesde(b.fechaApertura) - diasDesde(a.fechaApertura)).map(v => {
-    const a = avanceRequisicion(v), sem = semaforoInfo(diasDesde(v.fechaApertura));
-    const pct = a.total ? Math.round(a.cubiertas * 100 / a.total) : 0;
+  const barra = x => `<div class="avance-cel"><div class="avance-barra"><i style="width:${Math.round(x * 100)}%"></i></div><b>${pct(x)}</b></div>`;
+  tbody.innerHTML = lista.sort((a, b) => diasDesde(b.v.fechaApertura) - diasDesde(a.v.fechaApertura)).map(({ v, a }) => {
+    const etapa = a.etapasProceso.length
+      ? a.etapasProceso.map(([e, n]) => `<span class="pill-etapa" style="background:${colorEtapa(e)};color:${textoEtapa(e)}">${n} en ${e}</span>`).join('')
+      : `<span class="pill-etapa evaluacion">Evaluación de candidatos</span>${v.notas ? `<div class="nota-vac">${v.notas}</div>` : ''}`;
     return `<tr onclick="irACandidatosDeVacante('${v.id}')" title="Ver candidatos de esta requisición">
-      <td><strong>${v.puesto}</strong></td>
-      <td style="white-space:nowrap;">${v.planta}</td>
-      <td style="white-space:nowrap;">${formatoFechaLegible(v.fechaApertura)}<div><span class="semaforo ${sem.clase}"><span class="sq"></span>${diasDesde(v.fechaApertura)} días</span></div></td>
-      <td style="white-space:nowrap;">${a.cubiertas} / ${a.total} plazas<div class="avance-barra"><i style="width:${pct}%"></i></div></td>
-      ${etapas.map(e => `<td class="n${a.porEtapa[e] ? '' : ' cero'}">${a.porEtapa[e]}</td>`).join('')}
-      <td class="n">${a.nCand}</td>
+      <td><strong>${v.puesto}</strong><div class="planta">${v.planta || 'Planta no especificada'}</div></td>
+      <td class="num">${a.total}${a.cubiertas ? `<small>${a.cubiertas} cubierta${a.cubiertas !== 1 ? 's' : ''}</small>` : ''}</td>
+      <td>${etapa}</td>
+      <td class="num">${a.nProceso || '—'}</td>
+      <td>${barra(a.avance)}</td>
     </tr>`;
   }).join('');
+  tfoot.innerHTML = `<tr><td>TOTAL</td><td class="num">${plazas}</td><td></td><td class="num">${nProceso}</td><td>${barra(avanceGral)}</td></tr>`;
+}
+function renderBarraEtapas(lista){
+  const conteo = new Map();
+  lista.forEach(({ a }) => a.etapasProceso.forEach(([e, n]) => conteo.set(e, (conteo.get(e) || 0) + n)));
+  const etapas = [...conteo.entries()].sort((x, y) => ordenEtapa(x[0]) - ordenEtapa(y[0]));
+  const total = etapas.reduce((s, [, n]) => s + n, 0);
+  document.getElementById('barraEtapas').innerHTML = total
+    ? etapas.map(([e, n]) => `<i style="width:${n * 100 / total}%;background:${colorEtapa(e)};color:${textoEtapa(e)}" title="${e}: ${n}">${n}</i>`).join('')
+    : '';
+  document.getElementById('leyendaEtapas').innerHTML = total
+    ? etapas.map(([e, n]) => `<span><i style="background:${colorEtapa(e)}"></i>${e} (${n})</span>`).join('')
+    : '<span style="color:var(--text-dim);">No hay candidatos en proceso en las requisiciones filtradas.</span>';
+  const sinCand = lista.filter(({ a }) => !a.nProceso);
+  const plazasSin = sinCand.reduce((s, { a }) => s + Math.max(0, a.total - a.cubiertas), 0);
+  document.getElementById('notaEtapas').textContent = sinCand.length
+    ? `Además, ${plazasSin} vacante${plazasSin !== 1 ? 's' : ''} (${sinCand.length} requisici${sinCand.length !== 1 ? 'ones' : 'ón'}) se encuentra${plazasSin !== 1 ? 'n' : ''} en evaluación de candidatos.`
+    : '';
 }
 function irACandidatosDeVacante(id){
   switchToView('carga');
@@ -2275,7 +2357,7 @@ document.getElementById('btnExport').addEventListener('click', ()=>{
   const hojaAvance = vacs.filter(v => v.status === 'Abierta' || v.status === 'En proceso').map(v => {
     const a = avanceRequisicion(v);
     return { Puesto: v.puesto, Planta: v.planta, Apertura: v.fechaApertura, 'Días abierta': diasDesde(v.fechaApertura),
-      'Plazas cubiertas': a.cubiertas, 'Plazas totales': a.total, ...a.porEtapa, 'Total candidatos': a.nCand };
+      'Plazas cubiertas': a.cubiertas, 'Plazas totales': a.total, ...a.porEtapa, 'Total candidatos': a.nCand, 'Avance %': Math.round(a.avance * 100) };
   });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(hojaAvance.length ? hojaAvance : [{Puesto:''}]), 'Avance por requisición');
@@ -2561,7 +2643,8 @@ function limpiarFormCandidato(){
    LISTADOS de carga manual + acciones
    ========================================================= */
 function plazasCubiertas(v){ return v.plazasCubiertas || []; }
-function totalPlazas(v){ return v.numVacantes || 1; }
+// Number(): desde la Sheet llega como texto ("3") y las sumas lo pegaban ("0" + "3" = "03")
+function totalPlazas(v){ return Number(v.numVacantes) || 1; }
 function badgeVeredictoHTML(c){
   if(!c.veredictoPsicometria) return '';
   const cls = c.veredictoPsicometria.clase;
