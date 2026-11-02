@@ -240,6 +240,16 @@
   .barras-h .pista{height:9px;background:var(--p1);border-radius:5px;overflow:hidden;}
   .barras-h .pista i{display:block;height:100%;border-radius:5px;}
   .barras-h .fila b{text-align:right;color:var(--p5);}
+  /* presupuesto anual de capacitación (Resumen y Cumplimiento) */
+  .presupuesto{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:26px;}
+  .presupuesto .cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:8px 0 12px;}
+  .presupuesto .cifras b{display:block;font-size:22px;color:var(--p5);}
+  .presupuesto .cifras span{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .presupuesto .pista{height:10px;background:var(--p1);border-radius:5px;overflow:hidden;}
+  .presupuesto .pista i{display:block;height:100%;border-radius:5px;background:var(--ok);}
+  .presupuesto.excedido .pista i{background:var(--danger);}
+  .presupuesto.excedido #presDisponible{color:var(--danger);}
+  .presupuesto .nota{font-size:12px;color:var(--ink-soft);margin-top:8px;}
   .grafica-vacia{color:var(--ink-soft);font-size:13px;}
   .iniciales{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--p1);color:var(--p4);
     font-size:11.5px;font-weight:800;margin-right:9px;vertical-align:middle;flex-shrink:0;}
@@ -500,10 +510,22 @@
       </div>
     </div>
 
+    <div class="presupuesto" id="presResumen">
+      <div class="grafica-titulo" id="presTitulo">Presupuesto</div>
+      <div class="cifras">
+        <div><span>Presupuesto</span><b id="presMonto">—</b></div>
+        <div><span>Ejercido</span><b id="presEjercido">—</b></div>
+        <div><span>Disponible</span><b id="presDisponible">—</b></div>
+      </div>
+      <div class="pista"><i id="presBarra" style="width:0%"></i></div>
+      <div class="nota" id="presNota"></div>
+    </div>
+
     <!-- E: gráficas (barras hechas con HTML, sin librerías) -->
     <div class="graficas">
       <div class="grafica"><div class="grafica-titulo">Horas de capacitación por mes</div><div class="barras-v" id="grafHorasMes"></div></div>
       <div class="grafica"><div class="grafica-titulo">Cumplimiento de obligatorios por planta</div><div class="barras-h" id="grafCumplPlanta"></div></div>
+      <div class="grafica"><div class="grafica-titulo" id="grafHorasPlantaTitulo">Horas de capacitación por planta</div><div class="barras-h" id="grafHorasPlanta"></div></div>
     </div>
 
     <h2 id="secNuevosIngresos">⚠️ Nuevos ingresos: Seguimiento 30 días</h2>
@@ -568,6 +590,10 @@
           <div>
             <label>Duración (horas)</label>
             <input type="number" id="cDuracion" min="0" step="0.5" placeholder="Ej. 8">
+          </div>
+          <div>
+            <label>Costo del curso ($)</label>
+            <input type="number" id="cCosto" min="0" step="0.01" placeholder="0 si no tiene costo" title="Costo total del curso; escribe 0 si no tuvo costo">
           </div>
         </div>
 
@@ -935,6 +961,15 @@
 
   <!-- CUMPLIMIENTO -->
   <section id="view-cumplimiento" class="view">
+    <h2>Presupuesto anual de capacitación</h2>
+    <p class="section-sub">Monto autorizado por año. El costo de cada curso registrado (según su fecha de inicio) se descuenta y el saldo se ve en el Resumen.</p>
+    <div class="filter-bar">
+      <div><label>Año</label><select id="presAnio"></select></div>
+      <div><label>Presupuesto ($)</label><input type="number" id="presInput" min="0" step="0.01" placeholder="Ej. 250000"></div>
+      <div class="filter-actions"><button class="btn" id="btnGuardarPresupuesto">Guardar presupuesto</button></div>
+    </div>
+    <p class="section-sub" id="presCumplNota" style="margin-top:-6px"></p>
+
     <h2>Cumplimiento de cursos obligatorios</h2>
     <p class="section-sub">Empleados en ALTA contra los cursos obligatorios de su puesto (se definen en Catálogos → Cursos frecuentes → "Obligatorio para"). Cuenta la vez más reciente que asistió y aprobó; "por vencer" todavía cuenta como cumplido.</p>
 
@@ -1791,6 +1826,72 @@ function renderGraficaHoras(){
       <b>${Math.round(x.horas)}</b><i style="height:${Math.round(x.horas * 100 / max)}%"></i><span>${nombre(x)}</span></div>`).join('');
 }
 
+// ---------- presupuesto anual: Cap_Config guarda "Presupuesto_AAAA"; el costo de cada curso se descuenta por su año de inicio ----------
+const pesos = (n) => (n < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+const presupuestoDe = (anio) => { const v = (STATE.config || {})['Presupuesto_' + anio]; return v === undefined || v === '' ? null : Number(v); };
+function ejercidoDe(anio){
+  const delAnio = STATE.cursos.filter(c => String(c.FechaImparticion || '').slice(0, 4) === String(anio));
+  const conCosto = delAnio.filter(c => c.Costo !== '' && c.Costo != null);
+  return { total: conCosto.reduce((s, c) => s + (Number(c.Costo) || 0), 0), sinCosto: delAnio.length - conCosto.length };
+}
+function renderPresupuesto(){
+  const anio = new Date().getFullYear(), monto = presupuestoDe(anio), { total, sinCosto } = ejercidoDe(anio);
+  document.getElementById('presTitulo').textContent = 'Presupuesto ' + anio;
+  document.getElementById('presMonto').textContent = monto === null ? 'Sin capturar' : pesos(monto);
+  document.getElementById('presEjercido').textContent = pesos(total);
+  document.getElementById('presDisponible').textContent = monto === null ? '—' : pesos(monto - total);
+  const pct = monto ? Math.round(total * 100 / monto) : 0;
+  document.getElementById('presBarra').style.width = Math.min(pct, 100) + '%';
+  document.getElementById('presResumen').classList.toggle('excedido', monto !== null && total > monto);
+  document.getElementById('presNota').textContent = [
+    monto === null ? 'Captura el presupuesto del año en la pestaña Cumplimiento.' : `${pct}% ejercido${total > monto ? ' · excede el presupuesto por ' + pesos(total - monto) : ''}.`,
+    sinCosto ? `${sinCosto} curso(s) de ${anio} sin costo capturado (no se descuentan; edítalos para agregarlo).` : ''
+  ].filter(Boolean).join(' ');
+  // selector de años en Cumplimiento: años con cursos, el actual y el siguiente
+  const sel = document.getElementById('presAnio'), actual = sel.value || String(anio);
+  const anios = new Set([anio, anio + 1].map(String));
+  STATE.cursos.forEach(c => { const a = String(c.FechaImparticion || '').slice(0, 4); if(/^\d{4}$/.test(a)) anios.add(a); });
+  sel.innerHTML = [...anios].sort().reverse().map(a => `<option value="${a}">${a}</option>`).join('');
+  sel.value = anios.has(actual) ? actual : String(anio);
+  mostrarPresupuestoAnio();
+}
+function mostrarPresupuestoAnio(){
+  const a = document.getElementById('presAnio').value, monto = presupuestoDe(a), { total } = ejercidoDe(a);
+  document.getElementById('presInput').value = monto === null ? '' : monto;
+  document.getElementById('presCumplNota').textContent = `Ejercido en ${a}: ${pesos(total)}` + (monto === null ? '' : ` · disponible: ${pesos(monto - total)}`);
+}
+document.getElementById('presAnio').addEventListener('change', mostrarPresupuestoAnio);
+document.getElementById('btnGuardarPresupuesto').addEventListener('click', async ()=>{
+  const a = document.getElementById('presAnio').value, v = document.getElementById('presInput').value.trim();
+  if(v === '' || !(Number(v) >= 0)) return toast('Escribe el presupuesto del año (un número mayor o igual a 0)', true);
+  const btn = document.getElementById('btnGuardarPresupuesto');
+  btn.disabled = true;
+  try{
+    await apiPost({action:'setConfig', config:{['Presupuesto_' + a]: Math.round(Number(v) * 100) / 100}});
+    await cargarDatos();
+    toast('Presupuesto ' + a + ' guardado');
+  }catch(err){ toast('No se guardó el presupuesto: ' + err.message, true); }
+  finally{ btn.disabled = false; }
+});
+
+// Horas por planta del año en curso (la planta sale del catálogo de empleados; quien faltó ya trae 0 horas)
+function renderHorasPlanta(){
+  const anio = String(new Date().getFullYear()), porPlanta = new Map();
+  STATE.participaciones.forEach(pa => {
+    if(String(pa.FechaImparticion || '').slice(0, 4) !== anio) return;
+    const h = Number(pa.DuracionHoras) || 0;
+    if(!h) return;
+    const k = (empleadoPorId(pa.EmpleadoID) || {}).Departamento || '(sin planta)';
+    porPlanta.set(k, (porPlanta.get(k) || 0) + h);
+  });
+  document.getElementById('grafHorasPlantaTitulo').textContent = 'Horas de capacitación por planta · ' + anio;
+  const max = Math.max(...porPlanta.values(), 1);
+  document.getElementById('grafHorasPlanta').innerHTML = porPlanta.size
+    ? [...porPlanta.entries()].sort((a, b) => b[1] - a[1]).map(([k, h]) =>
+        `<div class="fila" title="${Math.round(h)} horas-hombre"><span>${escapeHtml(k)}</span><div class="pista"><i style="width:${Math.round(h * 100 / max)}%;background:var(--p3)"></i></div><b>${Math.round(h)}</b></div>`).join('')
+    : `<div class="grafica-vacia">Aún no hay horas de capacitación en ${anio}.</div>`;
+}
+
 function renderResumen(){
   document.getElementById('kpiCursos').textContent = STATE.cursos.length;
   document.getElementById('kpiEmpleados').textContent = STATE.empleados.length;
@@ -1821,6 +1922,8 @@ function renderResumen(){
     return d && d.getFullYear() === hoyR.getFullYear() && d.getMonth() === hoyR.getMonth();
   }).length;
   renderGraficaHoras();
+  renderHorasPlanta();
+  renderPresupuesto();
 
   const ordenados = [...STATE.cursos].sort((a,b) => new Date(b.FechaRegistro||b.FechaImparticion) - new Date(a.FechaRegistro||a.FechaImparticion)).slice(0,8);
   const tbody = document.getElementById('tblResumen');
@@ -2913,7 +3016,7 @@ window.addEventListener('afterprint', () => {
 // Qué campo de la hoja Cursos corresponde a cada casilla del formulario
 const CAMPOS_TEXTO_CURSO = { cNombre:'Nombre', cFecha:'FechaImparticion', cFechaFin:'FechaTermino', cDuracion:'DuracionHoras',
   cFechaVenc:'FechaVencimiento', cRfcAgente:'RFCAgente', cFechaEmisionCert:'FechaEmisionCertificado',
-  cInstructor:'Instructor', cEvidencia:'EvidenciaURL' };
+  cInstructor:'Instructor', cEvidencia:'EvidenciaURL', cCosto:'Costo' };
 const CAMPOS_SELECT_CURSO = { cModalidad:'ModalidadClave', cTipoAgente:'TipoAgenteClave', cObjetivo:'ObjetivoClave',
   cCatalogoCurso:'CatalogoCursoID', cAgente:'AgenteNombre' };
 const CAMPOS_DATALIST_CURSO = { cAreaTematica:['AreaTematicaClave','areasTematicas'], cClaveCompetencia:['ClaveCompetencia','normas'] };
@@ -3000,6 +3103,7 @@ document.getElementById('btnGuardarCurso').addEventListener('click', async ()=>{
   if(!curso.FechaImparticion) return toast('Selecciona la fecha de inicio', true);
   if(curso.FechaTermino && curso.FechaTermino < curso.FechaImparticion) return toast('La fecha de término no puede ser anterior a la de inicio', true);
   if(!curso.DuracionHoras || Number(curso.DuracionHoras) <= 0) return toast('Captura la duración en horas', true);
+  if(curso.Costo === '' || !(Number(curso.Costo) >= 0)) return toast('Captura el costo del curso (0 si no tuvo costo)', true);
   if(curso.TieneVencimiento && !curso.FechaVencimiento) return toast('Captura la fecha de vencimiento', true);
   if(curso.EvidenciaURL && !esEnlaceWeb(curso.EvidenciaURL)) return toast('La evidencia debe ser un enlace que empiece con https://', true);
   const faltaronIds = faltaronActuales();
@@ -3259,7 +3363,7 @@ document.getElementById('btnConfirmarCarga').addEventListener('click', async ()=
 
 // ---------- carga masiva de cursos (solo escribe cursos y participaciones) ----------
 const COLS_CURSOS_MASIVO = ['CLAVE','NOMBRE_CURSO','FECHA_INICIO','FECHA_TERMINO','DURACION_HORAS','APLICA_SIRCE','AREA_TEMATICA',
-  'MODALIDAD','OBJETIVO','TIPO_AGENTE','AGENTE','RFC_AGENTE','INSTRUCTOR','VIGENCIA_MESES','EVIDENCIA_URL'];
+  'MODALIDAD','OBJETIVO','TIPO_AGENTE','AGENTE','RFC_AGENTE','INSTRUCTOR','VIGENCIA_MESES','EVIDENCIA_URL','COSTO'];
 const COLS_PARTICIPANTES_MASIVO = ['CLAVE','NUMERO_EMPLEADO','ASISTIO','APROBO'];
 // Catálogo SIRCE de cada columna con clave
 const CLAVES_CURSO_MASIVO = { AREA_TEMATICA:['AreaTematicaClave','areasTematicas'], MODALIDAD:['ModalidadClave','modalidades'],
@@ -3271,8 +3375,8 @@ document.getElementById('btnPlantillaCursos').addEventListener('click', ()=>{
   const hoja = (filas, anchos, nombre) => { const ws = XLSX.utils.aoa_to_sheet(filas); ws['!cols'] = anchos.map(wch => ({wch})); XLSX.utils.book_append_sheet(wb, ws, nombre); };
   const primera = (cat) => (SC[cat][0] || [''])[0];
   hoja([COLS_CURSOS_MASIVO, ['C1','Seguridad industrial','06/10/2026','06/10/2026',4,'SI',primera('areasTematicas'),primera('modalidades'),
-    primera('objetivos'),primera('tiposAgente'),'','','',12,'']],
-    [8,34,13,13,10,10,14,10,10,11,26,15,24,10,30], 'Cursos');
+    primera('objetivos'),primera('tiposAgente'),'','','',12,'',0]],
+    [8,34,13,13,10,10,14,10,10,11,26,15,24,10,30,10], 'Cursos');
   hoja([COLS_PARTICIPANTES_MASIVO, ['C1','10040','SI','SI'], ['C1','10041','NO','']], [8,16,9,9], 'Participantes');
   const listas = [['AREA_TEMATICA', SC.areasTematicas], ['MODALIDAD', SC.modalidades], ['OBJETIVO', SC.objetivos], ['TIPO_AGENTE', SC.tiposAgente],
     ['CURSOS DEL CATÁLOGO', (STATE.catalogoCursos || []).map(c => ['', c.Nombre])], ['AGENTES DEL CATÁLOGO', (STATE.agentes || []).map(a => ['', a.Nombre])]];
@@ -3291,7 +3395,8 @@ document.getElementById('btnPlantillaCursos').addEventListener('click', ()=>{
     ['9. ASISTIO y APROBO: SI o NO (vacío = SI). Quien no asistió queda registrado con 0 horas.'],
     ['10. Todos los participantes deben existir en el catálogo de empleados: aquí no se dan de alta empleados.'],
     ['11. Un curso con el mismo nombre y fecha de inicio que uno ya registrado no se vuelve a guardar.'],
-    ['12. Borra las filas de ejemplo antes de subir.']], [120], 'Instrucciones');
+    ['12. COSTO: costo total del curso en pesos, sin signo $ (0 = sin costo). Vacío = sin costo capturado; no cuenta en el presupuesto.'],
+    ['13. Borra las filas de ejemplo antes de subir.']], [120], 'Instrucciones');
   XLSX.writeFile(wb, 'Plantilla_Cursos.xlsx');
 });
 
@@ -3336,7 +3441,8 @@ function leerCursosMasivos(wb){
       RFCAgente: String(f.RFC_AGENTE || (ag && ag.RFCAgente) || '').trim().toUpperCase(),
       Instructor: String(f.INSTRUCTOR || (ag && ag.Instructor) || '').trim(),
       EvidenciaURL: String(f.EVIDENCIA_URL || '').trim(), CatalogoCursoID: cc ? String(cc.ID) : '',
-      ClaveCompetencia: '', FechaEmisionCertificado: ''
+      ClaveCompetencia: '', FechaEmisionCertificado: '',
+      Costo: String(f.COSTO ?? '').replace(/[$,\s]/g, '')
     };
     const respaldo = { AreaTematicaClave: cc && cc.AreaTematicaClave, ModalidadClave: cc && cc.ModalidadClave,
       ObjetivoClave: cc && cc.ObjetivoClave, TipoAgenteClave: ag && ag.TipoAgenteClave };
@@ -3356,6 +3462,7 @@ function leerCursosMasivos(wb){
     if(!(curso.DuracionHoras > 0)) errores.push('falta DURACION_HORAS');
     if(curso.RFCAgente && !rfcValido(curso.RFCAgente)) errores.push('RFC_AGENTE no tiene formato válido');
     if(curso.EvidenciaURL && !esEnlaceWeb(curso.EvidenciaURL)) errores.push('EVIDENCIA_URL debe empezar con https://');
+    if(curso.Costo !== '' && !(Number(curso.Costo) >= 0)) errores.push(`COSTO "${f.COSTO}" no es un número mayor o igual a 0`);
     const llave = normTxt(curso.Nombre) + '|' + inicio;
     const repetido = !!(curso.Nombre && inicio && ya.has(llave));
     if(curso.Nombre && inicio) ya.add(llave); // el mismo curso dos veces en el archivo tampoco se duplica
