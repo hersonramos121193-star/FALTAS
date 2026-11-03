@@ -164,6 +164,25 @@
   .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
   .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
   .funnel-bar.descartado{background:#A9B2BB !important;}
+  /* selector de requisiciones del Resumen (v87) */
+  .req-filtro{position:relative;}
+  .req-boton{padding:8px 12px;border:1px solid #D3D6D9;border-radius:7px;background:#fff;min-width:230px;text-align:left;font:inherit;font-size:13px;cursor:pointer;color:var(--text);}
+  .req-boton.parcial{border:2px solid var(--navy);color:var(--navy);font-weight:600;}
+  .req-panel{position:absolute;top:100%;left:0;margin-top:6px;width:460px;max-width:90vw;background:#fff;border:1px solid #D3D6D9;border-radius:10px;
+    box-shadow:0 12px 30px rgba(21,42,82,.18);padding:12px 14px;z-index:20;}
+  .req-panel input[type=text]{width:100%;box-sizing:border-box;margin-bottom:8px;}
+  .req-acc{display:flex;gap:14px;font-size:12px;margin-bottom:6px;}
+  .req-acc a{color:var(--teal);font-weight:700;text-decoration:none;}
+  .req-lista{max-height:300px;overflow-y:auto;}
+  .req-lista label{display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid #F1F2F3;margin:0;font-size:13px;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;}
+  .req-lista label input{width:16px;height:16px;accent-color:var(--navy);}
+  .req-lista label b{flex:1;}
+  .req-lista label span{color:var(--text-dim);font-size:11.5px;white-space:nowrap;}
+  .req-pie{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11.5px;color:var(--text-dim);}
+  .req-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .req-chips:empty{display:none;}
+  .req-chips span{background:#EAF1F6;color:var(--navy);border-radius:99px;padding:3px 6px 3px 10px;font-size:11.5px;font-weight:600;}
+  .req-chips button{border:0;background:none;color:var(--text-dim);cursor:pointer;font-size:12px;padding:0 4px;}
   /* Resumen general y estatus por requisición (v85) */
   .kpis.resumen-kpis{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
   .resumen-kpis .kpi:nth-child(1){border-left-color:var(--silver);}
@@ -499,6 +518,7 @@
   body.solo-lectura .toolbar select, body.solo-lectura .toolbar input,
   body.solo-lectura #buscarCriterio, body.solo-lectura #permanenciaFiltroAnio, body.solo-lectura #otraPruebaSelect{ pointer-events:auto; opacity:1; cursor:pointer; }
   body.solo-lectura #btnExportarFaltasBaja{ pointer-events:auto; opacity:1; cursor:pointer; }
+  body.solo-lectura .req-filtro button, body.solo-lectura .req-chips button{ pointer-events:auto; opacity:1; cursor:pointer; } /* la lista Requisiciones solo filtra */
   body.solo-lectura::before{
     content:"👁️ Modo solo lectura — no se pueden guardar cambios";
     display:block; background:#1F3A6E; color:#fff; text-align:center;
@@ -602,6 +622,16 @@
         <option>Feria del empleo</option><option>Publicación en redes</option><option>Estatal del empleo</option>
       </select>
     </div>
+    <div class="req-filtro">
+      <label>Requisiciones</label>
+      <button type="button" class="req-boton" id="reqBoton">Todas ▾</button>
+      <div class="req-panel" id="reqPanel" hidden>
+        <input type="text" id="reqBuscar" placeholder="Buscar puesto o planta…">
+        <div class="req-acc"><a href="#" id="reqTodas">Seleccionar todas</a><a href="#" id="reqNinguna">Ninguna</a></div>
+        <div class="req-lista" id="reqLista"></div>
+        <div class="req-pie"><span>Se recuerda en esta computadora</span><button type="button" class="btn" id="reqAplicar">Aplicar</button></div>
+      </div>
+    </div>
     <div style="margin-left:auto;display:flex;gap:10px;align-items:flex-end;">
       <button class="btn secondary" id="btnExport">Exportar Excel</button>
       <button class="btn" id="btnRefresh">Actualizar</button>
@@ -621,7 +651,8 @@
 
     <div class="card" style="margin-bottom:22px;">
       <h2>Estatus por requisición</h2>
-      <div class="desc">Requisiciones abiertas y en proceso. Clic en una fila para ver sus candidatos.</div>
+      <div class="desc"><span id="reqMostrando">Requisiciones abiertas y en proceso.</span> Clic en una fila para ver sus candidatos.</div>
+      <div class="req-chips" id="reqChips"></div>
       <div style="overflow-x:auto;">
         <table class="tabla-estatus">
           <thead><tr><th>Puesto / Planta</th><th style="text-align:center;">Vacantes</th><th>Etapa actual</th><th style="text-align:center;">Candidatos en proceso</th><th>Avance</th></tr></thead>
@@ -2097,19 +2128,75 @@ function buildTiempoPorEtapa(candidatosRelevantes){
   return resultado;
 }
 
-function applyFilters(){
+// sinSeleccion: ignora la lista "Requisiciones" (para armar esa misma lista)
+function applyFilters(sinSeleccion){
   const planta = document.getElementById('fPlanta').value;
   const status = document.getElementById('fStatus').value;
   const fuente = document.getElementById('fFuente').value;
   return STATE.vacantes.filter(v =>
     (!planta || v.planta===planta) &&
     (!status || v.status===status) &&
-    (!fuente || v.fuente===fuente)
+    (!fuente || v.fuente===fuente) &&
+    (sinSeleccion || !REQ_OCULTAS.has(v.id))
   );
 }
 
+/* ---------- Lista "Requisiciones" del Resumen (v87) ----------
+   Se guardan las que se OCULTAN (no las elegidas): así una requisición nueva aparece marcada sola.
+   Vive en localStorage de esta computadora; si no se puede leer, se muestran todas. */
+const CLAVE_REQ_OCULTAS = 'rc_req_ocultas';
+let REQ_OCULTAS = new Set();
+try{ REQ_OCULTAS = new Set(JSON.parse(localStorage.getItem(CLAVE_REQ_OCULTAS) || '[]')); }catch(e){}
+function guardarReqOcultas(){ try{ localStorage.setItem(CLAVE_REQ_OCULTAS, JSON.stringify([...REQ_OCULTAS])); }catch(e){} }
+const esActiva = v => v.status === 'Abierta' || v.status === 'En proceso';
+function actualizarSelectorReq(){
+  const lista = applyFilters(true).filter(esActiva);
+  const elegidas = lista.filter(v => !REQ_OCULTAS.has(v.id));
+  const btn = document.getElementById('reqBoton');
+  const parcial = elegidas.length < lista.length;
+  btn.textContent = !lista.length ? 'Sin requisiciones activas ▾' : parcial ? `${elegidas.length} de ${lista.length} seleccionadas ▾` : `Todas (${lista.length}) ▾`;
+  btn.classList.toggle('parcial', parcial);
+  document.getElementById('reqMostrando').textContent = parcial
+    ? `Mostrando ${elegidas.length} de ${lista.length} requisiciones activas.` : 'Requisiciones abiertas y en proceso.';
+  document.getElementById('reqChips').innerHTML = parcial ? elegidas.map(v =>
+    `<span>${v.puesto} · ${v.planta || 'sin planta'}<button type="button" title="Quitar" onclick="quitarRequisicion('${v.id}')">✕</button></span>`).join('') : '';
+}
+function quitarRequisicion(id){ REQ_OCULTAS.add(id); guardarReqOcultas(); renderResumen(); }
+function abrirPanelReq(){
+  const lista = applyFilters(true).filter(esActiva);
+  document.getElementById('reqBuscar').value = '';
+  document.getElementById('reqLista').innerHTML = lista.length ? lista.map(v =>
+    `<label data-texto="${(v.puesto + ' ' + (v.planta || '')).toLowerCase().replace(/"/g, '')}"><input type="checkbox" value="${v.id}" ${REQ_OCULTAS.has(v.id) ? '' : 'checked'}>` +
+    `<b>${v.puesto}</b><span>${v.planta || 'Sin planta'} · abierta ${formatoFechaLegible(v.fechaApertura)}</span></label>`).join('')
+    : '<div class="empty-state">No hay requisiciones activas con los filtros actuales.</div>';
+  document.getElementById('reqPanel').hidden = false;
+}
+document.getElementById('reqBoton').addEventListener('click', ()=>{
+  const panel = document.getElementById('reqPanel');
+  if(panel.hidden) abrirPanelReq(); else panel.hidden = true;
+});
+document.getElementById('reqBuscar').addEventListener('input', e=>{
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#reqLista label').forEach(l => { l.style.display = !q || l.dataset.texto.includes(q) ? '' : 'none'; });
+});
+const marcarVisiblesReq = (valor) => document.querySelectorAll('#reqLista label').forEach(l => { if(l.style.display !== 'none') l.querySelector('input').checked = valor; });
+document.getElementById('reqTodas').addEventListener('click', e=>{ e.preventDefault(); marcarVisiblesReq(true); });
+document.getElementById('reqNinguna').addEventListener('click', e=>{ e.preventDefault(); marcarVisiblesReq(false); });
+document.getElementById('reqAplicar').addEventListener('click', ()=>{
+  document.querySelectorAll('#reqLista input').forEach(i => { if(i.checked) REQ_OCULTAS.delete(i.value); else REQ_OCULTAS.add(i.value); });
+  guardarReqOcultas();
+  document.getElementById('reqPanel').hidden = true;
+  renderResumen();
+});
+// clic fuera del panel lo cierra sin aplicar
+document.addEventListener('click', e=>{
+  const panel = document.getElementById('reqPanel');
+  if(!panel.hidden && !e.target.closest('.req-filtro')) panel.hidden = true;
+});
+
 function renderResumen(){
   try{ renderNuevosIngresos(); }catch(e){ console.error('Faltas de nuevos ingresos:', e); }
+  actualizarSelectorReq();
   const vacantesFiltradas = applyFilters();
   const abiertas = vacantesFiltradas.filter(v => v.status==="Abierta" || v.status==="En proceso");
   const cerradas = vacantesFiltradas.filter(v => v.status==="Cerrada");
