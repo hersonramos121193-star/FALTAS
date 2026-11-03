@@ -408,9 +408,28 @@
   header .brand-ico{display:none;}
   #statusDot{font-size:12px;background:rgba(255,255,255,.1);padding:5px 12px;}
   nav{padding:14px 22px 0;}
+
+  /* recuadros de "cargando" del Resumen mientras llegan los datos de la Sheet (v89) */
+  @keyframes brillo{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @keyframes girar{to{transform:rotate(360deg)}}
+  body.cargando #view-dashboard .kpi .num, body.cargando #view-dashboard .pend b, body.cargando #presResumen .cifras b,
+  body.cargando #grafHorasMes, body.cargando #grafCumplPlanta, body.cargando #grafHorasPlanta{
+    color:transparent !important;border-radius:6px;
+    background:linear-gradient(90deg,#ECEEF0 25%,#F6F7F8 50%,#ECEEF0 75%) !important;background-size:200% 100% !important;animation:brillo 1.3s linear infinite;}
+  body.cargando #view-dashboard .kpi .num{display:inline-block;min-width:64px;}
+  body.cargando #presResumen .cifras b{width:110px;min-height:26px;}
+  body.cargando #grafHorasMes, body.cargando #grafCumplPlanta, body.cargando #grafHorasPlanta{min-height:120px;}
+  body.cargando #grafHorasMes > *, body.cargando #grafCumplPlanta > *, body.cargando #grafHorasPlanta > *, body.cargando #presResumen .pista, body.cargando #presNota,
+  body.cargando #view-dashboard .anillo-valor{visibility:hidden;}
+  .aviso-carga{display:flex;align-items:center;gap:8px;background:#EAF1F6;color:var(--p5);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px;}
+  .aviso-carga .giro{width:13px;height:13px;border:2px solid var(--p3);border-top-color:transparent;border-radius:50%;animation:girar .8s linear infinite;}
+  .aviso-carga.ok{background:#E6F3EB;color:var(--ok);}
+  .aviso-carga.error{background:#FAE7E5;color:var(--danger);}
+  .aviso-carga.ok .giro,.aviso-carga.error .giro{display:none;}
+  @media (prefers-reduced-motion:reduce){body.cargando *,.aviso-carga .giro{animation:none !important;}}
 </style>
 </head>
-<body>
+<body class="cargando">
 
 <header>
   <div class="brand">
@@ -484,6 +503,7 @@
 
   <!-- RESUMEN -->
   <section id="view-dashboard" class="view active">
+    <div class="aviso-carga" id="avisoCarga"><span class="giro"></span><span id="avisoCargaTexto">Cargando datos de Google Sheets…</span></div>
     <div id="alertBanner" class="alert-banner hidden">
       <div>⏰</div>
       <div>
@@ -3831,7 +3851,14 @@ if(!CATALOGOS_OK){
   document.getElementById('avisoCatalogos').classList.remove('hidden');
 }
 if(location.search.includes('autotest=1')) autoprueba();
-cargarDatos();
+// primera carga: al terminar (bien o mal) se quitan los recuadros grises y el aviso dice cómo salió
+cargarDatos().then(ok => {
+  document.body.classList.remove('cargando');
+  document.getElementById('avisoCarga').className = 'aviso-carga ' + (ok ? 'ok' : 'error');
+  document.getElementById('avisoCargaTexto').textContent = ok
+    ? '✓ Datos actualizados · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
+    : 'No se pudieron cargar los datos de Google Sheets.';
+});
 </script>
 </body>
 </html>
