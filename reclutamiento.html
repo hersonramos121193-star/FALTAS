@@ -1789,8 +1789,8 @@ function personasDesdeEstado(){
 }
 
 const OBJETOS_RC = [
-  ['vacantes', () => (STATE.vacantes||[]).filter(v=>!esDemo(v)), 'id'],
-  ['candidatos', () => (STATE.candidatos||[]).filter(c=>!esDemo(c)), 'id'],
+  ['vacantes', () => STATE.vacantes||[], 'id'],
+  ['candidatos', () => STATE.candidatos||[], 'id'],
   ['criterios', () => STATE.criteriosPsicometria||[], 'id'],
   ['calculadora', () => calculadoraALista(STATE.rotacionData), 'anio']
 ];
@@ -1799,7 +1799,7 @@ function huellasActuales(){
   personasDesdeEstado().forEach((p, k) => { h.personas[k] = JSON.stringify(p); });
   OBJETOS_RC.forEach(([tipo, lista, llave]) => {
     h[tipo] = {};
-    lista().forEach(r => { if(r && r[llave] != null) h[tipo][String(r[llave])] = JSON.stringify(r); });
+    lista().forEach(r => { if(r && r[llave] != null) h[tipo][String(r[llave])] = JSON.stringify(r, (k, v) => k === '_mod' ? undefined : v); });
   });
   return h;
 }
@@ -1834,41 +1834,6 @@ async function cargarDesdeDashboard(){
    () => { poblarFiltroAnioPermanencia(); renderPermanencia(); }, renderResumenRotacion,
    () => { if(document.getElementById('tblCatalogoCandidatos')) renderCatalogo(); }]
     .forEach(f => { try{ f(); }catch(e){ console.error('Error al pintar:', e); } });
-}
-
-/* =========================================================
-   DATOS DEMO (se usan como base cuando no hay Sheet conectado
-   ni datos cargados manualmente)
-   ========================================================= */
-const DEMO = {
-  vacantes: [
-    {id:"d1", puesto:"Operador de Producción", planta:"Planta 1", solicitante:"J. Ramírez", fechaApertura:"2025-07-28", status:"Abierta", fuente:"Solicitud de empleo", numVacantes:2},
-    {id:"d2", puesto:"Supervisor de Calidad", planta:"Planta 3", solicitante:"M. Torres", fechaApertura:"2025-08-10", status:"En proceso", fuente:"Referido", numVacantes:1},
-    {id:"d3", puesto:"Auxiliar Contable", planta:"Corporativo", solicitante:"L. Fuentes", fechaApertura:"2025-08-18", status:"Abierta", fuente:"Feria del empleo", numVacantes:1},
-    {id:"d4", puesto:"Montacarguista", planta:"Niveladora", solicitante:"R. Ibarra", fechaApertura:"2025-07-05", status:"Abierta", fuente:"Solicitud de empleo", numVacantes:1},
-    {id:"d5", puesto:"Ingeniero de Procesos", planta:"Planta 2", solicitante:"D. Salinas", fechaApertura:"2025-08-01", status:"En proceso", fuente:"Agencia", numVacantes:1},
-    {id:"d6", puesto:"Técnico de Mantenimiento", planta:"Planta III", solicitante:"A. Correa", fechaApertura:"2025-08-15", status:"Abierta", fuente:"Publicación en redes", numVacantes:1},
-    {id:"d7", puesto:"Analista de Nómina", planta:"Corporativo", solicitante:"H. Peña", fechaApertura:"2025-06-20", status:"Abierta", fuente:"Referido", numVacantes:1},
-    {id:"d8", puesto:"Operador de Producción", planta:"Planta 4", solicitante:"J. Ramírez", fechaApertura:"2025-08-20", status:"Abierta", fuente:"Solicitud de empleo", numVacantes:1},
-    {id:"d9", puesto:"Auxiliar de Almacén", planta:"Planta 2", solicitante:"D. Salinas", fechaApertura:"2025-06-10", status:"Cerrada", fuente:"Solicitud de empleo", numVacantes:2, fechaCierre:"2025-07-02", plazasCubiertas:[{candidatoId:"c2",fecha:"2025-06-28"},{candidatoId:"c3",fecha:"2025-07-02"}]},
-  ],
-  candidatos: [
-    {id:"c1", nombre:"José Luis Martínez", vacanteId:"d1", fuente:"Solicitud de empleo", fechaPostulacion:"2025-08-01", etapaActual:"Entrevista jefe directo",
-      historial:[{fecha:"2025-08-01",etapa:"Prueba práctica"},{fecha:"2025-08-04",etapa:"Exámenes médicos"},{fecha:"2025-08-10",etapa:"Entrevista jefe directo"}]},
-    {id:"c2", nombre:"Ana Beatriz López", vacanteId:"d9", fuente:"Solicitud de empleo", fechaPostulacion:"2025-06-12", etapaActual:"Contratación",
-      historial:[{fecha:"2025-06-12",etapa:"Prueba práctica"},{fecha:"2025-06-28",etapa:"Contratación",observaciones:"Asignado a cubrir plaza de: Auxiliar de Almacén"}]},
-    {id:"c3", nombre:"Marco Aurelio Díaz", vacanteId:"d9", fuente:"Solicitud de empleo", fechaPostulacion:"2025-06-15", etapaActual:"Contratación",
-      historial:[{fecha:"2025-06-15",etapa:"Prueba práctica"},{fecha:"2025-07-02",etapa:"Contratación",observaciones:"Asignado a cubrir plaza de: Auxiliar de Almacén"}]},
-  ]
-};
-/** Los registros demo nunca deben llegar al Sheet ni mezclarse con datos reales. Se reconocen por id
- *  (los reales son 'v'/'c' + 13 dígitos), así también se detectan copias demo guardadas antes. */
-const DEMO_IDS = new Set([...DEMO.vacantes, ...DEMO.candidatos].map(x=>x.id));
-const esDemo = (r) => r && DEMO_IDS.has(String(r.id));
-/** Al registrar la primera vacante real se retiran los datos demo de la pantalla. */
-function quitarDemo(){
-  STATE.vacantes = STATE.vacantes.filter(v=>!esDemo(v));
-  STATE.candidatos = STATE.candidatos.filter(c=>!esDemo(c));
 }
 
 function criterioDefaultOperadorGeneral(){
@@ -1928,13 +1893,16 @@ async function guardarCambios(){
   if(SOLO_LECTURA || !LECTURA_OK) return;
   if(guardando){ guardarOtraVez = true; return; }
   const actual = huellasActuales();
-  const tareas = [];
+  const tareas = [], vacios = [];
   OBJETOS_RC.forEach(([tipo, lista, llave]) => {
     const antes = HUELLAS[tipo] || {}, ahora = actual[tipo];
     const registros = lista().filter(r => r && r[llave] != null && antes[String(r[llave])] !== ahora[String(r[llave])]);
     const eliminados = Object.keys(antes).filter(id => !(id in ahora));
-    if(registros.length || eliminados.length) tareas.push({ tipo, cuerpo: { rcAccion:'guardarObjetos', tipo, registros, eliminados } });
+    // Nunca se vacía un tipo completo de un golpe: eso solo pasa si la página perdió sus datos
+    if(eliminados.length > 1 && !Object.keys(ahora).length){ vacios.push(tipo); return; }
+    if(registros.length || eliminados.length) tareas.push({ tipo, lista, llave, cuerpo: { rcAccion:'guardarObjetos', tipo, registros, eliminados } });
   });
+  if(vacios.length) alert('No se guardó: la página se quedó sin ' + vacios.join(' ni ') + '. Recarga Reclutamiento antes de seguir.');
   const personas = personasDesdeEstado();
   const cambiadas = [];
   personas.forEach((p, k) => { if(HUELLAS.personas[k] !== actual.personas[k]) cambiadas.push(p); });
@@ -1957,6 +1925,9 @@ async function guardarCambios(){
         (r.errores || []).forEach(x => avisos.push(x.error));
       } else {
         HUELLAS[t.tipo] = actual[t.tipo];
+        // Nueva marca de versión del servidor; si otra persona lo cambió antes, el servidor no guardó el nuestro
+        if(r.mods) t.lista().forEach(x => { const m = x && r.mods[String(x[t.llave])]; if(m) x._mod = m; });
+        (r.conflictos || []).forEach(x => avisos.push(`Otra persona cambió "${x.nombre}" mientras lo editabas; tu cambio no se guardó. Pulsa "Actualizar" y vuelve a hacerlo.`));
       }
     }catch(err){
       fallo = true;
@@ -2370,7 +2341,7 @@ function renderResumen(){
 document.getElementById('fPlanta').addEventListener('change', renderResumen);
 document.getElementById('fStatus').addEventListener('change', renderResumen);
 document.getElementById('fFuente').addEventListener('change', renderResumen);
-document.getElementById('btnRefresh').addEventListener('click', ()=>{ STATE = loadLocal(); renderResumen(); refreshCargaLists(); });
+document.getElementById('btnRefresh').addEventListener('click', async ()=>{ clearTimeout(temporizadorGuardar); await guardarCambios(); cargarDesdeDashboard(); });
 /** Exporta a Excel las vacantes y candidatos que cumplen los filtros actuales del Resumen. */
 function renderEmbudo(vacantesFiltradas){
   vacantesFiltradas = vacantesFiltradas || applyFilters();
@@ -2585,7 +2556,6 @@ document.getElementById('btnGuardarVac').addEventListener('click', ()=>{
     return;
   }
 
-  quitarDemo();
   const nueva = {
     id: uid(),
     puesto, planta, solicitante,
@@ -5965,7 +5935,7 @@ function contratacionesConFaltas(){
     if(!periodosPor.has(k)) periodosPor.set(k, []);
     periodosPor.get(k).push({ fechaAlta: e.fechaAlta || '', fechaBaja: String(e.estatus||'').toUpperCase() === 'BAJA' ? (efectivaFechaBaja(e.codigo) || '') : '' });
   });
-  return (STATE.candidatos||[]).filter(c => !esDemo(c)).map(c => {
+  return (STATE.candidatos||[]).map(c => {
     const fecha = (c.historial||[]).filter(h => h.etapa === 'Contratación').map(h => h.fecha).sort().pop();
     if(!fecha) return null;
     const v = (STATE.vacantes||[]).find(x => x.id === c.vacanteId) || {};
