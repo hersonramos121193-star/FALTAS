@@ -601,10 +601,8 @@
   <div class="toolbar">
     <div>
       <label>Planta / Área</label>
-      <select id="fPlanta">
+      <select id="fPlanta" data-plantas>
         <option value="">Todas</option>
-        <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-        <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
       </select>
     </div>
     <div>
@@ -773,10 +771,8 @@
       <div class="form-grid">
         <div class="form-field"><label>Puesto *</label><input type="text" id="vPuesto" placeholder="Ej. Operador de Producción"></div>
         <div class="form-field"><label>Planta / Área *</label>
-          <select id="vPlanta">
+          <select id="vPlanta" data-plantas>
             <option value="">Selecciona…</option>
-            <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
           </select>
         </div>
         <div class="form-field"><label>Solicitante *</label><input type="text" id="vSolicitante" placeholder="Nombre del jefe/depto que solicita"></div>
@@ -870,11 +866,8 @@
     </div>
     <div>
       <label>Etapa actual</label>
-      <select id="catEtapa">
+      <select id="catEtapa" data-etapas>
         <option value="">Todas</option>
-        <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option><option>Entrevista jefe directo</option>
-        <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option>
-        <option>Contratación</option><option>Descartado</option>
       </select>
     </div>
   </div>
@@ -915,11 +908,7 @@
         <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:6px;">
           <div class="form-field">
             <label>Mover a nueva etapa</label>
-            <select id="detNuevaEtapa">
-              <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option><option>Entrevista jefe directo</option>
-              <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option><option>Contratación</option>
-              <option>Descartado</option>
-            </select>
+            <select id="detNuevaEtapa" data-etapas></select>
           </div>
           <div class="form-field">
             <label>Fecha en que ocurrió</label>
@@ -1057,11 +1046,7 @@
         </div>
         <div class="form-field"><label>Fecha de postulación *</label><input type="date" id="cFecha"></div>
         <div class="form-field"><label>Etapa actual</label>
-          <select id="cEtapa">
-            <option>Prueba práctica</option><option>Exámenes médicos</option><option>Entrevista RH</option><option>Entrevista jefe directo</option>
-            <option>Examen psicométrico</option><option>Papelería</option><option>Oferta</option><option>Contratación</option>
-            <option>Descartado</option>
-          </select>
+          <select id="cEtapa" data-etapas></select>
         </div>
         <div class="form-field"><label>Teléfono</label><input type="text" id="cTelefono" placeholder="Opcional"></div>
         <div class="form-field"><label>Observaciones del registro inicial</label><input type="text" id="cNotas" placeholder="Observaciones"></div>
@@ -1102,10 +1087,8 @@
       <div class="form-grid" style="grid-template-columns:1fr 1fr;">
         <div class="form-field"><label>Puesto *</label><input type="text" id="critPuesto" placeholder="Ej. Operador General"></div>
         <div class="form-field"><label>Planta / Área *</label>
-          <select id="critPlanta">
+          <select id="critPlanta" data-plantas>
             <option value="">Selecciona…</option>
-            <option>Planta 1</option><option>Planta 2</option><option>Planta 3</option>
-            <option>Planta 4</option><option>Planta III</option><option>Niveladora</option><option>Corporativo</option><option>Ventas</option>
           </select>
         </div>
       </div>
@@ -1520,9 +1503,7 @@
       <div class="form-field"><label>Planta / Área *</label><input type="text" id="abModalArea" list="abModalAreaLista" placeholder="Ej. Planta 2"></div>
       <div class="form-field"><label>Puesto *</label><input type="text" id="abModalPuesto" placeholder="Ej. Operador de Soldadura"></div>
     </div>
-    <datalist id="abModalAreaLista">
-      <option value="Planta 1"></option><option value="Planta 2"></option><option value="Planta 3"></option><option value="Planta 4"></option>
-      <option value="Planta III"></option><option value="Niveladora"></option><option value="Corporativo"></option><option value="Ventas"></option>
+    <datalist id="abModalAreaLista" data-plantas>
       <option value="GM"></option><option value="ZR"></option><option value="OP"></option><option value="FB"></option><option value="IZR"></option>
     </datalist>
     <div class="form-grid" style="grid-template-columns:1fr 1fr;">
@@ -1958,6 +1939,15 @@ function pillClass(status){
 }
 // "Entrevista jefe directo" se retiró en v84 y regresó en v86; una etapa que no esté aquí se conserva en el historial
 const ORDEN_ETAPAS = ["Prueba práctica","Exámenes médicos","Entrevista RH","Entrevista jefe directo","Examen psicométrico","Papelería","Oferta","Contratación"];
+// Plantas / áreas de las listas de Reclutamiento: para agregar una, se agrega aquí y sale en todas
+const PLANTAS = ["Planta 1","Planta 2","Planta 3","Planta 4","Planta III","Niveladora","Corporativo","Ventas"];
+// Las listas de etapas (data-etapas) y de plantas (data-plantas) se llenan desde aquí; se conserva su primera opción ("Todas", "Selecciona…")
+document.querySelectorAll('select[data-etapas]').forEach(sel =>
+  sel.insertAdjacentHTML('beforeend', ORDEN_ETAPAS.concat('Descartado').map(e => `<option>${e}</option>`).join('')));
+document.querySelectorAll('[data-plantas]').forEach(el => {
+  const html = PLANTAS.map(p => el.tagName === 'DATALIST' ? `<option value="${p}"></option>` : `<option>${p}</option>`).join('');
+  if(el.tagName === 'DATALIST') el.insertAdjacentHTML('afterbegin', html); else el.insertAdjacentHTML('beforeend', html);
+});
 
 function candidatosDeVacante(vId){
   return STATE.candidatos.filter(c => c.vacanteId === vId);
@@ -2133,8 +2123,10 @@ function applyFilters(sinSeleccion){
   const planta = document.getElementById('fPlanta').value;
   const status = document.getElementById('fStatus').value;
   const fuente = document.getElementById('fFuente').value;
+  // "PLANTA 1" del Excel de bajas y "Planta 1" de la lista son la misma planta
+  const igual = (a, b) => quitarAcentos_(String(a || '').trim().toLowerCase()) === quitarAcentos_(String(b || '').trim().toLowerCase());
   return STATE.vacantes.filter(v =>
-    (!planta || v.planta===planta) &&
+    (!planta || igual(v.planta, planta)) &&
     (!status || v.status===status) &&
     (!fuente || v.fuente===fuente) &&
     (sinSeleccion || !REQ_OCULTAS.has(v.id))
