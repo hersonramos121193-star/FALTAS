@@ -106,7 +106,7 @@
   @media (max-width:920px){.grid-2{grid-template-columns:1fr;}}
 
   label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin:14px 0 6px;}
-  input[type=text],input[type=password],input[type=number],input[type=date],select,textarea{
+  input[type=text],input[type=search],input[type=password],input[type=number],input[type=date],select,textarea{
     width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;
     font-size:14px;background:#fff;color:var(--ink);
   }
@@ -1087,6 +1087,7 @@
         <label style="display:flex;gap:6px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0;margin:0 0 6px;font-size:13px">
           <input type="checkbox" id="ccTodos" style="width:auto"> Todo el personal
         </label>
+        <input type="search" id="ccBuscarPuesto" placeholder="Buscar puesto…" autocomplete="off" style="margin-bottom:6px">
         <fieldset id="ccPuestos" style="margin:0;min-width:0;max-height:160px;overflow:auto;border:1.5px solid var(--line);border-radius:9px;padding:6px 10px;background:#fff"></fieldset>
         <span class="muted" style="font-size:11px">Marca los puestos que deben tomarlo (puestos de empleados en ALTA). Sin marcar = no es obligatorio.</span>
       </div>
@@ -2547,10 +2548,18 @@ function pintarPuestos(elegidos){
   const sobran = elegidos.filter(p => !vistos.has(normTxt(p)));
   document.getElementById('ccPuestos').innerHTML = [...vistos.values()].sort().map(p => casilla(p)).concat(sobran.map(p => casilla(p, true))).join('')
     || '<span class="muted" style="font-size:12px">No hay empleados en ALTA con puesto.</span>';
+  filtrarPuestos();
 }
+// El buscador solo oculta casillas: las marcadas que no coinciden siguen guardándose
+function filtrarPuestos(){
+  const q = normTxt(document.getElementById('ccBuscarPuesto').value.trim());
+  document.querySelectorAll('#ccPuestos label').forEach(l => { l.style.display = !q || normTxt(l.textContent).includes(q) ? '' : 'none'; });
+}
+document.getElementById('ccBuscarPuesto').addEventListener('input', filtrarPuestos);
 const puestosMarcados = () => [...document.querySelectorAll('#ccPuestos input:checked')].map(i => i.value);
 function llenarObligatorio(valor){
   const todos = String(valor || '').trim() === '*';
+  document.getElementById('ccBuscarPuesto').value = ''; // al abrir otro curso se ven todos los puestos
   pintarPuestos(todos ? [] : puestosObligatorio(valor));
   document.getElementById('ccTodos').checked = todos;
   document.getElementById('ccPuestos').disabled = todos;
