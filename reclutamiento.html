@@ -164,6 +164,7 @@
   .etapa-tag.contratado{background:#E6F3EB;color:#2E7D4F;}
   .etapa-tag.descartado{background:#EEEFF1;color:#5F6B76;}
   .funnel-bar.descartado{background:#A9B2BB !important;}
+  .funnel-bar.cubierta{background:#3E8C63 !important;}
   /* recuadros de "cargando" mientras llegan los datos de la Sheet (v89) */
   @keyframes brillo{0%{background-position:200% 0}100%{background-position:-200% 0}}
   @keyframes girar{to{transform:rotate(360deg)}}
@@ -1384,10 +1385,10 @@
     <div id="modalPlazasCubiertasResumen" style="margin-bottom:12px;"></div>
     <div id="modalListaCandidatos"></div>
     <div class="form-field">
-      <label>Fecha en que se cubrió esta plaza</label>
+      <label>Fecha en que se cubrieron las plazas</label>
       <input type="date" id="modalFechaCierre">
     </div>
-    <div class="form-field">
+    <div class="form-field" id="campoFichaCierre">
       <label>Número de empleado (opcional)</label>
       <input type="text" id="modalFichaEmpleado" autocomplete="off" placeholder="Ficha de PeopleCloud">
       <div class="desc" id="modalFichaSugerida" style="margin-top:4px;"></div>
@@ -2041,9 +2042,12 @@ let chartTiempoTotalVacanteInstance = null, chartTiempoPorEtapaInstance = null;
 function buildFunnelData(vacantesFiltradas){
   const idsFiltrados = new Set(vacantesFiltradas.map(v=>v.id));
   const candsRelevantes = STATE.candidatos.filter(c => idsFiltrados.has(c.vacanteId));
-  return ORDEN_ETAPAS.concat('Descartado').map(etapa => ({
+  // quien ya ocupa una plaza cuenta en "Plazas cubiertas" y no en su etapa (v92)
+  const conPlaza = new Set(vacantesFiltradas.flatMap(v => plazasCubiertas(v).map(p => p.candidatoId)));
+  const etapaEmbudo = c => conPlaza.has(c.id) ? 'Plazas cubiertas' : etapaVigente(c);
+  return ORDEN_ETAPAS.concat('Plazas cubiertas', 'Descartado').map(etapa => ({
     etapa,
-    total: candsRelevantes.filter(c => etapaVigente(c) === etapa).length
+    total: candsRelevantes.filter(c => etapaEmbudo(c) === etapa).length
   }));
 }
 // Lista "Requisición" del embudo: las vacantes que pasan los filtros del Resumen
@@ -2353,7 +2357,7 @@ function renderEmbudo(vacantesFiltradas){
     const pct = Math.round((f.total/maxF)*100);
     return `<div class="funnel-row">
       <div class="stage-label">${f.etapa}</div>
-      <div class="funnel-bar-wrap"><div class="funnel-bar${f.etapa === 'Descartado' ? ' descartado' : ''}" style="width:${Math.max(pct,4)}%">${f.total}</div></div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar${f.etapa === 'Descartado' ? ' descartado' : f.etapa === 'Plazas cubiertas' ? ' cubierta' : ''}" style="width:${Math.max(pct,4)}%">${f.total}</div></div>
     </div>`;
   }).join('');
 }
@@ -2417,10 +2421,11 @@ function renderAvanceRequisiciones(abiertas){
     const etapa = a.etapasProceso.length
       ? a.etapasProceso.map(([e, n, est]) => `<span class="pill-etapa" style="background:${colorEtapa(e)};color:${textoEtapa(e)}"${est ? ` title="${est} llevan más de ${DIAS_ESTANCADO} días en esta etapa"` : ''}>${n} en ${e}${est ? `<span class="estanc">⚠ ${est}</span>` : ''}</span>`).join('')
       : `<span class="pill-etapa evaluacion">Evaluación de candidatos</span>${v.notas ? `<div class="nota-vac">${v.notas}</div>` : ''}`;
+    const cubiertas = a.cubiertas ? `<span class="pill-etapa" style="background:${colorEtapa('Contratación')};color:#fff">${a.cubiertas} plaza${a.cubiertas !== 1 ? 's' : ''} cubierta${a.cubiertas !== 1 ? 's' : ''}</span>` : '';
     return `<tr onclick="irACandidatosDeVacante('${v.id}')" title="Ver candidatos de esta requisición">
       <td><strong>${v.puesto}</strong><div class="planta">${v.planta || 'Planta no especificada'}</div></td>
       <td class="num">${a.total}${a.cubiertas ? `<small>${a.cubiertas} cubierta${a.cubiertas !== 1 ? 's' : ''}</small>` : ''}</td>
-      <td>${etapa}</td>
+      <td>${etapa}${cubiertas}</td>
       <td class="num">${a.nProceso || '—'}</td>
       <td>${barra(a.avance)}</td>
     </tr>`;
@@ -2944,7 +2949,7 @@ function tiempoPromedioCobertura(v){
 }
 
 let vacanteEnCierreId = null;
-let candidatoSeleccionadoParaCierre = null;
+let seleccionCierre = []; // ids marcados en "Cubrir plaza", en el orden en que se marcaron
 
 function cambiarStatusVacante(id, nuevoStatus){
   const v = STATE.vacantes.find(v=>v.id===id);
@@ -3005,7 +3010,7 @@ document.getElementById('btnConfirmarCancelacion').addEventListener('click', ()=
 
 function abrirModalCierre(vacanteId){
   vacanteEnCierreId = vacanteId;
-  candidatoSeleccionadoParaCierre = null;
+  seleccionCierre = [];
   const v = STATE.vacantes.find(v=>v.id===vacanteId);
   const yaCubiertas = plazasCubiertas(v);
   const idsYaAsignados = new Set(yaCubiertas.map(p=>p.candidatoId));
@@ -3016,8 +3021,9 @@ function abrirModalCierre(vacanteId){
   document.getElementById('modalVacantePuesto').textContent = 'Cubrir plaza: ' + v.puesto;
   document.getElementById('modalProgreso').textContent = completo
     ? `Esta vacante ya tiene sus ${total} plaza${total>1?'s':''} cubiertas. Puedes quitar alguna si fue un error, o cerrarla si sigue como "En proceso".`
-    : `Esta vacante tiene ${total} plaza${total>1?'s':''} en total. Selecciona al candidato que cubre la siguiente.`;
+    : `Esta vacante tiene ${total} plaza${total>1?'s':''} en total. Marca a los candidatos que cubren las plazas (puedes elegir varios).`;
   document.getElementById('modalFechaCierre').value = hoyISO();
+  actualizarSeleccionCierre();
 
   const pct = Math.round((yaCubiertas.length/total)*100);
   document.getElementById('modalPlazasCubiertasResumen').innerHTML = `
@@ -3110,11 +3116,28 @@ function cerrarVacanteAhora(vacanteId){
 }
 
 function seleccionarCandidatoCierre(candId){
-  candidatoSeleccionadoParaCierre = candId;
-  document.querySelectorAll('.candidato-opcion').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('[id^="check_"]').forEach(el => el.innerHTML = '');
-  document.getElementById('opcion_' + candId).classList.add('selected');
-  document.getElementById('check_' + candId).innerHTML = '✓';
+  const i = seleccionCierre.indexOf(candId);
+  if(i > -1) seleccionCierre.splice(i, 1);
+  else {
+    const v = STATE.vacantes.find(v=>v.id===vacanteEnCierreId);
+    const faltan = Math.max(0, totalPlazas(v) - plazasCubiertas(v).length);
+    if(seleccionCierre.length >= faltan){ alert(faltan ? `Solo falta${faltan !== 1 ? 'n' : ''} ${faltan} plaza${faltan !== 1 ? 's' : ''} por cubrir.` : 'Ya no hay plazas pendientes por cubrir.'); return; }
+    seleccionCierre.push(candId);
+  }
+  const marcado = seleccionCierre.includes(candId);
+  document.getElementById('opcion_' + candId).classList.toggle('selected', marcado);
+  document.getElementById('check_' + candId).innerHTML = marcado ? '✓' : '';
+  actualizarSeleccionCierre();
+}
+// La ficha de empleado solo se pide con un candidato marcado; con varios se captura después en "Editar candidato"
+function actualizarSeleccionCierre(){
+  const n = seleccionCierre.length;
+  document.getElementById('btnConfirmarCierre').textContent = n > 1 ? `Registrar ${n} plazas cubiertas` : 'Registrar plaza cubierta';
+  document.getElementById('campoFichaCierre').style.display = n > 1 ? 'none' : '';
+  document.getElementById('modalFichaEmpleado').value = '';
+  document.getElementById('modalFichaSugerida').innerHTML = '';
+  if(n !== 1) return;
+  const candId = seleccionCierre[0];
   const c = (STATE.candidatos||[]).find(x=>x.id===candId);
   const sug = c && sugerirFicha(c.nombre, document.getElementById('modalFechaCierre').value || hoyISO());
   document.getElementById('modalFichaEmpleado').value = (c && c.codigoEmpleado) || '';
@@ -3127,14 +3150,14 @@ function cerrarModalCierre(){
   document.getElementById('modalFichaEmpleado').value = '';
   document.getElementById('modalFichaSugerida').innerHTML = '';
   vacanteEnCierreId = null;
-  candidatoSeleccionadoParaCierre = null;
+  seleccionCierre = [];
 }
 
 document.getElementById('btnCancelarCierre').addEventListener('click', cerrarModalCierre);
 document.getElementById('btnConfirmarCierre').addEventListener('click', ()=>{
   if(!vacanteEnCierreId) return;
-  if(!candidatoSeleccionadoParaCierre){
-    alert('Selecciona al candidato que cubre esta plaza.');
+  if(!seleccionCierre.length){
+    alert('Marca al menos un candidato que cubra una plaza.');
     return;
   }
   const fecha = document.getElementById('modalFechaCierre').value;
@@ -3148,17 +3171,18 @@ document.getElementById('btnConfirmarCierre').addEventListener('click', ()=>{
     return;
   }
   v.plazasCubiertas = v.plazasCubiertas || [];
-  v.plazasCubiertas.push({candidatoId: candidatoSeleccionadoParaCierre, fecha});
-
-  // registra el movimiento de "Contratación" en el historial del candidato
-  const c = STATE.candidatos.find(c=>c.id===candidatoSeleccionadoParaCierre);
-  if(c){
-    c.historial = c.historial || [];
-    c.historial.push({fecha, etapa: "Contratación", observaciones: "Asignado a cubrir plaza de: " + v.puesto, plazaDe: v.id});
-    c.etapaActual = etapaVigente(c);
-    const ficha = document.getElementById('modalFichaEmpleado').value.trim().replace(/[^\w-]/g, '');
-    if(ficha) c.codigoEmpleado = ficha; // liga al candidato con su ficha para cruzar sus faltas
-  }
+  const ficha = seleccionCierre.length === 1 ? document.getElementById('modalFichaEmpleado').value.trim().replace(/[^\w-]/g, '') : '';
+  seleccionCierre.forEach(candId => {
+    v.plazasCubiertas.push({candidatoId: candId, fecha});
+    // registra el movimiento de "Contratación" en el historial del candidato
+    const c = STATE.candidatos.find(c=>c.id===candId);
+    if(c){
+      c.historial = c.historial || [];
+      c.historial.push({fecha, etapa: "Contratación", observaciones: "Asignado a cubrir plaza de: " + v.puesto, plazaDe: v.id});
+      c.etapaActual = etapaVigente(c);
+      if(ficha) c.codigoEmpleado = ficha; // liga al candidato con su ficha para cruzar sus faltas
+    }
+  });
 
   const total = totalPlazas(v);
   if(v.plazasCubiertas.length >= total){
