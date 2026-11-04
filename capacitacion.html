@@ -1087,8 +1087,8 @@
         <label style="display:flex;gap:6px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0;margin:0 0 6px;font-size:13px">
           <input type="checkbox" id="ccTodos" style="width:auto"> Todo el personal
         </label>
-        <select id="ccPuestos" multiple size="4"></select>
-        <span class="muted" style="font-size:11px">Ctrl + clic para elegir varios puestos. Sin selección = no es obligatorio.</span>
+        <fieldset id="ccPuestos" style="margin:0;min-width:0;max-height:160px;overflow:auto;border:1.5px solid var(--line);border-radius:9px;padding:6px 10px;background:#fff"></fieldset>
+        <span class="muted" style="font-size:11px">Marca los puestos que deben tomarlo (puestos de empleados en ALTA). Sin marcar = no es obligatorio.</span>
       </div>
       <div class="filter-actions">
         <button class="btn btn-primary btn-sm" id="btnGuardarCatalogoCursos">Agregar</button>
@@ -2537,22 +2537,27 @@ function textoObligatorio(valor){
   const p = puestosObligatorio(valor);
   return p.length ? `<span title="${escapeHtml(p.join(', '))}">${escapeHtml(p.length <= 2 ? p.join(', ') : p.length + ' puestos')}</span>` : '—';
 }
+// Una casilla por puesto de los empleados en ALTA (sin repetir mayúsculas/acentos)
+function pintarPuestos(elegidos){
+  const vistos = new Map();
+  STATE.empleados.filter(esAlta).forEach(e => { const p = String(e.Puesto || '').trim(); if(p && !vistos.has(normTxt(p))) vistos.set(normTxt(p), p); });
+  const marcados = new Set(elegidos.map(normTxt));
+  const casilla = (p, extra) => `<label style="display:flex;gap:6px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0;margin:3px 0;font-size:13px;cursor:pointer"><input type="checkbox" value="${escapeHtml(p)}" style="width:auto"${marcados.has(normTxt(p)) ? ' checked' : ''}> ${escapeHtml(p)}${extra ? ' <span class="muted">(sin empleados)</span>' : ''}</label>`;
+  // puestos guardados que ya no tiene nadie en ALTA: se muestran marcados para no perderlos al guardar
+  const sobran = elegidos.filter(p => !vistos.has(normTxt(p)));
+  document.getElementById('ccPuestos').innerHTML = [...vistos.values()].sort().map(p => casilla(p)).concat(sobran.map(p => casilla(p, true))).join('')
+    || '<span class="muted" style="font-size:12px">No hay empleados en ALTA con puesto.</span>';
+}
+const puestosMarcados = () => [...document.querySelectorAll('#ccPuestos input:checked')].map(i => i.value);
 function llenarObligatorio(valor){
   const todos = String(valor || '').trim() === '*';
-  const sel = document.getElementById('ccPuestos');
-  const elegidos = new Set(todos ? [] : puestosObligatorio(valor).map(normTxt));
-  sel.querySelectorAll('option[data-extra]').forEach(o => o.remove());
-  [...sel.options].forEach(o => { o.selected = elegidos.has(normTxt(o.value)); elegidos.delete(normTxt(o.value)); });
-  // puestos guardados que ya no tiene ningún empleado: se agregan para no perderlos al guardar
-  puestosObligatorio(valor).filter(p => elegidos.has(normTxt(p))).forEach(p => {
-    const o = new Option(p + ' (sin empleados)', p, true, true); o.dataset.extra = '1'; sel.add(o);
-  });
+  pintarPuestos(todos ? [] : puestosObligatorio(valor));
   document.getElementById('ccTodos').checked = todos;
-  sel.disabled = todos;
+  document.getElementById('ccPuestos').disabled = todos;
 }
 function leerObligatorio(){
   if(document.getElementById('ccTodos').checked) return '*';
-  return [...document.getElementById('ccPuestos').selectedOptions].map(o => o.value).join('|');
+  return puestosMarcados().join('|');
 }
 document.getElementById('ccTodos').addEventListener('change', (e) => { document.getElementById('ccPuestos').disabled = e.target.checked; });
 
@@ -2629,12 +2634,7 @@ function renderCatalogos(){
       <td>${Number(c.VigenciaMeses) > 0 ? escapeHtml(c.VigenciaMeses) + ' meses' : 'No vence'}</td>
       <td>${textoObligatorio(c.ObligatorioPara)}</td>${acciones('CatalogoCursos', c.ID)}</tr>`).join('')
     || vacio(8, 'Sin cursos en el catálogo');
-  // puestos para elegir: los del catálogo de empleados (sin repetir mayúsculas/acentos)
-  const sel = document.getElementById('ccPuestos');
-  const elegidos = new Set([...sel.selectedOptions].map(o => normTxt(o.value)));
-  const vistos = new Map();
-  STATE.empleados.forEach(e => { const p = String(e.Puesto || '').trim(); if(p && !vistos.has(normTxt(p))) vistos.set(normTxt(p), p); });
-  sel.innerHTML = [...vistos.values()].sort().map(p => `<option value="${escapeHtml(p)}"${elegidos.has(normTxt(p)) ? ' selected' : ''}>${escapeHtml(p)}</option>`).join('');
+  pintarPuestos(puestosMarcados()); // conserva lo que ya estaba marcado
   // listas para elegir: en "Registrar curso" el agente se guarda por nombre (así se ve aunque luego se borre del catálogo)
   const nombreCurso = (id) => (cursos.find(c => String(c.ID) === String(id)) || {}).Nombre || id;
   // un mismo agente puede tener varios instructores: el texto lleva el instructor para distinguirlos
