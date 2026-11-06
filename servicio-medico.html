@@ -39,6 +39,13 @@
   nav button.activo{color:var(--azul-1);border-bottom-color:var(--oro);}
   nav button.activo svg{color:var(--oro);}
   main{max-width:1300px;margin:0 auto;padding:22px;}
+  @keyframes girar{to{transform:rotate(360deg)}}
+  .aviso-carga{display:flex;align-items:center;gap:8px;background:#EAF1F6;color:var(--azul-2);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px;}
+  .aviso-carga .giro{width:13px;height:13px;border:2px solid var(--azul-3);border-top-color:transparent;border-radius:50%;animation:girar .8s linear infinite;}
+  .aviso-carga.ok{background:#E6F3EB;color:var(--ok);}
+  .aviso-carga.error{background:#FAE7E5;color:var(--warn);}
+  .aviso-carga.ok .giro,.aviso-carga.error .giro{display:none;}
+  @media (prefers-reduced-motion:reduce){.aviso-carga .giro{animation:none;}}
   .vista{display:none;}
   .vista.activa{display:block;}
   .grid{display:grid;gap:16px;}
@@ -167,6 +174,7 @@
 </nav>
 
 <main>
+<div class="aviso-carga" id="avisoCarga"><span class="giro"></span><span id="avisoCargaTexto">Cargando datos de Google Sheets…</span></div>
 
 <!-- ===================== DASHBOARD ===================== -->
 <div id="vista-dashboard" class="vista activa">
@@ -471,7 +479,12 @@ async function persistir(body){
   return !!(await apiPost(body));
 }
 
+function pintarAvisoCarga(estado, texto){
+  document.getElementById('avisoCarga').className = 'aviso-carga ' + estado;
+  document.getElementById('avisoCargaTexto').textContent = texto;
+}
 async function cargarTodo(){
+  pintarAvisoCarga('', 'Cargando datos de Google Sheets…');
   const datos = await apiGet('todo');
   lecturaOk = !!(datos && Array.isArray(datos.incapacidades) && Array.isArray(datos.empleados));
   if(lecturaOk){
@@ -484,6 +497,9 @@ async function cargarTodo(){
     empleados = [];
   }
   refrescarTodaLaUI();
+  pintarAvisoCarga(lecturaOk ? 'ok' : 'error', lecturaOk
+    ? '✓ Datos actualizados · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'})
+    : 'No se pudieron cargar los datos de Google Sheets.');
 }
 
 function borrarLocalRespaldo(){ try{

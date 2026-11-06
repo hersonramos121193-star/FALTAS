@@ -444,8 +444,15 @@ body:not(.sin-sesion) .login{display:none;}
 .dash-bar[onclick]{cursor:pointer;}
 .dash-bar[onclick]:hover span:first-child{color:var(--navy-800);text-decoration:underline;}
 .dash-pt{cursor:pointer;}
+@keyframes girar{to{transform:rotate(360deg)}}
+.aviso-carga{display:flex;align-items:center;gap:8px;background:#EAF1F6;color:#1A3A5C;border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px;}
+.aviso-carga .giro{width:13px;height:13px;border:2px solid #254D74;border-top-color:transparent;border-radius:50%;animation:girar .8s linear infinite;}
+.aviso-carga.ok{background:#E6F3EB;color:var(--ok);}
+.aviso-carga.error{background:#FAE7E5;color:var(--bad);}
+.aviso-carga.ok .giro,.aviso-carga.error .giro{display:none;}
+@media (prefers-reduced-motion:reduce){.aviso-carga .giro{animation:none;}}
 @media print{
-  .sidebar,.no-print,#dash-conn-banner,.toast{display:none !important;}
+  .sidebar,.no-print,#dash-conn-banner,.toast,.aviso-carga{display:none !important;}
   .main{padding:0;}
   body{background:#fff;}
   .panel,.kpi{box-shadow:none;break-inside:avoid;}
@@ -595,6 +602,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 
   <!-- ================= MAIN ================= -->
   <main class="main">
+    <div class="aviso-carga hidden" id="avisoCarga"><span class="giro"></span><span>Cargando datos de Google Sheets…</span></div>
 
     <!-- ============ DASHBOARD ============ -->
     <section id="view-dashboard" class="view">
@@ -1200,6 +1208,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 
     <!-- ============ KPIS SEMANAL (todos los departamentos) ============ -->
     <section id="view-kpis-semanales" class="view hidden">
+      <div class="aviso-carga" id="avisoKpis"><span class="giro"></span><span>Cargando datos de Google Sheets…</span></div>
       <div class="topbar ejecutivo">
         <div>
           <div class="kicker-gen">Reportes</div>
@@ -1599,7 +1608,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.11.04-v94";
+const APP_VERSION = "2026.11.06-v95";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2014,12 +2023,22 @@ function primerModulo(){
 function aplicarModulos(){
   document.querySelectorAll('.navbtn').forEach(b=> b.classList.toggle('hidden', !moduloPermitido(b.dataset.view)));
 }
+// Vistas que se llenan con la carga general; Kpis lleva su propio aviso y los módulos en iframe traen el suyo
+const VISTAS_CON_AVISO = ['dashboard', 'cumpleanos', 'registro', 'historial', 'empleados', 'supervisores'];
+const ajustarAvisoCarga = view => document.getElementById('avisoCarga').classList.toggle('hidden', !VISTAS_CON_AVISO.includes(view));
+function pintarAviso(id, estado, texto){
+  const aviso = document.getElementById(id);
+  aviso.className = 'aviso-carga ' + estado + (aviso.classList.contains('hidden') ? ' hidden' : '');
+  aviso.lastElementChild.textContent = texto;
+}
+const textoActualizado = () => '✓ Datos actualizados · ' + new Date().toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
 function goTo(view){
   if(MODO_LECTURA && (view==='registro' || view==='conexion')) view='dashboard';
   if(!moduloPermitido(view)){ const v = primerModulo(); if(!v) return; view = v; }
   document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
   document.getElementById('view-'+view).classList.remove('hidden');
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  ajustarAvisoCarga(view);
   renderVista(view);
   window.scrollTo(0,0);
 }
@@ -4129,6 +4148,7 @@ async function cargarDeptosKpis(){
   const turno = ++ksTurno;
   const capOk = moduloPermitido('capacitacion'), smOk = moduloPermitido('serviciomedico'), rcOk = moduloPermitido('reclutamiento');
   ksDeptos = { cap: capOk ? null : undefined, sm: smOk ? null : undefined, rc: rcOk ? null : undefined };
+  pintarAviso('avisoKpis', '', 'Cargando datos de Google Sheets…');
   renderKpisSemanales();
   const [cap, sm, rc] = await Promise.allSettled([
     capOk ? apiPost({action:'cap', capAction:'getAll'}) : undefined,
@@ -4139,6 +4159,8 @@ async function cargarDeptosKpis(){
   const valor = (ok, r)=> !ok ? undefined : r.status==='fulfilled' ? r.value : 'error';
   ksDeptos = { cap: valor(capOk, cap), sm: valor(smOk, sm), rc: valor(rcOk, rc) };
   renderKpisSemanales();
+  const fallo = [cap, sm, rc].some(r => r.status === 'rejected');
+  pintarAviso('avisoKpis', fallo ? 'error' : 'ok', fallo ? 'No se pudieron cargar todos los datos de Google Sheets.' : textoActualizado());
 }
 const isoDe = v=> String(v ?? '').slice(0,10); // el Sheet manda 'yyyy-mm-dd' o fecha ISO completa
 const diasISO = (a, b)=> Math.round((new Date(b+'T00:00:00Z') - new Date(a+'T00:00:00Z'))/86400000) + 1;
@@ -4586,18 +4608,22 @@ async function arrancarApp(){
   // La fecha de la falta SÍ admite fechas futuras (faltas por adelantado / programadas).
   document.getElementById('inp-fecha-carta').max = hoy;
 
+  ajustarAvisoCarga(document.querySelector('.view:not(.hidden)')?.id.slice(5));
   const copia = getScriptUrl() ? leerCacheDatos() : null;
   if(copia){
     aplicarDatos(copia.datos);
     actualizarEstadoConexion('aviso', 'Mostrando datos guardados — actualizando con tu Google Sheet…');
+    pintarAviso('avisoCarga', '', 'Mostrando datos guardados — actualizando con Google Sheets…');
     renderDashboard();
   }
-  await cargarDatos(copia);
+  const ok = await cargarDatos(copia);
   procesarPendientes(); // cambios que quedaron sin subir la vez anterior
   // Se vuelve a dibujar la vista abierta con los datos nuevos (Supervisores no,
   // para no borrar cambios que se estén capturando en ese momento).
   const vista = document.querySelector('.view:not(.hidden)')?.id.slice(5);
   if(vista && vista !== 'supervisores') renderVista(vista);
+  pintarAviso('avisoCarga', ok ? 'ok' : 'error', ok ? textoActualizado()
+    : copia ? 'No se pudo actualizar con Google Sheets: se ven los últimos datos guardados.' : 'No se pudieron cargar los datos de Google Sheets.');
 }
 </script>
 

@@ -222,6 +222,8 @@
   .tabla-estatus .planta{font-size:11.5px;color:var(--text-dim);}
   .tabla-estatus .num{text-align:center;font-size:17px;font-weight:700;color:var(--navy);}
   .tabla-estatus .num small{display:block;font-size:10.5px;font-weight:400;color:var(--text-dim);}
+  .tabla-estatus tr.grupo-cerradas{cursor:default;}
+  .tabla-estatus tr.grupo-cerradas td{background:#EDEEEF;font-weight:700;color:var(--navy);font-size:12px;}
   .tabla-estatus tfoot td{background:#EDEEEF;font-weight:700;color:var(--navy);border-top:2px solid var(--silver-lt);}
   .pill-etapa{display:inline-block;padding:3px 11px;border-radius:99px;font-size:11.5px;font-weight:600;color:#fff;margin:2px 4px 2px 0;white-space:nowrap;}
   .pill-etapa.evaluacion{background:#A7ADB3;}
@@ -679,7 +681,7 @@
 
     <div class="card" style="margin-bottom:22px;">
       <h2>Estatus por requisición</h2>
-      <div class="desc"><span id="reqMostrando">Requisiciones abiertas y en proceso.</span> Clic en una fila para ver sus candidatos.</div>
+      <div class="desc"><span id="reqMostrando">Requisiciones abiertas, en proceso y cerradas.</span> Clic en una fila para ver sus candidatos.</div>
       <div class="req-chips" id="reqChips"></div>
       <div class="alerta-estancados" id="alertaEstancados"></div>
       <div class="sk-bloque solo-cargando">
@@ -692,6 +694,7 @@
         <table class="tabla-estatus">
           <thead><tr><th>Puesto / Planta</th><th style="text-align:center;">Vacantes</th><th>Etapa actual</th><th style="text-align:center;">Candidatos en proceso</th><th>Avance</th></tr></thead>
           <tbody id="tblAvanceReq"></tbody>
+          <tbody id="tblCerradasReq"></tbody>
           <tfoot id="tfAvanceReq"></tfoot>
         </table>
       </div>
@@ -2176,7 +2179,7 @@ function actualizarSelectorReq(){
   btn.textContent = document.body.classList.contains('cargando') ? 'Cargando… ▾' : !lista.length ? 'Sin requisiciones activas ▾' : parcial ? `${elegidas.length} de ${lista.length} seleccionadas ▾` : `Todas (${lista.length}) ▾`;
   btn.classList.toggle('parcial', parcial);
   document.getElementById('reqMostrando').textContent = parcial
-    ? `Mostrando ${elegidas.length} de ${lista.length} requisiciones activas.` : 'Requisiciones abiertas y en proceso.';
+    ? `Mostrando ${elegidas.length} de ${lista.length} requisiciones activas.` : 'Requisiciones abiertas, en proceso y cerradas.';
   document.getElementById('reqChips').innerHTML = parcial ? elegidas.map(v =>
     `<span>${v.puesto} · ${v.planta || 'sin planta'}<button type="button" title="Quitar" onclick="quitarRequisicion('${v.id}')">✕</button></span>`).join('') : '';
 }
@@ -2264,7 +2267,8 @@ function renderResumen(){
     }).join('');
   }
 
-  renderAvanceRequisiciones(abiertas);
+  // la selección de "Requisiciones" solo lista activas: una cerrada no debe quedar oculta sin forma de volver a marcarla
+  renderAvanceRequisiciones(abiertas, applyFilters(true).filter(v => v.status === 'Cerrada'));
 
   // alertas
   const top = [...abiertas].sort((a,b)=>diasDesde(b.fechaApertura)-diasDesde(a.fechaApertura)).slice(0,6);
@@ -2392,7 +2396,7 @@ function avanceRequisicion(v){
   return { cubiertas, total, porEtapa, nCand: cands.length, nProceso: proceso.length, etapasProceso, avance,
     nEstancados: proceso.filter(estancado).length };
 }
-function renderAvanceRequisiciones(abiertas){
+function renderAvanceRequisiciones(abiertas, cerradas){
   const lista = abiertas.map(v => ({ v, a: avanceRequisicion(v) }));
   const plazas = lista.reduce((s, x) => s + x.a.total, 0);
   const avanceGral = plazas ? lista.reduce((s, x) => s + x.a.avance * x.a.total, 0) / plazas : 0;
@@ -2407,30 +2411,45 @@ function renderAvanceRequisiciones(abiertas){
   alerta.classList.toggle('activa', nEst > 0);
   alerta.innerHTML = nEst ? `<b>⚠ ${nEst} candidato${nEst !== 1 ? 's llevan' : ' lleva'} más de ${DIAS_ESTANCADO} días sin moverse de etapa</b> en ${lista.filter(x => x.a.nEstancados).length} requisición(es). Se marcan con ⚠ en su etapa; da clic en la fila para verlos.` : '';
   document.getElementById('notaEstatus').innerHTML = 'Proceso: ' + ORDEN_ETAPAS.join(' › ') +
-    '.<br>Avance: 100% = todas las vacantes contratadas; cada candidato suma según las etapas concluidas.' +
+    '.<br>Avance: 100% = todas las vacantes contratadas; cada candidato suma según las etapas concluidas. Una vacante cerrada cuenta 100%. El total y las tarjetas cuentan solo las activas.' +
     `<br>⚠ = candidatos con más de ${DIAS_ESTANCADO} días desde su último movimiento.`;
   renderBarraEtapas(lista);
   const tbody = document.getElementById('tblAvanceReq'), tfoot = document.getElementById('tfAvanceReq');
+  const barra = x => `<div class="avance-cel"><div class="avance-barra"><i style="width:${Math.round(x * 100)}%"></i></div><b>${pct(x)}</b></div>`;
+  const textoPlazas = n => `${n} plaza${n !== 1 ? 's' : ''} cubierta${n !== 1 ? 's' : ''}`;
+  const pillPlazas = texto => `<span class="pill-etapa" style="background:${colorEtapa('Contratación')};color:#fff">${texto}</span>`;
+  const celdaVacantes = a => `<td class="num">${a.total}${a.cubiertas ? `<small>${a.cubiertas} cubierta${a.cubiertas !== 1 ? 's' : ''}</small>` : ''}</td>`;
+  document.getElementById('tblCerradasReq').innerHTML = !cerradas.length ? '' : `<tr class="grupo-cerradas"><td colspan="5">Cerradas (${cerradas.length})</td></tr>` +
+    [...cerradas].sort((a, b) => String(b.fechaCierre || '').localeCompare(String(a.fechaCierre || ''))).map(v => {
+      const a = avanceRequisicion(v);
+      // "Cerrar ahora" permite cerrar con plazas sin cubrir: el 100% no debe ocultar cuántas quedaron
+      return `<tr onclick="irACandidatosDeVacante('${v.id}')" title="Ver candidatos de esta requisición">
+      <td><strong>${v.puesto}</strong><div class="planta">${v.planta || 'Planta no especificada'}</div></td>
+      ${celdaVacantes(a)}
+      <td><span class="pill-etapa evaluacion">Cerrada</span>${pillPlazas(a.cubiertas < a.total ? `${a.cubiertas} de ${textoPlazas(a.total)}` : textoPlazas(a.cubiertas))}</td>
+      <td class="num">${a.nCand || '—'}<small>en total</small></td>
+      <td>${barra(1)}</td>
+    </tr>`;
+    }).join('');
   if(!lista.length){
     tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay requisiciones abiertas que coincidan con los filtros.</td></tr>';
     tfoot.innerHTML = '';
     return;
   }
-  const barra = x => `<div class="avance-cel"><div class="avance-barra"><i style="width:${Math.round(x * 100)}%"></i></div><b>${pct(x)}</b></div>`;
   tbody.innerHTML = lista.sort((a, b) => diasDesde(b.v.fechaApertura) - diasDesde(a.v.fechaApertura)).map(({ v, a }) => {
     const etapa = a.etapasProceso.length
       ? a.etapasProceso.map(([e, n, est]) => `<span class="pill-etapa" style="background:${colorEtapa(e)};color:${textoEtapa(e)}"${est ? ` title="${est} llevan más de ${DIAS_ESTANCADO} días en esta etapa"` : ''}>${n} en ${e}${est ? `<span class="estanc">⚠ ${est}</span>` : ''}</span>`).join('')
       : `<span class="pill-etapa evaluacion">Evaluación de candidatos</span>${v.notas ? `<div class="nota-vac">${v.notas}</div>` : ''}`;
-    const cubiertas = a.cubiertas ? `<span class="pill-etapa" style="background:${colorEtapa('Contratación')};color:#fff">${a.cubiertas} plaza${a.cubiertas !== 1 ? 's' : ''} cubierta${a.cubiertas !== 1 ? 's' : ''}</span>` : '';
+    const cubiertas = a.cubiertas ? pillPlazas(textoPlazas(a.cubiertas)) : '';
     return `<tr onclick="irACandidatosDeVacante('${v.id}')" title="Ver candidatos de esta requisición">
       <td><strong>${v.puesto}</strong><div class="planta">${v.planta || 'Planta no especificada'}</div></td>
-      <td class="num">${a.total}${a.cubiertas ? `<small>${a.cubiertas} cubierta${a.cubiertas !== 1 ? 's' : ''}</small>` : ''}</td>
+      ${celdaVacantes(a)}
       <td>${etapa}${cubiertas}</td>
       <td class="num">${a.nProceso || '—'}</td>
       <td>${barra(a.avance)}</td>
     </tr>`;
   }).join('');
-  tfoot.innerHTML = `<tr><td>TOTAL</td><td class="num">${plazas}</td><td></td><td class="num">${nProceso}</td><td>${barra(avanceGral)}</td></tr>`;
+  tfoot.innerHTML = `<tr><td>TOTAL activas</td><td class="num">${plazas}</td><td></td><td class="num">${nProceso}</td><td>${barra(avanceGral)}</td></tr>`;
 }
 function renderBarraEtapas(lista){
   const conteo = new Map();
