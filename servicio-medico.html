@@ -182,7 +182,7 @@
   <div class="barra-filtros">
     <div><label>Año comparación A</label><select id="filtroAnioA"></select></div>
     <div><label>Año comparación B</label><select id="filtroAnioB"></select></div>
-    <div><label>Planta</label><select id="filtroPlanta"><option value="">Todas</option></select></div>
+    <div><label>Planta</label><select id="filtroPlanta" onchange="renderIncapPeriodo()"><option value="">Todas</option></select></div>
     <div><button class="btn" onclick="renderDashboard()">Actualizar</button></div>
     <div><button class="btn secundario" onclick="exportarGraficasExcel()">⬇ Exportar gráficas a Excel</button></div>
   </div>
@@ -191,6 +191,21 @@
     <button type="button" class="aten aten-rojo" data-rapido="rt"><b id="atenRT">0</b><span>riesgos de trabajo activos</span></button>
     <button type="button" class="aten aten-ambar" data-rapido="regresan"><b id="atenRegresan">0</b><span>terminan su incapacidad en los próximos 7 días</span></button>
     <button type="button" class="aten aten-azul" data-rapido="activas"><b id="kpiCasosActivos">0</b><span>incapacidades activas hoy</span></button>
+  </div>
+
+  <div class="card" style="margin-bottom:18px;">
+    <div class="titulo-banda">INCAPACIDADES DEL PERIODO</div>
+    <div class="barra-filtros" style="margin-bottom:10px;">
+      <div><label for="filtroPeriodoIncap">Periodo</label><select id="filtroPeriodoIncap" onchange="renderIncapPeriodo()"></select></div>
+      <div id="incapPeriodoN" style="font-size:12px;color:#5b6675;padding-bottom:9px;"></div>
+    </div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Ficha</th><th>Nombre</th><th>Planta</th><th>Tipo</th><th>Días</th><th>Inicial</th><th>Final</th><th>Probable alta</th><th>Días acumulados</th></tr></thead>
+        <tbody id="tbodyIncapPeriodo"></tbody>
+      </table>
+    </div>
+    <div style="font-size:11.5px;color:#5b6675;margin-top:8px;">Días acumulados: suma los certificados seguidos de la misma ficha y el mismo tipo; un hueco entre fechas inicia la cuenta. La planta se toma del filtro de arriba.</div>
   </div>
 
   <div class="comp-nota">Comparando <b id="thAnioB">Año B</b> contra <b id="thAnioA">Año A</b> · casos = registros iniciales; días repartidos por mes calendario. Que suba se marca en rojo.</div>
@@ -656,6 +671,8 @@ function refrescarTodaLaUI(){
   poblarFiltroPlanta();
   poblarFiltrosIncapacidades();
   renderDashboard();
+  poblarFiltroPeriodoIncap();
+  renderIncapPeriodo();
   renderTablaIncapacidades();
   renderTablaEmpleados();
   poblarDatalistCodigos();
@@ -1071,6 +1088,61 @@ function iniciales(nombre){
   const ini = p.length > 1 ? p[0][0] + p[1][0] : (p[0] || '?').slice(0, 2);
   return `<span class="ini" aria-hidden="true">${esc(ini.toUpperCase())}</span>`;
 }
+const CLASE_TIPO_INCAP = { 'RIESGO DE TRABAJO':'t-rt', 'RIESGO DE TRAYECTO':'t-tray', 'ENFERMEDAD':'t-enf', 'MATERNIDAD':'t-mat' };
+
+/* ============================================================
+   INCAPACIDADES DEL PERIODO (Resumen)
+============================================================ */
+const fechaDMA = iso => iso ? iso.split('-').reverse().join('/') : '';
+const finDeIncap = r => fechaISOValida(r.FechaFin) ? r.FechaFin : sumarDiasISO(r.FechaInicio, Math.max(Number(r.Dias)||1, 1)-1);
+function poblarFiltroPeriodoIncap(){
+  const sel = document.getElementById('filtroPeriodoIncap');
+  const periodos = dashboard()?.periodosNominaParaModulos?.() || [];
+  const previo = sel.value, hoy = hoyISO();
+  const opciones = periodos.map(p => [p.inicio+'|'+p.fin, p.etiqueta]);
+  sel.innerHTML = (periodos.length ? [[periodos[0].inicio+'|'+periodos[periodos.length-1].fin, 'Todos los periodos del año']] : []).concat(opciones)
+    .map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join('');
+  const deHoy = periodos.find(p => p.inicio <= hoy && p.fin >= hoy);
+  if(previo && [...sel.options].some(o => o.value === previo)) sel.value = previo;
+  else if(deHoy) sel.value = deHoy.inicio+'|'+deHoy.fin;
+}
+// Un caso = certificados seguidos de la misma ficha y tipo. Sale una fila por caso: el último certificado que toca el periodo, con lo acumulado hasta él.
+function casosDelPeriodo(desde, hasta, planta){
+  const grupos = new Map();
+  incapacidades.filter(r => fechaISOValida(r.FechaInicio)).forEach(r => {
+    const k = (r.Codigo || r.Nombre) + '|' + r.Incapacidad;
+    if(!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(r);
+  });
+  const filas = [];
+  grupos.forEach(lista => {
+    lista.sort((a, b) => a.FechaInicio.localeCompare(b.FechaInicio));
+    let acumulado = 0, finCaso = '', fila = null;
+    lista.forEach(r => {
+      if(finCaso && r.FechaInicio > sumarDiasISO(finCaso, 1)){ if(fila) filas.push(fila); acumulado = 0; finCaso = ''; fila = null; }
+      const fin = finDeIncap(r);
+      acumulado += Number(r.Dias) || 0;
+      if(fin > finCaso) finCaso = fin;
+      if(r.FechaInicio <= hasta && fin >= desde) fila = { r, fin, acumulado };
+    });
+    if(fila) filas.push(fila);
+  });
+  return filas.filter(f => !planta || f.r.Planta === planta)
+    .sort((a, b) => String(a.r.Planta).localeCompare(String(b.r.Planta)) || b.r.FechaInicio.localeCompare(a.r.FechaInicio));
+}
+function renderIncapPeriodo(){
+  const [desde, hasta] = document.getElementById('filtroPeriodoIncap').value.split('|');
+  const filas = desde ? casosDelPeriodo(desde, hasta, document.getElementById('filtroPlanta').value) : [];
+  document.getElementById('incapPeriodoN').textContent = filas.length + (filas.length === 1 ? ' caso' : ' casos');
+  document.getElementById('tbodyIncapPeriodo').innerHTML = filas.map(({ r, fin, acumulado }) => `
+    <tr>
+      <td>${esc(r.Codigo)}</td><td>${esc(r.Nombre)}</td><td>${esc(r.Planta)}</td>
+      <td><span class="badge ${CLASE_TIPO_INCAP[r.Incapacidad] || 'neutro'}">${esc(r.Incapacidad)}</span></td>
+      <td>${esc(r.Dias)}</td><td>${esc(fechaDMA(r.FechaInicio))}</td><td>${esc(fechaDMA(fin))}</td>
+      <td>${esc(fechaDMA(r.FechaAlta || sumarDiasISO(fin, 1)))}</td><td><b>${acumulado}</b></td>
+    </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;color:#8892a0;">Sin incapacidades en este periodo</td></tr>';
+}
+
 function renderTablaIncapacidades(){
   const tbody = document.getElementById('tbodyIncapacidades');
   const filtradas = obtenerIncapacidadesFiltradas();
@@ -1078,13 +1150,12 @@ function renderTablaIncapacidades(){
   const etiqueta = document.getElementById('filtroRapidoEtiqueta');
   etiqueta.hidden = !filtroRapido;
   if(filtroRapido) document.getElementById('filtroRapidoTexto').textContent = TEXTO_RAPIDO[filtroRapido];
-  const claseTipo = { 'RIESGO DE TRABAJO':'t-rt', 'RIESGO DE TRAYECTO':'t-tray', 'ENFERMEDAD':'t-enf', 'MATERNIDAD':'t-mat' };
   tbody.innerHTML = filtradas.map(i => {
     const estatusHoy = calcularEstatusPorFecha(i.FechaFin);
     return `
     <tr>
       <td>${esc(i.Codigo)}</td><td>${iniciales(i.Nombre)}${esc(i.Nombre)}</td><td>${esc(i.Puesto)}</td><td>${esc(i.Planta)}</td>
-      <td><span class="badge neutro">${esc(i.TipoRegistro)}</span></td><td><span class="badge ${claseTipo[i.Incapacidad] || 'neutro'}">${esc(i.Incapacidad)}</span></td>
+      <td><span class="badge neutro">${esc(i.TipoRegistro)}</span></td><td><span class="badge ${CLASE_TIPO_INCAP[i.Incapacidad] || 'neutro'}">${esc(i.Incapacidad)}</span></td>
       <td>${esc(i.FechaInicio)}</td><td>${esc(i.FechaFin)}</td><td>${esc(i.FechaAlta)}</td>
       <td>${esc(i.Dias)}</td><td>${esc(i.Folio)}</td>
       <td><span class="badge ${estatusHoy==='Activa'?'activa':'cerrada'}">${estatusHoy}</span></td>
