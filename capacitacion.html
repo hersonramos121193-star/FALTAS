@@ -748,6 +748,10 @@
         <select id="filtroCursoMes"><option value="">Todos los meses</option></select>
       </div>
       <div>
+        <label>Buscar curso</label>
+        <input type="search" id="filtroCursoBuscar" autocomplete="off" placeholder="🔍 Nombre del curso…">
+      </div>
+      <div>
         <label>Curso</label>
         <select id="filtroCursoNombre"><option value="">Todos los cursos</option></select>
       </div>
@@ -1081,7 +1085,7 @@
       <div><label>Objetivo</label><select id="ccObjetivo"><option value="">— Selecciona —</option></select></div>
       <div><label>Agente capacitador</label><select id="ccAgente"><option value="">— Ninguno —</option></select></div>
       <div><label>¿Aplica SIRCE?</label><select id="ccAplica"><option value="SI">Sí</option><option value="NO">No</option></select></div>
-      <div><label>Vigencia (meses)</label><input type="number" id="ccVigencia" min="0" step="1" placeholder="0 = no vence"></div>
+      <div><label>Vigencia (años)</label><input type="number" id="ccVigencia" min="0" step="any" placeholder="0 = no vence; 1.5 = año y medio"></div>
       <div style="min-width:230px">
         <label>Obligatorio para</label>
         <label style="display:flex;gap:6px;align-items:center;font-weight:400;text-transform:none;letter-spacing:0;margin:0 0 6px;font-size:13px">
@@ -1759,6 +1763,7 @@ function getFiltrosCursos(){
   return {
     mes: document.getElementById('filtroCursoMes').value,
     nombre: document.getElementById('filtroCursoNombre').value,
+    buscar: normTxt(document.getElementById('filtroCursoBuscar').value),
     planta: document.getElementById('filtroCursoPlanta').value
   };
 }
@@ -1767,6 +1772,7 @@ function getCursosFiltrados(){
   return STATE.cursos.filter(c => {
     if(f.mes && mesKey(c.FechaImparticion) !== f.mes) return false;
     if(f.nombre && c.Nombre !== f.nombre) return false;
+    if(f.buscar && !normTxt(c.Nombre).includes(f.buscar)) return false;
     if(f.planta){
       const parts = participantesDe(c.ID);
       const enPlanta = parts.some(p => {
@@ -1809,8 +1815,9 @@ function getEmpleadosFiltrados(){
 document.getElementById('filtroCursoMes').addEventListener('change', renderCursos);
 document.getElementById('filtroCursoNombre').addEventListener('change', renderCursos);
 document.getElementById('filtroCursoPlanta').addEventListener('change', renderCursos);
+document.getElementById('filtroCursoBuscar').addEventListener('input', renderCursos);
 document.getElementById('btnLimpiarFiltrosCursos').addEventListener('click', ()=>{
-  ['filtroCursoMes','filtroCursoNombre','filtroCursoPlanta'].forEach(id => document.getElementById(id).value = '');
+  ['filtroCursoMes','filtroCursoNombre','filtroCursoBuscar','filtroCursoPlanta'].forEach(id => document.getElementById(id).value = '');
   renderCursos();
 });
 
@@ -2194,6 +2201,7 @@ document.getElementById('btnExportCursos').addEventListener('click', ()=>{
       'Curso': c.Nombre,
       'Fecha de impartición': c.FechaImparticion,
       'Duración (hrs)': Number(c.DuracionHoras) || 0,
+      'Costo ($)': c.Costo === '' || c.Costo == null ? '' : Number(c.Costo),
       'Tiene vencimiento': c.TieneVencimiento === 'SI' ? 'Sí' : 'No',
       'Fecha de vencimiento': c.TieneVencimiento === 'SI' ? c.FechaVencimiento : '',
       'Estado': est.label,
@@ -2204,7 +2212,7 @@ document.getElementById('btnExportCursos').addEventListener('click', ()=>{
     };
   });
   const ws = XLSX.utils.json_to_sheet(filas);
-  ws['!cols'] = [{wch:28},{wch:14},{wch:12},{wch:14},{wch:16},{wch:16},{wch:12},{wch:14},{wch:50},{wch:40}];
+  ws['!cols'] = [{wch:28},{wch:14},{wch:12},{wch:12},{wch:14},{wch:16},{wch:16},{wch:12},{wch:14},{wch:50},{wch:40}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Cursos');
   XLSX.writeFile(wb, nombreArchivoFecha('Cursos_capacitacion'));
@@ -2570,6 +2578,8 @@ function leerObligatorio(){
 }
 document.getElementById('ccTodos').addEventListener('change', (e) => { document.getElementById('ccPuestos').disabled = e.target.checked; });
 
+// VigenciaMeses de la hoja → años para mostrar (24 → 2, 18 → 1.5, 2 → 0.17)
+const aniosVigencia = (meses) => meses === '' || meses == null || isNaN(meses) ? '' : String(+(Number(meses) / 12).toFixed(2));
 function llenarFormCatalogo(hoja, reg){
   const def = CATALOGO_FORM[hoja];
   Object.entries(def.campos).forEach(([id, campo]) => {
@@ -2578,7 +2588,10 @@ function llenarFormCatalogo(hoja, reg){
     else el.value = reg[campo] ?? '';
   });
   Object.entries(def.datalist).forEach(([id, [campo, cat]]) => { document.getElementById(id).value = textoDatalist(cat, reg[campo]); });
-  if(hoja === 'CatalogoCursos') llenarObligatorio(reg.ObligatorioPara);
+  if(hoja === 'CatalogoCursos'){
+    llenarObligatorio(reg.ObligatorioPara);
+    document.getElementById('ccVigencia').value = aniosVigencia(reg.VigenciaMeses);
+  }
   catalogoEditando[hoja] = reg.ID ?? null;
   document.getElementById('btnGuardar' + hoja).textContent = reg.ID != null ? 'Guardar cambios' : 'Agregar';
   document.getElementById('btnCancelar' + hoja).style.display = reg.ID != null ? '' : 'none';
@@ -2588,7 +2601,11 @@ function leerFormCatalogo(hoja){
   Object.entries(def.campos).forEach(([id, campo]) => { reg[campo] = document.getElementById(id).value.trim(); });
   Object.entries(def.datalist).forEach(([id, [campo]]) => { reg[campo] = claveDeDatalistInput(id); });
   if(reg.RFCAgente) reg.RFCAgente = reg.RFCAgente.toUpperCase();
-  if(hoja === 'CatalogoCursos') reg.ObligatorioPara = leerObligatorio();
+  if(hoja === 'CatalogoCursos'){
+    reg.ObligatorioPara = leerObligatorio();
+    // se captura en años y se guarda en meses enteros: 1.5 → 18
+    if(reg.VigenciaMeses !== '' && Number(reg.VigenciaMeses) >= 0) reg.VigenciaMeses = String(Math.round(Number(reg.VigenciaMeses) * 12));
+  }
   if(catalogoEditando[hoja] != null) reg.ID = catalogoEditando[hoja];
   return reg;
 }
@@ -2596,7 +2613,7 @@ async function guardarCatalogo(hoja){
   const reg = leerFormCatalogo(hoja);
   if(!reg.Nombre) return toast('Escribe el nombre', true);
   if(reg.RFCAgente && !rfcValido(reg.RFCAgente)) return toast('El RFC no tiene un formato válido (12 o 13 caracteres)', true);
-  if(reg.VigenciaMeses && !(Number(reg.VigenciaMeses) >= 0)) return toast('La vigencia debe ser un número de meses', true);
+  if(reg.VigenciaMeses && !(Number(reg.VigenciaMeses) >= 0)) return toast('La vigencia debe ser un número de años', true);
   const btn = document.getElementById('btnGuardar' + hoja);
   btn.disabled = true;
   try{
@@ -2640,7 +2657,7 @@ function renderCatalogos(){
       <td>${escapeHtml(descCatalogo('areasTematicas', c.AreaTematicaClave))}</td>
       <td>${escapeHtml((agentePorId(c.AgenteID) || {}).Nombre || '—')}</td>
       <td>${c.AplicaSIRCE === 'NO' ? 'No' : 'Sí'}</td>
-      <td>${Number(c.VigenciaMeses) > 0 ? escapeHtml(c.VigenciaMeses) + ' meses' : 'No vence'}</td>
+      <td>${Number(c.VigenciaMeses) > 0 ? aniosVigencia(c.VigenciaMeses) + (Number(c.VigenciaMeses) === 12 ? ' año' : ' años') : 'No vence'}</td>
       <td>${textoObligatorio(c.ObligatorioPara)}</td>${acciones('CatalogoCursos', c.ID)}</tr>`).join('')
     || vacio(8, 'Sin cursos en el catálogo');
   pintarPuestos(puestosMarcados()); // conserva lo que ya estaba marcado
@@ -2649,7 +2666,7 @@ function renderCatalogos(){
   // un mismo agente puede tener varios instructores: el texto lleva el instructor para distinguirlos
   const etiquetaAgente = (a) => a.Instructor ? `${a.Nombre} — ${a.Instructor}` : a.Nombre;
   const nombreAgente = (id) => { const a = agentePorId(id); return a ? etiquetaAgente(a) : id; };
-  poblarSelect(document.getElementById('cCatalogoCurso'), cursos.map(c => String(c.ID)), nombreCurso);
+  poblarSelect(document.getElementById('cCatalogoCurso'), [...cursos].sort((a, b) => String(a.Nombre || '').localeCompare(String(b.Nombre || ''), 'es', { sensitivity: 'base' })).map(c => String(c.ID)), nombreCurso);
   const selAgente = document.getElementById('cAgente');
   poblarSelect(selAgente, agentes.map(a => a.Nombre));
   agentes.forEach((a, i) => { selAgente.options[i + 1].textContent = etiquetaAgente(a); });
