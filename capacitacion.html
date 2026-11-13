@@ -245,9 +245,10 @@
   .presupuesto .cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:8px 0 12px;}
   .presupuesto .cifras b{display:block;font-size:22px;color:var(--p5);}
   .presupuesto .cifras span{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
-  .presupuesto .pista{height:10px;background:var(--p1);border-radius:5px;overflow:hidden;}
-  .presupuesto .pista i{display:block;height:100%;border-radius:5px;background:var(--ok);}
-  .presupuesto.excedido .pista i{background:var(--danger);}
+  .presupuesto .pista{display:flex;height:10px;background:var(--p1);border-radius:5px;overflow:hidden;}
+  .presupuesto .pista i{display:block;height:100%;background:var(--ok);}
+  .presupuesto .pista i#presBarraIngles{background:var(--p3);}
+  .presupuesto.excedido .pista i#presBarra{background:var(--danger);}
   .presupuesto.excedido #presDisponible{color:var(--danger);}
   .presupuesto .nota{font-size:12px;color:var(--ink-soft);margin-top:8px;}
   .grafica-vacia{color:var(--ink-soft);font-size:13px;}
@@ -534,10 +535,11 @@
       <div class="grafica-titulo" id="presTitulo">Presupuesto</div>
       <div class="cifras">
         <div><span>Presupuesto</span><b id="presMonto">—</b></div>
+        <div id="presInglesCifra" style="display:none"><span>Inglés</span><b id="presIngles" style="color:var(--p3)">—</b></div>
         <div><span>Ejercido</span><b id="presEjercido">—</b></div>
         <div><span>Disponible</span><b id="presDisponible">—</b></div>
       </div>
-      <div class="pista"><i id="presBarra" style="width:0%"></i></div>
+      <div class="pista"><i id="presBarraIngles" style="width:0%"></i><i id="presBarra" style="width:0%"></i></div>
       <div class="nota" id="presNota"></div>
     </div>
 
@@ -990,6 +992,7 @@
     <div class="filter-bar">
       <div><label>Año</label><select id="presAnio"></select></div>
       <div><label>Presupuesto ($)</label><input type="number" id="presInput" min="0" step="0.01" placeholder="Ej. 250000"></div>
+      <div><label>Presupuesto de Inglés ($)</label><input type="number" id="presInglesInput" min="0" step="0.01" placeholder="Vacío si no aplica" title="Se aparta del presupuesto anual"></div>
       <div class="filter-actions"><button class="btn" id="btnGuardarPresupuesto">Guardar presupuesto</button></div>
     </div>
     <p class="section-sub" id="presCumplNota" style="margin-top:-6px"></p>
@@ -1857,6 +1860,8 @@ function renderGraficaHoras(){
 // ---------- presupuesto anual: Cap_Config guarda "Presupuesto_AAAA"; el costo de cada curso se descuenta por su año de inicio ----------
 const pesos = (n) => (n < 0 ? '-$' : '$') + Math.abs(Number(n || 0)).toLocaleString('es-MX', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const presupuestoDe = (anio) => { const v = (STATE.config || {})['Presupuesto_' + anio]; return v === undefined || v === '' ? null : Number(v); };
+// Inglés: monto fijo capturado a mano ("PresupuestoIngles_AAAA") que se aparta del presupuesto anual; no depende de cursos registrados
+const inglesDe = (anio) => Number((STATE.config || {})['PresupuestoIngles_' + anio]) || 0;
 function ejercidoDe(anio){
   const delAnio = STATE.cursos.filter(c => String(c.FechaImparticion || '').slice(0, 4) === String(anio));
   const conCosto = delAnio.filter(c => c.Costo !== '' && c.Costo != null);
@@ -1864,15 +1869,21 @@ function ejercidoDe(anio){
 }
 function renderPresupuesto(){
   const anio = new Date().getFullYear(), monto = presupuestoDe(anio), { total, sinCosto } = ejercidoDe(anio);
+  const ingles = monto === null ? 0 : inglesDe(anio), usado = total + ingles;
   document.getElementById('presTitulo').textContent = 'Presupuesto ' + anio;
   document.getElementById('presMonto').textContent = monto === null ? 'Sin capturar' : pesos(monto);
+  document.getElementById('presInglesCifra').style.display = ingles ? '' : 'none';
+  document.getElementById('presIngles').textContent = pesos(ingles);
   document.getElementById('presEjercido').textContent = pesos(total);
-  document.getElementById('presDisponible').textContent = monto === null ? '—' : pesos(monto - total);
-  const pct = monto ? Math.round(total * 100 / monto) : 0;
-  document.getElementById('presBarra').style.width = Math.min(pct, 100) + '%';
-  document.getElementById('presResumen').classList.toggle('excedido', monto !== null && total > monto);
+  document.getElementById('presDisponible').textContent = monto === null ? '—' : pesos(monto - usado);
+  const pct = monto ? Math.round(usado * 100 / monto) : 0;
+  const pctIngles = monto ? Math.min(ingles * 100 / monto, 100) : 0;
+  document.getElementById('presBarraIngles').style.width = pctIngles + '%';
+  document.getElementById('presBarra').style.width = (monto ? Math.min(total * 100 / monto, 100 - pctIngles) : 0) + '%';
+  document.getElementById('presResumen').classList.toggle('excedido', monto !== null && usado > monto);
   document.getElementById('presNota').textContent = [
-    monto === null ? 'Captura el presupuesto del año en la pestaña Cumplimiento.' : `${pct}% ejercido${total > monto ? ' · excede el presupuesto por ' + pesos(total - monto) : ''}.`,
+    monto === null ? 'Captura el presupuesto del año en la pestaña Cumplimiento.'
+      : `${pct}% ${ingles ? 'comprometido (azul: inglés · verde: cursos)' : 'ejercido'}${usado > monto ? ' · excede el presupuesto por ' + pesos(usado - monto) : ''}.`,
     sinCosto ? `${sinCosto} curso(s) de ${anio} sin costo capturado (no se descuentan; edítalos para agregarlo).` : ''
   ].filter(Boolean).join(' ');
   // selector de años en Cumplimiento: años con cursos, el actual y el siguiente
@@ -1884,18 +1895,24 @@ function renderPresupuesto(){
   mostrarPresupuestoAnio();
 }
 function mostrarPresupuestoAnio(){
-  const a = document.getElementById('presAnio').value, monto = presupuestoDe(a), { total } = ejercidoDe(a);
+  const a = document.getElementById('presAnio').value, monto = presupuestoDe(a), { total } = ejercidoDe(a), ingles = inglesDe(a);
   document.getElementById('presInput').value = monto === null ? '' : monto;
-  document.getElementById('presCumplNota').textContent = `Ejercido en ${a}: ${pesos(total)}` + (monto === null ? '' : ` · disponible: ${pesos(monto - total)}`);
+  document.getElementById('presInglesInput').value = ingles || '';
+  document.getElementById('presCumplNota').textContent = `Ejercido en ${a}: ${pesos(total)}` + (ingles ? ` · inglés: ${pesos(ingles)}` : '')
+    + (monto === null ? '' : ` · disponible: ${pesos(monto - total - ingles)}`);
 }
 document.getElementById('presAnio').addEventListener('change', mostrarPresupuestoAnio);
 document.getElementById('btnGuardarPresupuesto').addEventListener('click', async ()=>{
   const a = document.getElementById('presAnio').value, v = document.getElementById('presInput').value.trim();
   if(v === '' || !(Number(v) >= 0)) return toast('Escribe el presupuesto del año (un número mayor o igual a 0)', true);
+  const vi = document.getElementById('presInglesInput').value.trim();
+  if(vi !== '' && !(Number(vi) >= 0)) return toast('El presupuesto de Inglés debe ser un número mayor o igual a 0', true);
+  if(Number(vi) > Number(v)) return toast('El presupuesto de Inglés no puede ser mayor que el presupuesto anual', true);
   const btn = document.getElementById('btnGuardarPresupuesto');
   btn.disabled = true;
   try{
-    await apiPost({action:'setConfig', config:{['Presupuesto_' + a]: Math.round(Number(v) * 100) / 100}});
+    await apiPost({action:'setConfig', config:{['Presupuesto_' + a]: Math.round(Number(v) * 100) / 100,
+      ['PresupuestoIngles_' + a]: vi === '' ? '' : Math.round(Number(vi) * 100) / 100}});
     await cargarDatos();
     toast('Presupuesto ' + a + ' guardado');
   }catch(err){ toast('No se guardó el presupuesto: ' + err.message, true); }
