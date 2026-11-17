@@ -182,7 +182,7 @@
   <div class="barra-filtros">
     <div><label>Año comparación A</label><select id="filtroAnioA"></select></div>
     <div><label>Año comparación B</label><select id="filtroAnioB"></select></div>
-    <div><label>Planta</label><select id="filtroPlanta" onchange="renderIncapPeriodo();renderAguinaldo()"><option value="">Todas</option></select></div>
+    <div><label>Planta</label><select id="filtroPlanta" onchange="renderIncapPeriodo()"><option value="">Todas</option></select></div>
     <div><button class="btn" onclick="renderDashboard()">Actualizar</button></div>
     <div><button class="btn secundario" onclick="exportarGraficasExcel()">⬇ Exportar gráficas a Excel</button></div>
   </div>
@@ -206,26 +206,6 @@
       </table>
     </div>
     <div style="font-size:11.5px;color:#5b6675;margin-top:8px;">Días acumulados: suma los certificados seguidos de la misma ficha y el mismo tipo; un hueco entre fechas inicia la cuenta. La planta se toma del filtro de arriba.</div>
-  </div>
-
-  <div class="card" style="margin-bottom:18px;">
-    <div class="titulo-banda">DÍAS DE INCAPACIDAD DEL AÑO · PARA AGUINALDO</div>
-    <div class="barra-filtros" style="margin-bottom:8px;">
-      <div><label for="aguiDesde">Desde</label><input type="date" id="aguiDesde" onchange="renderAguinaldo()"></div>
-      <div><label for="aguiCorte">Corte al</label><input type="date" id="aguiCorte" onchange="renderAguinaldo()"></div>
-      <div><label for="aguiBuscar">Buscar</label><input type="search" id="aguiBuscar" placeholder="Ficha o nombre" autocomplete="off" oninput="renderAguinaldo()"></div>
-      <div id="aguiN" style="font-size:12px;color:#5b6675;padding-bottom:9px;"></div>
-      <div><button class="btn secundario" onclick="exportarAguinaldoXlsx()">⬇ Descargar Excel</button></div>
-    </div>
-    <div id="aguiTipos" style="font-size:12px;color:#5b6675;margin-bottom:8px;">Descuentan del aguinaldo:</div>
-    <div class="tabla-scroll">
-      <table>
-        <thead><tr><th>Ficha</th><th>Nombre</th><th>Planta</th><th>Enf. general</th><th>Riesgo trabajo</th><th>Trayecto</th><th>Maternidad</th><th>Total</th><th>Días a descontar</th></tr></thead>
-        <tbody id="tbodyAguinaldo"></tbody>
-        <tfoot id="tfootAguinaldo"></tfoot>
-      </table>
-    </div>
-    <div style="font-size:11.5px;color:#5b6675;margin-top:8px;">Cuenta los días de Desde (por defecto, 1 de enero) a la fecha de corte; un día cubierto por dos certificados cuenta una vez. Las casillas marcadas se recuerdan en este navegador. La planta se toma del filtro de arriba.</div>
   </div>
 
   <div class="comp-nota">Comparando <b id="thAnioB">Año B</b> contra <b id="thAnioA">Año A</b> · casos = registros iniciales; días repartidos por mes calendario. Que suba se marca en rojo.</div>
@@ -340,6 +320,26 @@
       </tr></thead>
       <tbody id="tbodyIncapacidades"></tbody>
     </table>
+  </div>
+  <div class="card" style="margin-top:18px;">
+    <div class="titulo-banda">DÍAS DE INCAPACIDAD DEL AÑO · PARA AGUINALDO</div>
+    <div class="barra-filtros" style="margin-bottom:8px;">
+      <div><label for="aguiDesde">Desde</label><input type="date" id="aguiDesde" onchange="renderAguinaldo()"></div>
+      <div><label for="aguiCorte">Corte al</label><input type="date" id="aguiCorte" onchange="renderAguinaldo()"></div>
+      <div><label for="aguiPlanta">Planta</label><select id="aguiPlanta" onchange="renderAguinaldo()"><option value="">Todas</option></select></div>
+      <div><label for="aguiBuscar">Buscar</label><input type="search" id="aguiBuscar" placeholder="Ficha o nombre" autocomplete="off" oninput="renderAguinaldo()"></div>
+      <div id="aguiN" style="font-size:12px;color:#5b6675;padding-bottom:9px;"></div>
+      <div><button class="btn secundario" onclick="exportarAguinaldoXlsx()">⬇ Descargar Excel</button></div>
+    </div>
+    <div id="aguiTipos" style="font-size:12px;color:#5b6675;margin-bottom:8px;">Descuentan del aguinaldo:</div>
+    <div class="tabla-scroll">
+      <table>
+        <thead><tr><th>Ficha</th><th>Nombre</th><th>Planta</th><th>Enf. general</th><th>Riesgo trabajo</th><th>Trayecto</th><th>Maternidad</th><th>Total</th><th>Días a descontar</th></tr></thead>
+        <tbody id="tbodyAguinaldo"></tbody>
+        <tfoot id="tfootAguinaldo"></tfoot>
+      </table>
+    </div>
+    <div style="font-size:11.5px;color:#5b6675;margin-top:8px;">Cuenta los días de Desde (por defecto, 1 de enero) a la fecha de corte; un día cubierto por dos certificados cuenta una vez. Las casillas marcadas se recuerdan en este navegador. Estos filtros solo afectan a este apartado; los de la tabla de arriba no lo cambian.</div>
   </div>
 </div>
 
@@ -716,10 +716,11 @@ function poblarFiltrosAnio(){
 }
 function poblarFiltroPlanta(){
   const plantas = [...new Set([...incapacidades.map(i=>i.Planta), ...empleados.map(e=>e.Planta)].filter(Boolean))].sort();
-  const sel = document.getElementById('filtroPlanta');
-  const prev = sel.value;
-  sel.innerHTML = '<option value="">Todas</option>' + plantas.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
-  sel.value = prev;
+  ['filtroPlanta', 'aguiPlanta'].forEach(id => {
+    const sel = document.getElementById(id), prev = sel.value;
+    sel.innerHTML = '<option value="">Todas</option>' + plantas.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+    sel.value = prev;
+  });
 }
 function poblarDatalistCodigos(){
   document.getElementById('listaCodigosEmp').innerHTML =
@@ -1152,7 +1153,7 @@ function casosDelPeriodo(desde, hasta, planta){
     .sort((a, b) => String(a.r.Planta).localeCompare(String(b.r.Planta)) || b.r.FechaInicio.localeCompare(a.r.FechaInicio));
 }
 /* ============================================================
-   DÍAS DE INCAPACIDAD DEL AÑO · PARA AGUINALDO (Resumen)
+   DÍAS DE INCAPACIDAD DEL AÑO · PARA AGUINALDO (pestaña Incapacidades, debajo del concentrado)
 ============================================================ */
 const TIPOS_AGUINALDO = [['ENFERMEDAD','Enfermedad general'], ['RIESGO DE TRABAJO','Riesgo de trabajo'], ['RIESGO DE TRAYECTO','Trayecto'], ['MATERNIDAD','Maternidad']];
 function tiposQueDescuentan(){
@@ -1194,7 +1195,7 @@ function filasAguinaldo(){
   if(!fechaISOValida(corte.value)) corte.value = hoyISO();
   if(!fechaISOValida(desde.value)) desde.value = corte.value.slice(0, 4) + '-01-01';
   if(desde.value > corte.value) return [];
-  return diasAguinaldo(desde.value, corte.value, document.getElementById('filtroPlanta').value, document.getElementById('aguiBuscar').value, tiposQueDescuentan());
+  return diasAguinaldo(desde.value, corte.value, document.getElementById('aguiPlanta').value, document.getElementById('aguiBuscar').value, tiposQueDescuentan());
 }
 function renderAguinaldo(){
   if(!document.querySelector('#aguiTipos input')) pintarTiposAguinaldo();
