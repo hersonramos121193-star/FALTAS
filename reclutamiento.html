@@ -4902,6 +4902,31 @@ function evidenciaHabilidad(hab){
     return `${nom} = ${f.valor}${f.estado === 'verde' ? ' ✓' : ''}`;
   }).join(' · ');
 }
+/** Factores con regla del criterio que NO están en ninguna habilidad y salen de rango, rompen una regla dura o no tienen valor.
+ *  Son los que hacen que el veredicto general diga "con observaciones", "No apto" o "Incompleto" aunque todas las habilidades salgan bien. */
+function observacionesFueraDeHabilidades(c, criterio){
+  const enHabilidad = new Set((criterio.habilidades || []).flatMap(h => h.factores));
+  const datos = datosCandidatoPorPrueba(c), out = [];
+  PRUEBAS_CON_REGLAS.forEach(pid => {
+    const reglas = (criterio.pruebas || {})[pid];
+    if(!reglas || ((criterio.pruebasAsignadas || []).length && !criterio.pruebasAsignadas.includes(pid))) return;
+    const valores = (datos[pid] || {}).valores || {};
+    const vistos = new Set();
+    [...(reglas.reglasDuras || []).map(r => ['dura', r]), ...(reglas.reglasBlandas || []).map(r => ['blanda', r])].forEach(([tipo, r]) => {
+      const ref = pid + ':' + r.factor;
+      if(enHabilidad.has(ref) || vistos.has(ref)) return;
+      const res = evaluarReglasPrueba(valores, tipo === 'dura' ? { reglasDuras: [r] } : { reglasBlandas: [r] });
+      const nom = `${PRUEBAS_INFO[pid].nombre} · ${nombreFactor(pid, r.factor)}`;
+      let texto = null;
+      if(res.faltantes.length) texto = `${nom}: sin dato`;
+      else if(res.reglaDuraFallida) texto = `${nom} = ${valores[r.factor]} ✗ (regla dura: ${opRegla(r.operador)} ${r.valor})`;
+      else if(res.reglasBlandasFueraDeRango.length) texto = `${nom} = ${valores[r.factor]} ⚠ (esperado ${r.min}–${r.max})`;
+      if(texto){ vistos.add(ref); out.push(texto); }
+    });
+  });
+  return out;
+}
+
 /** Expediente: semáforo por habilidad y comentario opcional (se guarda en el candidato y sale en la ficha). */
 function renderHabilidadesCandidato(c, criterio){
   const wrap = document.getElementById('habilidadesCandidato');
@@ -4942,11 +4967,13 @@ function abrirFichaDictamen(){
   const lista = hs => hs.map(h => escFD(h.nombre)).join(', ');
   const de = n => habs.filter(h => h.nivel === n);
   const fav = de('favorable'), vig = de('vigilar'), noFav = de('noFavorable'), sinD = [...de('incompleto'), ...de('sinRegla')];
+  const fuera = observacionesFueraDeHabilidades(c, criterio);
   const resumen = [
     `Cumple de forma favorable ${fav.length} de ${habs.length} habilidad${habs.length !== 1 ? 'es' : ''} requerida${habs.length !== 1 ? 's' : ''}.`,
-    noFav.length ? `No favorable: ${lista(noFav)}.` : 'No presenta indicadores en rojo.',
+    noFav.length ? `No favorable: ${lista(noFav)}.` : 'Ninguna habilidad en rojo.',
     vig.length ? `A vigilar: ${lista(vig)}.` : '',
-    sinD.length ? `Sin datos o sin regla para evaluar: ${lista(sinD)}.` : ''
+    sinD.length ? `Sin datos o sin regla para evaluar: ${lista(sinD)}.` : '',
+    fuera.length ? `Fuera de las habilidades: ${fuera.length} factor${fuera.length !== 1 ? 'es' : ''} con observación (ver abajo).` : ''
   ].filter(Boolean).join(' ');
   const com = c.comentariosHabilidades || {};
   const banda = `<div class="fd-banda"><div class="fd-titulo">FICHA DE DICTAMEN PSICOMÉTRICO</div>
@@ -4987,6 +5014,7 @@ function abrirFichaDictamen(){
           <td>${evidenciaHabilidad(h)}${com[h.nombre] ? `<div class="fd-com">${escFD(com[h.nombre])}</div>` : ''}</td>
           <td>${badge(h.nivel)}</td></tr>`).join('')}</tbody>
       </table>
+      ${fuera.length ? `<div class="fd-alcance" style="margin-top:10px;"><strong>Otras observaciones (factores que no están en ninguna habilidad):</strong>${fuera.map(t => `<div>• ${escFD(t)}</div>`).join('')}</div>` : ''}
       <div class="fd-leyenda">${badge('favorable')} ${badge('vigilar')}<span class="veredicto-badge no-apto">No favorable</span></div>
       ${pie(1)}
     </div>
