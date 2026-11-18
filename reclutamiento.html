@@ -4263,59 +4263,30 @@ function renderCleaverResultado(datos){
   document.getElementById('sintesisChartCleaver').innerHTML = generarSintesisCleaver(datos);
 }
 
-const CLEAVER_DESCRIPCION = {
-  D: {
-    alto: 'le gusta tomar el control de las situaciones, tomar decisiones rápido y le motivan los retos y la competencia',
-    bajo: 'prefiere evitar los conflictos, es más paciente y le cuesta imponer su opinión sobre la de otros'
-  },
-  I: {
-    alto: 'es una persona sociable y entusiasta, le gusta convencer a los demás y trabajar con y para la gente',
-    bajo: 'es más reservado(a), prefiere trabajar con datos y hechos concretos que socializar todo el tiempo'
-  },
-  S: {
-    alto: 'es constante y paciente, y tolera bien la rutina de trabajo',
-    bajo: 'es inquieto(a), le cuesta sostener rutinas y busca variedad'
-  },
-  C: {
-    alto: 'es cuidadoso(a) y meticuloso(a), sigue las reglas y los procedimientos al pie de la letra',
-    bajo: 'tiende a saltarse reglas y procedimientos, y requiere supervisión en seguridad'
-  }
-};
 const CLEAVER_SECCION_CONTEXTO = {
-  'Motivación': 'Cuando algo le interesa o le motiva',
-  'Presión': 'Cuando está bajo presión o estrés',
-  'Generales': 'En su forma de ser habitual, sin presión ni motivación especial de por medio'
+  'Generales': 'En su forma de ser habitual',
+  'Motivación': 'Lo que le mueve',
+  'Presión': 'Cuando está bajo presión o estrés'
 };
 
-/** Síntesis en lenguaje sencillo (sin jerga técnica) del patrón DISC por sección — solo referencia, no participa en el veredicto.
- *  Si la letra dominante y la menos presente salen IGUALES en las 3 facetas (Generales/Motivación/Presión) —
- *  algo común en reportes reales, no un error — se describe una sola vez en lugar de repetir el mismo
- *  párrafo tres veces, y se aclara que el patrón se mantiene sin importar el contexto. */
+/** Síntesis en lenguaje sencillo del Cleaver por sección — solo referencia, no participa en el veredicto.
+ *  Solo menciona letras que de verdad destacan según los cortes de su sección (CORTES_ALTO_BAJO) y usa las
+ *  frases de FACTOR_SIGNIFICADO_CLEAVER, que ya leen Presión al revés. Antes comparaba las letras entre sí y
+ *  siempre acusaba a la más baja (ej. "se salta reglas" con C normal). */
 function generarSintesisCleaver(datos){
   const secciones = datos.secciones || {};
-  const ordenSecciones = ['Generales', 'Motivación', 'Presión'];
-  const nombresSecciones = ordenSecciones.filter(sec => secciones[sec]);
-  if(nombresSecciones.length === 0){
+  const ordenSecciones = ['Generales', 'Motivación', 'Presión'].filter(sec => secciones[sec]);
+  if(ordenSecciones.length === 0){
     return 'No se pudo generar una síntesis porque no se detectaron los datos automáticamente. Revisa el PDF manualmente si lo necesitas.';
   }
-  const patrones = nombresSecciones.map(sec=>{
-    const d = secciones[sec];
-    const vals = {D: parseFloat(d.D), I: parseFloat(d.I), S: parseFloat(d.S), C: parseFloat(d.C)};
-    const letras = Object.keys(vals);
-    const max = letras.reduce((a,b)=> vals[a] >= vals[b] ? a : b);
-    const min = letras.reduce((a,b)=> vals[a] <= vals[b] ? a : b);
-    return {sec, max, min};
-  });
-
-  const mismoPatronEnLas3 = patrones.length > 1 && patrones.every(p => p.max === patrones[0].max && p.min === patrones[0].min);
-  if(mismoPatronEnLas3){
-    const {max, min} = patrones[0];
-    return `<strong>En las facetas evaluadas (forma de ser habitual, cuando algo le motiva y bajo presión):</strong> esta persona ${CLEAVER_DESCRIPCION[max].alto}. En cambio, ${CLEAVER_DESCRIPCION[min].bajo}. Este patrón se mantiene consistente sin importar el contexto.`;
-  }
-
-  const frases = patrones.map(p=>{
-    const contexto = CLEAVER_SECCION_CONTEXTO[p.sec] || p.sec;
-    return `<strong>${contexto}:</strong> esta persona ${CLEAVER_DESCRIPCION[p.max].alto}. En cambio, ${CLEAVER_DESCRIPCION[p.min].bajo}.`;
+  const frases = ordenSecciones.map(sec=>{
+    const pre = CLEAVER_PREFIJO_SECCION[sec];
+    const destacan = ['D','I','S','C'].map(L=>{
+      const v = parseFloat(secciones[sec][L]);
+      return isNaN(v) ? null : descripcionValorFactor('cleaver', pre + '_' + L, v);
+    }).filter(f => f && !f.startsWith('un nivel equilibrado')).map(f => f.replace(/^bajo presión /, ''));
+    const texto = destacan.length ? capitalFD(destacan.join('; ')) + '.' : 'Perfil equilibrado: ninguna letra destaca.';
+    return `<strong>${CLEAVER_SECCION_CONTEXTO[sec]}:</strong> ${texto}`;
   });
   return frases.join('<br><br>');
 }
