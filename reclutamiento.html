@@ -461,6 +461,10 @@
   .fd-tabla th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;}
   .fd-tabla td{padding:7px 8px;border-bottom:1px solid #E3E6E9;vertical-align:top;line-height:1.45;}
   .fd-com{font-style:italic;color:#5b6675;margin-top:3px;}
+  .ev-conc{font-weight:700;color:var(--text);margin-bottom:2px;}
+  .ev-f{margin:3px 0 0;} .ev-f.rojo strong{color:var(--crit);} .ev-f.amarillo strong{color:#9A7414;}
+  .ev-sig{font-style:italic;color:#5b6675;margin:0 0 2px 14px;}
+  .ev-ok{color:#8892a0;margin-top:3px;}
   .fd-leyenda{display:flex;gap:10px;margin-top:8px;}
   .fd-pie{margin-top:18px;border-top:1px solid #E3E6E9;padding-top:6px;font-size:10px;color:var(--text-dim);}
   .imp-veredicto-grande.pendiente{background:#EEF0F2;}
@@ -3664,10 +3668,25 @@ const PRUEBAS_INFO = {
 const PRUEBAS_CON_REGLAS = ['16pf','cleaver','zavic','ipv','kostick','terman'];
 const PRUEBAS_TODAS = ['16pf','cleaver','zavic','ipv','kostick','terman'];
 
-function nombreFactor(pruebaId, code){
+/** En el 16PF de PeopleCloud el nombre de varios factores no dice lo que mide la letra (lo confirma la interpretación
+ *  del propio reporte: "A · Reservado = 8 → Expresivo, afectuoso"). El valor se lee por el nombre del PDF y se guarda en su
+ *  letra; para leerlo bien se muestra junto al nombre el polo bajo ↔ alto de la letra. Ver nota de Jarvis 16pf-peoplecloud. */
+const POLOS_16PF = {
+  A:'reservado ↔ expresivo', B:'pensamiento concreto ↔ abstracto', C:'afectado por sentimientos ↔ emocionalmente estable',
+  E:'sumiso ↔ dominante', F:'sobrio ↔ entusiasta', G:'evade reglas ↔ escrupuloso', H:'tímido ↔ aventurado',
+  I:'objetivo ↔ sensible', L:'confiado ↔ desconfiado', M:'práctico ↔ imaginativo', N:'directo ↔ astuto',
+  O:'seguro ↔ aprensivo', Q1:'conservador ↔ cuestiona lo establecido', Q2:'prefiere el grupo ↔ autosuficiente',
+  Q3:'poco apego ↔ apego a normas', Q4:'relajado ↔ tenso'
+};
+/** Nombre tal como lo trae el reporte (sin polos): para gráficas. */
+function nombreFactorSimple(pruebaId, code){
   const info = PRUEBAS_INFO[pruebaId];
   const f = info ? info.factores.find(f=>f.code===code) : null;
   return f ? f.nombre : code;
+}
+function nombreFactor(pruebaId, code){
+  const nombre = nombreFactorSimple(pruebaId, code);
+  return pruebaId === '16pf' && POLOS_16PF[code] ? `${nombre} (${code}: ${POLOS_16PF[code]})` : nombre;
 }
 
 let criterioEnEdicionId = null;
@@ -3751,7 +3770,7 @@ function filaReglaDura(pid, regla){
   const factores = PRUEBAS_INFO[pid].factores;
   const r = regla ? Object.assign({}, regla, { operador: opRegla(regla.operador) }) : {factor: factores[0].code, operador:'<', valor: factores[0].min};
   return `<div class="regla-row" data-prueba="${pid}">
-    <select class="rd-factor">${factores.map(f=>`<option value="${f.code}" ${f.code===r.factor?'selected':''}>${f.nombre}</option>`).join('')}</select>
+    <select class="rd-factor">${factores.map(f=>`<option value="${f.code}" ${f.code===r.factor?'selected':''}>${nombreFactor(pid, f.code)}</option>`).join('')}</select>
     <select class="rd-operador">
       <option value="<" ${r.operador==='<'?'selected':''}>menor que</option>
       <option value="<=" ${r.operador==='<='?'selected':''}>menor o igual</option>
@@ -3766,7 +3785,7 @@ function filaReglaBlanda(pid, regla){
   const factores = PRUEBAS_INFO[pid].factores;
   const r = regla || {factor: factores[0].code, min: factores[0].min, max: factores[0].max};
   return `<div class="regla-row blanda" data-prueba="${pid}">
-    <select class="rb-factor">${factores.map(f=>`<option value="${f.code}" ${f.code===r.factor?'selected':''}>${f.nombre}</option>`).join('')}</select>
+    <select class="rb-factor">${factores.map(f=>`<option value="${f.code}" ${f.code===r.factor?'selected':''}>${nombreFactor(pid, f.code)}</option>`).join('')}</select>
     <input type="number" class="rb-min" value="${r.min}" placeholder="Mín">
     <input type="number" class="rb-max" value="${r.max}" placeholder="Máx">
     <button type="button" class="quitar-regla" onclick="this.closest('.regla-row').remove()">Quitar</button>
@@ -4251,12 +4270,12 @@ const CLEAVER_DESCRIPCION = {
     bajo: 'es más reservado(a), prefiere trabajar con datos y hechos concretos que socializar todo el tiempo'
   },
   S: {
-    alto: 'es constante y paciente, prefiere la estabilidad y le cuesta más adaptarse a cambios repentinos',
-    bajo: 'se adapta rápido a los cambios, es más inquieto(a) y le aburre la rutina'
+    alto: 'es constante y paciente, y tolera bien la rutina de trabajo',
+    bajo: 'es inquieto(a), le cuesta sostener rutinas y busca variedad'
   },
   C: {
     alto: 'es cuidadoso(a) y meticuloso(a), sigue las reglas y los procedimientos al pie de la letra',
-    bajo: 'es más flexible con las reglas y prefiere resolver las cosas a su manera'
+    bajo: 'tiende a saltarse reglas y procedimientos, y requiere supervisión en seguridad'
   }
 };
 const CLEAVER_SECCION_CONTEXTO = {
@@ -4435,7 +4454,7 @@ function renderChartFactoresPrueba(valores, reglas, pid, canvasId){
   const escalaMax = Math.max(...info.factores.map(f=>f.max));
   const escalaMin = Math.min(...info.factores.map(f=>f.min));
 
-  const labels = filas.map(f => nombreFactor(pid, f.regla.factor));
+  const labels = filas.map(f => nombreFactorSimple(pid, f.regla.factor));
   const rangoData = filas.map(f => {
     const [rmin,rmax] = rangoAceptableParaGrafica(f.regla, f.esDura);
     return [Math.max(escalaMin, rmin), Math.min(escalaMax, rmax)];
@@ -4490,41 +4509,67 @@ function renderChartFactoresPrueba(valores, reglas, pid, canvasId){
 /* =========================================================
    SÍNTESIS EN LENGUAJE SENCILLO (genérico, por prueba)
    ========================================================= */
+// Frases por LETRA (16PF clásico), que es lo que confirma la interpretación de los reportes de PeopleCloud.
+// Son predicados: se leen como "Esta persona …" y "lo cual indica que …".
 const FACTOR_SIGNIFICADO_16PF = {
-  A:  {alto:'más sociable y cálido en el trato con otros', bajo:'más reservado y distante en el trato con otros'},
-  B:  {alto:'mayor capacidad de razonamiento abstracto', bajo:'menor capacidad de razonamiento abstracto'},
-  C:  {alto:'mayor estabilidad emocional y madurez para enfrentar problemas', bajo:'menor estabilidad emocional, se afecta más fácilmente ante los contratiempos'},
-  E:  {alto:'mayor independencia y tendencia a imponer su punto de vista', bajo:'mayor disposición a seguir instrucciones y ceder ante otros'},
-  F:  {alto:'más entusiasta e impulsivo', bajo:'más serio y cauteloso'},
-  G:  {alto:'mayor impulsividad, actúa antes de pensar', bajo:'mayor control de sus impulsos'},
-  H:  {alto:'más atrevido y con iniciativa', bajo:'más tímido, evita exponerse'},
-  I:  {alto:'más sensible y dependiente emocionalmente', bajo:'más objetivo e independiente emocionalmente'},
-  L:  {alto:'más desconfiado hacia los demás', bajo:'más confiado y con mejor disposición al trabajo en equipo'},
-  M:  {alto:'más orientado a ideas abstractas, menos práctico', bajo:'más práctico y realista'},
-  N:  {alto:'más calculador y diplomático', bajo:'más directo y espontáneo'},
-  O:  {alto:'más aprensivo, tiende a preocuparse', bajo:'más seguro de sí mismo'},
-  Q1: {alto:'más abierto al cambio, cuestiona lo establecido', bajo:'más conservador, respeta lo establecido'},
-  Q2: {alto:'más autosuficiente, prefiere trabajar solo', bajo:'más orientado al grupo, prefiere trabajar acompañado'},
-  Q3: {alto:'mayor disciplina y apego a normas y procedimientos establecidos', bajo:'menor apego a normas y procedimientos establecidos'},
-  Q4: {alto:'mayor tensión y posible dificultad para manejar la presión', bajo:'mayor calma y tolerancia a la presión'}
+  A:  {alto:'es expresivo(a), afectuoso(a) y participativo(a) con los demás', bajo:'es reservado(a) y distante en el trato con otros'},
+  B:  {alto:'tiene pensamiento abstracto y mayor capacidad de razonamiento', bajo:'tiene pensamiento concreto y menor capacidad de razonamiento abstracto'},
+  C:  {alto:'es emocionalmente estable y maduro(a) ante los problemas', bajo:'se afecta fácilmente por sus sentimientos y los contratiempos'},
+  E:  {alto:'es dominante y tiende a imponer su punto de vista', bajo:'es sumiso(a), obediente y servicial; cede ante otros'},
+  F:  {alto:'es entusiasta e impetuoso(a)', bajo:'es sobrio(a), serio(a) y cauteloso(a)'},
+  G:  {alto:'es escrupuloso(a), persistente y apegado(a) a las normas', bajo:'tiende a evadir reglas y es despreocupado(a) con las normas'},
+  H:  {alto:'es aventurado(a) y desinhibido(a), con iniciativa', bajo:'es tímido(a) y evita exponerse'},
+  I:  {alto:'es sensible y afectuoso(a), dependiente emocionalmente', bajo:'es práctico(a) y objetivo(a), poco influido(a) por emociones'},
+  L:  {alto:'es desconfiado(a) hacia los demás', bajo:'es confiado(a) y acepta las condiciones'},
+  M:  {alto:'es imaginativo(a) y abstracto(a), menos práctico(a)', bajo:'es práctico(a) y realista'},
+  N:  {alto:'es astuto(a), calculador(a) y socialmente consciente', bajo:'es directo(a) y espontáneo(a)'},
+  O:  {alto:'es aprensivo(a) y tiende a preocuparse', bajo:'es seguro(a) de sí mismo(a) y sereno(a)'},
+  Q1: {alto:'cuestiona lo establecido y está abierto(a) al cambio', bajo:'es conservador(a) y respeta lo establecido'},
+  Q2: {alto:'es autosuficiente y prefiere decidir y trabajar solo(a)', bajo:'prefiere trabajar en grupo y acompañado(a)'},
+  Q3: {alto:'es disciplinado(a) y apegado(a) a normas y procedimientos', bajo:'tiene poco apego a normas y procedimientos'},
+  Q4: {alto:'es tenso(a) y le cuesta manejar la presión', bajo:'es relajado(a) y tolera bien la presión'}
+};
+// Cleaver por sección, según la guía de rangos (Generales = forma habitual; Motivación = lo que le mueve; Presión = bajo estrés).
+const FACTOR_SIGNIFICADO_CLEAVER = {
+  GEN_D: {alto:'decide rápido, va directo a resultados y le gusta tener el control', bajo:'cede ante otros y prefiere que alguien más decida'},
+  GEN_I: {alto:'se comunica con facilidad, convence y motiva a otros', bajo:'habla poco y prefiere tareas individuales a convivir'},
+  GEN_S: {alto:'mantiene un ritmo constante y tolera bien la rutina repetitiva', bajo:'le cuesta sostener rutinas; busca variedad y se impacienta'},
+  GEN_C: {alto:'sigue normas y procedimientos con disciplina y cuidado', bajo:'se toma libertades con las reglas y requiere supervisión en seguridad'},
+  MOT_D: {alto:'le mueven los retos, competir y tener autoridad', bajo:'no busca mandar; se siente bien en roles de apoyo'},
+  MOT_I: {alto:'le mueven el reconocimiento y el trato con la gente', bajo:'le mueve el trabajo técnico o individual, no socializar'},
+  MOT_S: {alto:'le mueven la estabilidad y un ritmo predecible', bajo:'le mueven la variedad y el cambio; la rutina le aburre'},
+  MOT_C: {alto:'le mueve hacer las cosas bien, con reglas claras y orden', bajo:'le mueve la libertad de hacer las cosas a su manera'},
+  PRE_D: {alto:'bajo presión se impone, se impacienta y choca con la autoridad', bajo:'bajo presión cede y evita confrontar o decidir'},
+  PRE_I: {alto:'bajo presión habla de más y descuida la tarea', bajo:'bajo presión se retrae y deja de comunicar'},
+  PRE_S: {alto:'bajo presión conserva la calma, pero le cuestan los cambios súbitos', bajo:'bajo presión se impacienta y pierde constancia'},
+  PRE_C: {alto:'bajo presión se aferra al procedimiento y no improvisa', bajo:'bajo presión puede saltarse procedimientos, incluso de seguridad'}
 };
 /** Diccionarios curados por prueba. Las pruebas que no tengan entradas aquí usan una frase genérica automática — se pueden enriquecer más adelante conforme se definan criterios para factores específicos. */
 const FACTOR_SIGNIFICADO_POR_PRUEBA = {
-  '16pf': FACTOR_SIGNIFICADO_16PF
+  '16pf': FACTOR_SIGNIFICADO_16PF,
+  'cleaver': FACTOR_SIGNIFICADO_CLEAVER
 };
 
 function significadoFactor(pid, code, alto){
   const dict = FACTOR_SIGNIFICADO_POR_PRUEBA[pid];
   if(dict && dict[code]) return alto ? dict[code].alto : dict[code].bajo;
   const nombre = nombreFactor(pid, code);
-  return alto ? `un nivel más alto de lo habitual en "${nombre}"` : `un nivel más bajo de lo habitual en "${nombre}"`;
+  return alto ? `tiene un nivel más alto de lo habitual en "${nombre}"` : `tiene un nivel más bajo de lo habitual en "${nombre}"`;
 }
 
+// 16PF: PeopleCloud escribe la interpretación con 4 o menos y con 7 o más (5–6 = "Normal"). Cleaver: guía de rangos (Medio = -6 a 5).
+const CORTES_ALTO_BAJO = { '16pf': { bajo: 4, alto: 7 }, 'cleaver': { bajo: -7, alto: 6 } };
 /** Describe en lenguaje llano lo que significa el valor de un factor, sin importar si pasa o no la regla. */
 function descripcionValorFactor(pid, factor, valor){
   const info = PRUEBAS_INFO[pid];
   const def = info.factores.find(f=>f.code===factor);
   if(!def) return `un nivel de ${valor} en ${factor}`;
+  const corte = CORTES_ALTO_BAJO[pid];
+  if(corte){
+    if(valor >= corte.alto) return significadoFactor(pid, factor, true);
+    if(valor <= corte.bajo) return significadoFactor(pid, factor, false);
+    return `un nivel equilibrado, ni muy alto ni muy bajo, en "${nombreFactor(pid, factor)}"`;
+  }
   const mid = (def.min + def.max) / 2;
   const margen = (def.max - def.min) * 0.15;
   if(valor >= mid + margen) return significadoFactor(pid, factor, true);
@@ -4540,7 +4585,7 @@ function fraseFactor(pid, factor, valor, esDura, regla){
     porArriba = valor > regla.max;
   }
   const comparacion = porArriba ? 'por arriba de lo que se esperaba para este puesto' : 'por debajo de lo que se esperaba para este puesto';
-  return `En <strong>${nombreFactor(pid, factor)}</strong> (${PRUEBAS_INFO[pid].nombre}) obtuvo un resultado ${comparacion}, lo cual indica que es una persona con ${significadoFactor(pid, factor, porArriba)}.`;
+  return `En <strong>${nombreFactor(pid, factor)}</strong> (${PRUEBAS_INFO[pid].nombre}) obtuvo un resultado ${comparacion}, lo cual indica que ${significadoFactor(pid, factor, porArriba)}.`;
 }
 
 /** Arma un párrafo breve tipo "esta persona es/tiene..." — solo con lo que realmente destaca
@@ -4812,7 +4857,7 @@ function chipFactorHabilidad(ref){
 function filaHabilidad(h){
   h = h || { nombre: '', factores: [] };
   const opciones = PRUEBAS_TODAS.map(pid => `<optgroup label="${PRUEBAS_INFO[pid].nombre}">${PRUEBAS_INFO[pid].factores
-    .map(f => `<option value="${pid}:${f.code}">${escFD(f.nombre)} (${f.code})</option>`).join('')}</optgroup>`).join('');
+    .map(f => `<option value="${pid}:${f.code}">${escFD(pid === '16pf' ? nombreFactor(pid, f.code) : `${f.nombre} (${f.code})`)}</option>`).join('')}</optgroup>`).join('');
   return `<div class="hab-row">
     <div class="hab-row-top">
       <input type="text" class="hab-nombre" placeholder="Habilidad requerida (ej. Apego a normas de seguridad)" value="${escFD(h.nombre)}">
@@ -4893,14 +4938,43 @@ function evaluarHabilidades(c, criterio){
     return { nombre: h.nombre, factores, nivel };
   });
 }
+const capitalFD = (t) => t ? t[0].toUpperCase() + t.slice(1) : t;
+/** Etiqueta corta para el renglón "En rango". */
+function etiquetaCortaRef(ref){
+  const [pid, code] = String(ref).split(':');
+  if(pid === '16pf') return `${nombreFactorSimple(pid, code)} (${code})`;
+  if(pid === 'cleaver'){ const [sec, l] = code.split('_'); return `Cleaver ${l} · ${({GEN:'Generales', MOT:'Motivación', PRE:'Presión'})[sec] || sec}`; }
+  return PRUEBAS_INFO[pid] ? `${PRUEBAS_INFO[pid].nombre} · ${nombreFactorSimple(pid, code)}` : ref;
+}
+/** La regla en palabras: lo que descalifica (dura) o lo que se esperaba (blanda). */
+function reglaEnPalabras(regla, blanda){
+  if(blanda) return `se esperaba entre ${regla.min} y ${regla.max}`;
+  const op = opRegla(regla.operador);
+  return ({ '<': `descalifica si es menor que ${regla.valor}`, '<=': `descalifica con ${regla.valor} o menos`,
+            '>': `descalifica si es mayor que ${regla.valor}`, '>=': `descalifica desde ${regla.valor}` })[op] || `regla dura: ${op} ${regla.valor}`;
+}
+/** Explicación de una habilidad: conclusión, factores que fallan (regla en palabras y significado) y el resto agrupado. */
 function evidenciaHabilidad(hab){
-  return hab.factores.map(f => {
-    const nom = escFD(etiquetaFactorRef(f.ref));
-    if(f.valor === null) return `${nom}: sin dato`;
-    if(f.estado === 'rojo') return `${nom} = ${f.valor} ✗ (regla dura: ${escFD(opRegla(f.regla.operador))} ${f.regla.valor})`;
-    if(f.estado === 'amarillo') return `${nom} = ${f.valor} ⚠ (esperado ${f.regla.min}–${f.regla.max})`;
-    return `${nom} = ${f.valor}${f.estado === 'verde' ? ' ✓' : ''}`;
-  }).join(' · ');
+  const fs = hab.factores, de = e => fs.filter(f => f.estado === e), pl = (k, a, b) => k === 1 ? a : b;
+  const rojos = de('rojo'), amar = de('amarillo'), verdes = de('verde'), sinRegla = de('sinRegla'), faltan = de('falta'), sinDato = [...faltan, ...de('sinDato')];
+  const n = fs.length, nF = pl(n, 'factor', 'factores');
+  let conc;
+  if(rojos.length) conc = `${rojos.length} de ${n} ${nF} ${pl(rojos.length, 'rompe', 'rompen')} una regla dura` + (amar.length ? ` y ${amar.length} ${pl(amar.length, 'sale', 'salen')} del rango esperado.` : '.');
+  else if(amar.length) conc = `${amar.length} de ${n} ${nF} fuera del rango esperado.`;
+  else if(faltan.length) conc = `Falta el valor de ${faltan.length} ${pl(faltan.length, 'factor', 'factores')} para evaluar.`;
+  else if(verdes.length) conc = verdes.length === n ? (n === 1 ? 'El factor está dentro de lo esperado.' : `Los ${n} factores están dentro de lo esperado.`)
+    : `${verdes.length} de ${n} ${nF} ${pl(verdes.length, 'tiene regla y está', 'tienen regla y están')} dentro de lo esperado.`;
+  else if(sinRegla.length) conc = 'Sus factores no tienen regla en el criterio: solo se muestran los valores.';
+  else conc = 'Sin datos capturados para sus factores.';
+  const linea = f => {
+    const [pid, code] = f.ref.split(':'), blanda = f.estado === 'amarillo';
+    const alto = blanda ? f.valor > f.regla.max : ['>', '>='].includes(opRegla(f.regla.operador));
+    return `<div class="ev-f ${f.estado}">${blanda ? '⚠' : '✗'} <strong>${escFD(etiquetaFactorRef(f.ref))} = ${f.valor}</strong> → ${escFD(reglaEnPalabras(f.regla, blanda))}</div>` +
+      `<div class="ev-sig">${escFD(capitalFD(significadoFactor(pid, code, alto)))}.</div>`;
+  };
+  const grupo = (titulo, xs, conValor) => xs.length ? `<div class="ev-ok">${titulo}: ${xs.map(f => escFD(etiquetaCortaRef(f.ref)) + (conValor ? ' ' + f.valor : '')).join(' · ')}</div>` : '';
+  return `<div class="ev-conc">${conc}</div>` + [...rojos, ...amar].map(linea).join('') +
+    grupo('En rango', verdes, true) + grupo('Sin regla (solo dato)', sinRegla, true) + grupo('Sin dato', sinDato, false);
 }
 /** Factores con regla del criterio que NO están en ninguna habilidad y salen de rango, rompen una regla dura o no tienen valor.
  *  Son los que hacen que el veredicto general diga "con observaciones", "No apto" o "Incompleto" aunque todas las habilidades salgan bien. */
@@ -4916,11 +4990,11 @@ function observacionesFueraDeHabilidades(c, criterio){
       const ref = pid + ':' + r.factor;
       if(enHabilidad.has(ref) || vistos.has(ref)) return;
       const res = evaluarReglasPrueba(valores, tipo === 'dura' ? { reglasDuras: [r] } : { reglasBlandas: [r] });
-      const nom = `${PRUEBAS_INFO[pid].nombre} · ${nombreFactor(pid, r.factor)}`;
+      const nom = etiquetaFactorRef(ref);
       let texto = null;
       if(res.faltantes.length) texto = `${nom}: sin dato`;
-      else if(res.reglaDuraFallida) texto = `${nom} = ${valores[r.factor]} ✗ (regla dura: ${opRegla(r.operador)} ${r.valor})`;
-      else if(res.reglasBlandasFueraDeRango.length) texto = `${nom} = ${valores[r.factor]} ⚠ (esperado ${r.min}–${r.max})`;
+      else if(res.reglaDuraFallida) texto = `${nom} = ${valores[r.factor]} ✗ (${reglaEnPalabras(r, false)})`;
+      else if(res.reglasBlandasFueraDeRango.length) texto = `${nom} = ${valores[r.factor]} ⚠ (${reglaEnPalabras(r, true)})`;
       if(texto){ vistos.add(ref); out.push(texto); }
     });
   });
