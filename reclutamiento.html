@@ -3740,9 +3740,13 @@ function renderCriterios(){
     const bloquesPrueba = asignadas.map(pid => {
       const p = (cr.pruebas||{})[pid];
       const tieneReglas = p && ((p.reglasDuras||[]).length>0 || (p.reglasBlandas||[]).length>0);
+      const lineasPC = p ? [
+        (p.palabrasNoApto||[]).length ? `<div class="regla-lista">🔴 Si el reporte dice: <strong>${escFD(p.palabrasNoApto.join(', '))}</strong> → No apto automático</div>` : '',
+        (p.palabrasVigilar||[]).length ? `<div class="regla-lista">🟡 Si el reporte dice: <strong>${escFD(p.palabrasVigilar.join(', '))}</strong> → Apto con observaciones</div>` : ''].join('') : '';
       return `<div class="prueba-subgrupo">
         <div class="prueba-subgrupo-titulo">${PRUEBAS_INFO[pid].nombre}</div>
-        ${tieneReglas ? [
+        ${lineasPC}
+        ${tieneReglas || lineasPC ? [
           ...(p.reglasDuras||[]).map(r=>`<div class="regla-lista">🔴 <strong>${nombreFactor(pid, r.factor)}</strong> ${r.operador} ${r.valor} → No apto automático</div>`),
           ...(p.reglasBlandas||[]).map(r=>`<div class="regla-lista">🟡 <strong>${nombreFactor(pid, r.factor)}</strong> fuera de ${r.min}–${r.max} → Apto con observaciones</div>`)
         ].join('') : '<div class="regla-lista">Asignada, sin reglas todavía (los valores se guardan como referencia).</div>'}
@@ -3804,7 +3808,7 @@ function construirSeccionesPruebasCriterio(criterioExistente){
     const estaAsignada = asignadas.includes(pid);
 
     const p = criterioExistente ? (criterioExistente.pruebas||{})[pid] : null;
-    const tieneReglas = p && ((p.reglasDuras||[]).length>0 || (p.reglasBlandas||[]).length>0);
+    const tieneReglas = p && ((p.reglasDuras||[]).length>0 || (p.reglasBlandas||[]).length>0 || tienePalabrasClave(p));
     return `
     <div class="prueba-criterio-section" data-prueba-section="${pid}">
       <div class="pcs-header">
@@ -3826,6 +3830,13 @@ function construirSeccionesPruebasCriterio(criterioExistente){
         <h3 style="font-size:12.5px;color:var(--navy);margin:4px 0 4px;">Reglas blandas (rango aceptable)</h3>
         <div id="reglasBlandasWrap_${pid}">${(p && p.reglasBlandas && p.reglasBlandas.length) ? p.reglasBlandas.map(r=>filaReglaBlanda(pid,r)).join('') : ''}</div>
         <button type="button" class="btn ghost" onclick="agregarRegla('${pid}','blanda')">+ Agregar regla blanda</button>
+        ${PRUEBAS_CON_TEXTO.includes(pid) ? `
+        <h3 style="font-size:12.5px;color:var(--navy);margin:14px 0 4px;">Palabras clave en el texto del reporte</h3>
+        <div class="sub" style="margin-bottom:6px;">Separadas por coma. Se buscan sin importar mayúsculas ni acentos. Solo conducta en el trabajo: nunca religión, salud, embarazo, origen ni estado civil (art. 1 constitucional; LFT arts. 3 y 133-I).</div>
+        <label style="font-size:12px;">No apto si el reporte dice</label>
+        <input type="text" id="pcNoApto_${pid}" value="${escFD(((p && p.palabrasNoApto) || []).join(', '))}" placeholder="ej. desacata las reglas, agresivo, impulsivo" style="width:100%;margin-bottom:6px;">
+        <label style="font-size:12px;">Apto con observaciones si el reporte dice</label>
+        <input type="text" id="pcVigilar_${pid}" value="${escFD(((p && p.palabrasVigilar) || []).join(', '))}" placeholder="ej. descontrolado" style="width:100%;">` : ''}
       </div>
     </div>`;
   }).join('');
@@ -3923,8 +3934,12 @@ document.getElementById('btnGuardarCriterio').addEventListener('click', ()=>{
     // una regla con número vacío, o con mínimo mayor que el máximo, nunca se aplicaría: se rechaza
     const malas = reglasDuras.filter(r=>isNaN(r.valor)).length + reglasBlandas.filter(r=>isNaN(r.min) || isNaN(r.max) || r.min > r.max).length;
     if(malas){ reglasInvalidas.push(`${PRUEBAS_INFO[pid].nombre}: ${malas} regla(s) sin número o con mínimo mayor que el máximo`); return; }
-    if(reglasDuras.length || reglasBlandas.length){
+    const lista = id => { const el = document.getElementById(id); return el ? [...new Set(el.value.split(',').map(x => x.trim()).filter(Boolean))] : []; };
+    const palabrasNoApto = lista('pcNoApto_' + pid), palabrasVigilar = lista('pcVigilar_' + pid);
+    if(reglasDuras.length || reglasBlandas.length || palabrasNoApto.length || palabrasVigilar.length){
       pruebasObj[pid] = { reglasDuras, reglasBlandas };
+      if(palabrasNoApto.length) pruebasObj[pid].palabrasNoApto = palabrasNoApto;
+      if(palabrasVigilar.length) pruebasObj[pid].palabrasVigilar = palabrasVigilar;
     }
   });
   if(reglasInvalidas.length){ alert('Corrige antes de guardar:\n' + reglasInvalidas.join('\n')); return; }
@@ -4078,8 +4093,22 @@ function parseCleaverAciertos(texto){
   return {
     secciones: resultado,
     patronRaw: patronMatch ? [...new Set(patronMatch.map(s=>s.trim()))].slice(0,5) : [],
+    textos: parsearTextosCleaver(texto),
     fechaPresentacion: parsearFechaPresentacion(texto)
   };
+}
+/** Párrafo que el reporte escribe junto a cada identificador ("C>I: Esta persona tiende…", "I-: Lógicas y…").
+ *  Toma desde el identificador hasta el siguiente identificador (máx. 900 caracteres). Devuelve {"C>I": "texto", …}. */
+function parsearTextosCleaver(texto){
+  // sin consumir el espacio de alrededor, para no perder identificadores seguidos ("I- S+ C+")
+  const re = /(?<=^|\s)([DISC](?:[<>][DISC]|[+\-]))(?=\s*:?\s+[A-ZÁÉÍÓÚÑ])/g;
+  const marcas = [...String(texto).matchAll(re)].map(m => ({ id: m[1], ini: m.index + m[0].length, fin: m.index }));
+  const out = {};
+  marcas.forEach((m, i) => {
+    const t = texto.slice(m.ini, i + 1 < marcas.length ? marcas[i + 1].fin : m.ini + 900).replace(/\s+/g, ' ').replace(/^\s*:?\s*/, '').trim().slice(0, 900);
+    if(t.split(' ').length >= 6 && !out[m.id]) out[m.id] = t; // un párrafo, no una etiqueta suelta
+  });
+  return out;
 }
 
 /** Dibuja/edita una grilla de valores genérica. idPrefix distingue la grilla del 16PF de la de "otras pruebas". */
@@ -4201,11 +4230,11 @@ function renderReglasCleaverUI(){
   renderGrid('valoresCleaverGrid', FACTORES_CLEAVER, datos.valores || {}, 'vc');
 
   const reglas = criterio ? (criterio.pruebas || {})['cleaver'] : null;
-  if(reglas && ((reglas.reglasDuras||[]).length || (reglas.reglasBlandas||[]).length)){
+  if(reglas && ((reglas.reglasDuras||[]).length || (reglas.reglasBlandas||[]).length || tienePalabrasClave(reglas))){
     document.getElementById('cleaverReglasChartBox').style.display = 'block';
     document.getElementById('cleaverSinCriterioMsg').style.display = 'none';
     renderChartFactoresPrueba(datos.valores || {}, reglas, 'cleaver', 'chartCriterioFactoresCleaver');
-    const sintesis = generarSintesisPrueba(datos.valores || {}, reglas, 'cleaver', puestoTextoActual());
+    const sintesis = generarSintesisPrueba(datos.valores || {}, reglas, 'cleaver', puestoTextoActual(), textosReporte(c, 'cleaver'));
     document.getElementById('sintesisChartCleaverReglas').innerHTML = sintesis.parrafo +
       (sintesis.detalles.length ? '<br><br>' + sintesis.detalles.map(d=>'• '+d).join('<br>') : '');
   } else {
@@ -4288,6 +4317,13 @@ function generarSintesisCleaver(datos){
     const texto = destacan.length ? capitalFD(destacan.join('; ')) + '.' : 'Perfil equilibrado: ninguna letra destaca.';
     return `<strong>${CLEAVER_SECCION_CONTEXTO[sec]}:</strong> ${texto}`;
   });
+  // Lo que escribe el propio reporte por identificador (primera oración), para no quedarse solo en "Perfil equilibrado".
+  const textos = datos.textos || {};
+  const delReporte = Object.keys(textos).map(id => {
+    const t = String(textos[id]), m = t.match(/^.{20,}?[.;](?=\s|$)/);
+    return `• <strong>${escFD(id)}:</strong> ${escFD(m ? m[0] : t.slice(0, 200))}`;
+  });
+  if(delReporte.length) frases.push('<strong>Lo que dice el reporte:</strong><br>' + delReporte.join('<br>'));
   return frases.join('<br><br>');
 }
 
@@ -4296,8 +4332,10 @@ function generarSintesisCleaver(datos){
    ========================================================= */
 
 /** Evalúa un conjunto de reglas {reglasDuras, reglasBlandas} de UNA prueba contra sus valores. */
-function evaluarReglasPrueba(valores, reglas){
+function evaluarReglasPrueba(valores, reglas, textos){
   if(!reglas) return null;
+  const palabrasNoApto = buscarPalabrasClave(textos, reglas.palabrasNoApto);
+  const palabrasVigilar = buscarPalabrasClave(textos, reglas.palabrasVigilar);
   const reglaDuraFallida = (reglas.reglasDuras||[]).find(r=>{
     const v = valores[r.factor];
     if(v === undefined || v === null || isNaN(v)) return false;
@@ -4317,11 +4355,11 @@ function evaluarReglasPrueba(valores, reglas){
   const faltantes = [...new Set([...(reglas.reglasDuras||[]), ...(reglas.reglasBlandas||[])].map(r=>r.factor))]
     .filter(f => { const v = (valores||{})[f]; return v === undefined || v === null || v === '' || isNaN(v); });
   let veredicto, clase;
-  if(reglaDuraFallida){ veredicto = 'No apto'; clase = 'no-apto'; }
+  if(reglaDuraFallida || palabrasNoApto.length){ veredicto = 'No apto'; clase = 'no-apto'; }
   else if(faltantes.length > 0){ veredicto = 'Incompleto'; clase = 'pendiente'; }
-  else if(reglasBlandasFueraDeRango.length > 0){ veredicto = 'Apto con observaciones'; clase = 'observaciones'; }
+  else if(reglasBlandasFueraDeRango.length > 0 || palabrasVigilar.length > 0){ veredicto = 'Apto con observaciones'; clase = 'observaciones'; }
   else { veredicto = 'Apto'; clase = 'apto'; }
-  return { veredicto, clase, reglaDuraFallida, reglasBlandasFueraDeRango, faltantes };
+  return { veredicto, clase, reglaDuraFallida, reglasBlandasFueraDeRango, faltantes, palabrasNoApto, palabrasVigilar };
 }
 
 /** Datos de candidato → valores por prueba, para poder iterar de forma genérica. */
@@ -4342,13 +4380,16 @@ function evaluarCriterioCompleto(c, criterio){
   const blandasFueraGlobal = [];
 
   const faltantesGlobal = []; // {prueba, factor} con regla pero sin valor capturado
+  const palabrasNoAptoGlobal = [], palabrasVigilarGlobal = []; // palabras clave encontradas en el texto del reporte
   PRUEBAS_CON_REGLAS.forEach(pid=>{
     const reglas = (criterio.pruebas || {})[pid];
-    if(!reglas || !((reglas.reglasDuras||[]).length || (reglas.reglasBlandas||[]).length)) return;
+    if(!reglas || !((reglas.reglasDuras||[]).length || (reglas.reglasBlandas||[]).length || tienePalabrasClave(reglas))) return;
     if((criterio.pruebasAsignadas || []).length && !criterio.pruebasAsignadas.includes(pid)) return;
     const datos = datosPorPrueba[pid];
     // prueba con reglas pero sin cargar: cuenta como incompleta (todos sus factores faltan), no se brinca
-    const r = evaluarReglasPrueba((datos && datos.valores) || {}, reglas);
+    const r = evaluarReglasPrueba((datos && datos.valores) || {}, reglas, textosReporte(c, pid));
+    r.palabrasNoApto.forEach(x => palabrasNoAptoGlobal.push(Object.assign({ prueba: pid }, x)));
+    r.palabrasVigilar.forEach(x => palabrasVigilarGlobal.push(Object.assign({ prueba: pid }, x)));
     porPrueba[pid] = r;
     if(r.reglaDuraFallida && !duraFallidaGlobal){
       duraFallidaGlobal = Object.assign({ prueba: pid }, r.reglaDuraFallida);
@@ -4360,13 +4401,14 @@ function evaluarCriterioCompleto(c, criterio){
   });
 
   let veredicto, clase;
-  if(duraFallidaGlobal){ veredicto = 'No apto'; clase = 'no-apto'; }
+  if(duraFallidaGlobal || palabrasNoAptoGlobal.length){ veredicto = 'No apto'; clase = 'no-apto'; }
   else if(faltantesGlobal.length > 0){ veredicto = 'Incompleto'; clase = 'pendiente'; }
-  else if(blandasFueraGlobal.length > 0){ veredicto = 'Apto con observaciones'; clase = 'observaciones'; }
+  else if(blandasFueraGlobal.length > 0 || palabrasVigilarGlobal.length > 0){ veredicto = 'Apto con observaciones'; clase = 'observaciones'; }
   else if(Object.keys(porPrueba).length > 0){ veredicto = 'Apto'; clase = 'apto'; }
   else { veredicto = null; clase = 'pendiente'; }
 
-  return { veredicto, clase, reglaDuraFallida: duraFallidaGlobal, reglasBlandasFueraDeRango: blandasFueraGlobal, faltantes: faltantesGlobal, porPrueba };
+  return { veredicto, clase, reglaDuraFallida: duraFallidaGlobal, reglasBlandasFueraDeRango: blandasFueraGlobal, faltantes: faltantesGlobal, porPrueba,
+    palabrasNoApto: palabrasNoAptoGlobal, palabrasVigilar: palabrasVigilarGlobal };
 }
 
 function renderVeredictoBadge(resultado){
@@ -4387,6 +4429,8 @@ function renderVeredictoBadge(resultado){
       exp += `<div class="fx-blanda">• [${PRUEBAS_INFO[r.prueba].nombre}] ${nombreFactor(r.prueba, r.factor)} fuera del rango ${r.min}–${r.max}.</div>`;
     });
   }
+  (resultado.palabrasNoApto || []).forEach(pc => { exp += `<div class="fx-dura">• ${escFD(motivoPalabraClave(pc))} → No apto.</div>`; });
+  (resultado.palabrasVigilar || []).forEach(pc => { exp += `<div class="fx-blanda">• ${escFD(motivoPalabraClave(pc))} → revisar en entrevista.</div>`; });
   if(resultado.faltantes && resultado.faltantes.length){
     exp += `<div class="fx-blanda">• Falta capturar: ${resultado.faltantes.map(f=>`[${PRUEBAS_INFO[f.prueba].nombre}] ${nombreFactor(f.prueba, f.factor)}`).join(', ')}. Sin esos valores no se puede dar un veredicto.</div>`;
   }
@@ -4521,6 +4565,68 @@ const FACTOR_SIGNIFICADO_CLEAVER = {
   PRE_C: {bajo:'bajo presión se aferra al procedimiento y no improvisa', alto:'bajo presión puede saltarse procedimientos, incluso de seguridad'}
 };
 /** Diccionarios curados por prueba. Las pruebas que no tengan entradas aquí usan una frase genérica automática — se pueden enriquecer más adelante conforme se definan criterios para factores específicos. */
+/** Texto que escribe el reporte 16PF de PeopleCloud por letra: con 4 o menos el de "bajo", con 7 o más el de "alto"
+ *  (5–6 = "Normal"). Es fijo (revisado en 56 reportes reales, nov-2026), así que se deduce del valor y sirve también
+ *  para candidatos ya capturados. Q3 alto no trae texto en el reporte. */
+const TEXTO_REPORTE_16PF = {
+  A:  {bajo:'Reservado, discreto, crítico, apartado, flexible', alto:'Expresivo, afectuoso, complaciente, participante'},
+  B:  {bajo:'Menos inteligente, pensamiento concreto (Baja capacidad mental)', alto:'Más inteligente, pensamiento abstracto, brillante (Alta capacidad mental escolar)'},
+  C:  {bajo:'Afectado por sentimientos, menor estabilidad emocional, perturbable', alto:'Emocionalmente estable, maduro, se enfrenta a la realidad'},
+  E:  {bajo:'Sumiso, indulgente, obediente, dócil, servicial', alto:'Afirmativo, agresivo, terco, competitivo'},
+  F:  {bajo:'Sobrio, taciturno, serio', alto:'Despreocupado, entusiasta'},
+  G:  {bajo:'Activo, desacata las reglas', alto:'Escrupuloso, persistente, moralista, juicioso'},
+  H:  {bajo:'Recatado, tímido, reprimido', alto:'Aventurado, desinhibido, gusto por conocer gente'},
+  I:  {bajo:'Calculador, confiado en sí mismo, realista', alto:'Afectuoso, sensitivo, dependiente, sobreprotegido'},
+  L:  {bajo:'Confiado, acepta condiciones', alto:'Desconfiado, suspicaz'},
+  M:  {bajo:'Práctico, tiene preocupaciones reales', alto:'Imaginativo, bohemio, distraído'},
+  N:  {bajo:'Ingenioso, sin pretensiones, sincero pero socialmente torpe', alto:'Astuto, cultivado, socialmente consciente'},
+  O:  {bajo:'Seguro de sí mismo, apacible, seguro, complaciente, sereno', alto:'Aprensivo, autorrecriminante, inseguro, preocupado'},
+  Q1: {bajo:'Conservador, respetuoso de las ideas establecidas', alto:'Experimentador, liberal, pensamiento libre'},
+  Q2: {bajo:'Dependiente del grupo, se adhiere, y es un seguidor ejemplar', alto:'Autosuficiente, rico en recursos, prefiere sus propias decisiones'},
+  Q3: {bajo:'Incontrolado, flojo, sigue sus propios impulsos, indiferente a las reglas', alto:''},
+  Q4: {bajo:'Reflejado, tranquilo, no frustrado, sereno', alto:'Tenso, frustrado, impulsivo, sobreexcitado'}
+};
+/** Lo que dice el reporte del candidato, como [{donde, texto}]: 16PF por letra (deducido del valor); Cleaver por identificador (leído del PDF). */
+function textosReporte(c, pid){
+  if(!c) return [];
+  if(pid === '16pf'){
+    const v = (c.psicometria16PF || {}).valores || {};
+    return Object.keys(TEXTO_REPORTE_16PF).map(L => {
+      if(v[L] === undefined || v[L] === null || v[L] === '' || isNaN(v[L])) return null;
+      const x = Number(v[L]), t = x <= 4 ? TEXTO_REPORTE_16PF[L].bajo : x >= 7 ? TEXTO_REPORTE_16PF[L].alto : '';
+      return t ? { donde: `${L} (${nombreFactorSimple('16pf', L)}) = ${x}`, texto: t } : null;
+    }).filter(Boolean);
+  }
+  if(pid === 'cleaver'){
+    const t = (c.cleaverInfo && c.cleaverInfo.textos) || {};
+    return Object.keys(t).map(id => ({ donde: 'identificador ' + id, texto: t[id] }));
+  }
+  return [];
+}
+const normPC = s => quitarAcentos_(String(s == null ? '' : s).toLowerCase()).replace(/\s+/g, ' ');
+/** Palabras clave del criterio que aparecen en el texto del reporte: [{palabra, donde, texto}] (sin mayúsculas ni acentos). */
+function buscarPalabrasClave(textos, palabras){
+  const out = [];
+  (palabras || []).forEach(p => {
+    const n = normPC(p).trim();
+    if(n) (textos || []).forEach(t => { if(normPC(t.texto).includes(n)) out.push({ palabra: p, donde: t.donde, texto: t.texto }); });
+  });
+  return out;
+}
+/** Pedazo corto del texto alrededor de la palabra clave (los párrafos del Cleaver son largos). */
+function fragmentoPC(texto, palabra){
+  const t = String(texto), n = normPC(t), i = n.indexOf(normPC(palabra).trim());
+  if(t.length <= 160 || i < 0 || n.length !== t.length) return t.length <= 160 ? t : t.slice(0, 160) + '…';
+  const a = Math.max(0, i - 70), b = Math.min(t.length, i + palabra.length + 70);
+  return (a > 0 ? '…' : '') + t.slice(a, b).trim() + (b < t.length ? '…' : '');
+}
+/** Motivo en palabras: "[16PF] El reporte dice en E (…): «…» (palabra clave "agresivo")". Texto plano (escapar al pintar). */
+function motivoPalabraClave(pc){
+  return `[${PRUEBAS_INFO[pc.prueba] ? PRUEBAS_INFO[pc.prueba].nombre : pc.prueba}] El reporte dice en ${pc.donde}: «${fragmentoPC(pc.texto, pc.palabra)}» (palabra clave "${pc.palabra}")`;
+}
+const tienePalabrasClave = r => !!r && ((r.palabrasNoApto || []).length > 0 || (r.palabrasVigilar || []).length > 0);
+const PRUEBAS_CON_TEXTO = ['16pf', 'cleaver'];
+
 const FACTOR_SIGNIFICADO_POR_PRUEBA = {
   '16pf': FACTOR_SIGNIFICADO_16PF,
   'cleaver': FACTOR_SIGNIFICADO_CLEAVER
@@ -4584,9 +4690,9 @@ function generarPerfilConductual(valores, reglas, pid){
 }
 
 /** Síntesis individual de UNA prueba (para el recuadro bajo su gráfica y para la hoja impresa). */
-function generarSintesisPrueba(valores, reglas, pid, puestoTexto){
+function generarSintesisPrueba(valores, reglas, pid, puestoTexto, textos){
   const perfil = generarPerfilConductual(valores, reglas, pid);
-  const resultado = evaluarReglasPrueba(valores, reglas);
+  const resultado = evaluarReglasPrueba(valores, reglas, textos);
   let parrafo = '', detalles = [];
 
   if(!resultado){
@@ -4599,12 +4705,16 @@ function generarSintesisPrueba(valores, reglas, pid, puestoTexto){
     parrafo = `${perfil} En conjunto, este resultado (${PRUEBAS_INFO[pid].nombre}) se ajusta a lo requerido para ${puestoTexto}.`;
   } else if(resultado.veredicto === 'No apto'){
     const r = resultado.reglaDuraFallida;
-    parrafo = `${perfil} Sin embargo, en ${PRUEBAS_INFO[pid].nombre} incumple un requisito indispensable para ${puestoTexto}: ${fraseFactor(pid, r.factor, valores[r.factor], true, r)}`;
+    parrafo = r
+      ? `${perfil} Sin embargo, en ${PRUEBAS_INFO[pid].nombre} incumple un requisito indispensable para ${puestoTexto}: ${fraseFactor(pid, r.factor, valores[r.factor], true, r)}`
+      : `${perfil} Sin embargo, el reporte de ${PRUEBAS_INFO[pid].nombre} contiene una palabra clave que descalifica para ${puestoTexto}:`;
+    resultado.palabrasNoApto.forEach(pc => detalles.push(escFD(motivoPalabraClave(Object.assign({ prueba: pid }, pc)))));
   } else {
     parrafo = `${perfil} En ${PRUEBAS_INFO[pid].nombre} no hay ningún factor que descalifique por sí solo, pero hay puntos que vale la pena revisar:`;
     resultado.reglasBlandasFueraDeRango.forEach(r=>{
       detalles.push(fraseFactor(pid, r.factor, valores[r.factor], false, r));
     });
+    resultado.palabrasVigilar.forEach(pc => detalles.push(escFD(motivoPalabraClave(Object.assign({ prueba: pid }, pc)))));
   }
   return { parrafo, detalles };
 }
@@ -4732,7 +4842,7 @@ document.getElementById('btnCalcularVeredicto').addEventListener('click', ()=>{
   const reglas16pf = (criterio.pruebas||{})['16pf'];
   if(reglas16pf && c.psicometria16PF){
     renderChartFactoresPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', 'chartCriterioFactores');
-    const sintesis16 = generarSintesisPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', puestoTextoActual());
+    const sintesis16 = generarSintesisPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', puestoTextoActual(), textosReporte(c, '16pf'));
     document.getElementById('sintesisChart16PF').innerHTML = sintesis16.parrafo +
       (sintesis16.detalles.length ? '<br><br>' + sintesis16.detalles.map(d=>'• '+d).join('<br>') : '');
     marcarGridPorResultado('valores16PFGrid', 'vf', reglas16pf, agregado.porPrueba['16pf']);
@@ -4784,6 +4894,7 @@ function generarResumenPsicometrias(agregado, pruebasAnalizadas){
   }).join('');
 
   let alerta = '';
+  const pcNo = agregado.palabrasNoApto || [], pcVig = agregado.palabrasVigilar || [];
   if(agregado.reglaDuraFallida){
     const r = agregado.reglaDuraFallida;
     alerta = `
@@ -4791,6 +4902,13 @@ function generarResumenPsicometrias(agregado, pruebasAnalizadas){
         <strong>Motivo del resultado "No apto":</strong> en <strong>${PRUEBAS_INFO[r.prueba].nombre}</strong>,
         el factor <strong>${nombreFactor(r.prueba, r.factor)}</strong> incumplió el criterio obligatorio
         definido para este puesto (regla: ${r.operador} ${r.valor}).
+        ${pcNo.map(pc => `<div>• ${escFD(motivoPalabraClave(pc))}</div>`).join('')}
+      </div>`;
+  } else if(pcNo.length){
+    alerta = `
+      <div class="imp-alerta-no-apto">
+        <strong>Motivo del resultado "No apto": el reporte contiene una palabra clave que descalifica para este puesto.</strong>
+        ${pcNo.map(pc => `<div>• ${escFD(motivoPalabraClave(pc))}</div>`).join('')}
       </div>`;
   } else if(agregado.faltantes && agregado.faltantes.length){
     alerta = `
@@ -4798,10 +4916,10 @@ function generarResumenPsicometrias(agregado, pruebasAnalizadas){
         <strong>Evaluación incompleta — falta capturar:</strong>
         ${agregado.faltantes.map(f=>`<div>• [${PRUEBAS_INFO[f.prueba].nombre}] ${nombreFactor(f.prueba, f.factor)}</div>`).join('')}
       </div>`;
-  } else if(agregado.reglasBlandasFueraDeRango && agregado.reglasBlandasFueraDeRango.length){
-    const items = agregado.reglasBlandasFueraDeRango.map(r=>
+  } else if((agregado.reglasBlandasFueraDeRango && agregado.reglasBlandasFueraDeRango.length) || pcVig.length){
+    const items = (agregado.reglasBlandasFueraDeRango || []).map(r=>
       `<div>• [${PRUEBAS_INFO[r.prueba].nombre}] ${nombreFactor(r.prueba, r.factor)} — fuera del rango esperado (${r.min}–${r.max}).</div>`
-    ).join('');
+    ).join('') + pcVig.map(pc => `<div>• ${escFD(motivoPalabraClave(pc))}</div>`).join('');
     alerta = `
       <div class="imp-alerta-observaciones">
         <strong>Puntos a revisar (observaciones):</strong>
@@ -4974,6 +5092,9 @@ function observacionesFueraDeHabilidades(c, criterio){
       else if(res.reglasBlandasFueraDeRango.length) texto = `${nom} = ${valores[r.factor]} ⚠ (${reglaEnPalabras(r, true)})`;
       if(texto){ vistos.add(ref); out.push(texto); }
     });
+    const res = evaluarReglasPrueba({}, { palabrasNoApto: reglas.palabrasNoApto, palabrasVigilar: reglas.palabrasVigilar }, textosReporte(c, pid));
+    res.palabrasNoApto.forEach(pc => out.push('✗ ' + motivoPalabraClave(Object.assign({ prueba: pid }, pc)) + ' → No apto'));
+    res.palabrasVigilar.forEach(pc => out.push('⚠ ' + motivoPalabraClave(Object.assign({ prueba: pid }, pc)) + ' → revisar en entrevista'));
   });
   return out;
 }
@@ -5036,7 +5157,7 @@ function abrirFichaDictamen(){
   conDatos.forEach(pid => {
     const d = datos[pid];
     if(!d) return;
-    const sintesis = generarSintesisPrueba(d.valores || {}, (criterio.pruebas || {})[pid], pid, `${vac.puesto} (${vac.planta})`);
+    const sintesis = generarSintesisPrueba(d.valores || {}, (criterio.pruebas || {})[pid], pid, `${vac.puesto} (${vac.planta})`, textosReporte(c, pid));
     analisis.push(`<div class="imp-prueba-bloque"><h2 class="imp-prueba-titulo">${nombrePrueba(pid)}</h2>
       <p>${sintesis.parrafo}</p>${sintesis.detalles.length ? `<div class="imp-factores">${sintesis.detalles.map(x => `<div class="imp-factor-item">• ${x}</div>`).join('')}</div>` : ''}</div>`);
   });
@@ -5100,7 +5221,7 @@ function abrirImpresionVeredicto(){
     if(!datos) return;
     pruebasAnalizadas.push(PRUEBAS_INFO[pid].nombre);
     const reglas = (criterio.pruebas||{})[pid];
-    const sintesis = generarSintesisPrueba(datos.valores || {}, reglas, pid, puestoTexto);
+    const sintesis = generarSintesisPrueba(datos.valores || {}, reglas, pid, puestoTexto, textosReporte(c, pid));
     bloques.push(`
       <div class="imp-prueba-bloque">
         <h2 class="imp-prueba-titulo">${PRUEBAS_INFO[pid].nombre}</h2>
@@ -5249,9 +5370,9 @@ function cargarSeccionPsicometriaCandidato(c){
       renderValores16PFGrid(c.psicometria16PF.valores);
       actualizarFechaPresentacionUI(c.psicometria16PF.fechaPresentacion);
       if(reglas16pf){
-        const resultado16 = evaluarReglasPrueba(c.psicometria16PF.valores, reglas16pf);
+        const resultado16 = evaluarReglasPrueba(c.psicometria16PF.valores, reglas16pf, textosReporte(c, '16pf'));
         renderChartFactoresPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', 'chartCriterioFactores');
-        const sintesis16 = generarSintesisPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', puestoTextoActual());
+        const sintesis16 = generarSintesisPrueba(c.psicometria16PF.valores, reglas16pf, '16pf', puestoTextoActual(), textosReporte(c, '16pf'));
         document.getElementById('sintesisChart16PF').innerHTML = sintesis16.parrafo +
           (sintesis16.detalles.length ? '<br><br>' + sintesis16.detalles.map(d=>'• '+d).join('<br>') : '');
         marcarGridPorResultado('valores16PFGrid', 'vf', reglas16pf, resultado16);
