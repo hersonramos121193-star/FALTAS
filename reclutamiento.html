@@ -3686,7 +3686,10 @@ function nombreFactorSimple(pruebaId, code){
 }
 function nombreFactor(pruebaId, code){
   const nombre = nombreFactorSimple(pruebaId, code);
-  return pruebaId === '16pf' && POLOS_16PF[code] ? `${nombre} (${code}: ${POLOS_16PF[code]})` : nombre;
+  if(pruebaId === '16pf' && POLOS_16PF[code]) return `${nombre} (${code}: ${POLOS_16PF[code]})`;
+  // Presión cuenta respuestas "MENOS": más aciertos = menos del rasgo. Ver nota de Jarvis cleaver-peoplecloud-escala-real.
+  if(pruebaId === 'cleaver' && code.startsWith('PRE_')) return `${nombre} (al revés: más aciertos = menos ${code.slice(4)})`;
+  return nombre;
 }
 
 let criterioEnEdicionId = null;
@@ -4529,7 +4532,9 @@ const FACTOR_SIGNIFICADO_16PF = {
   Q3: {alto:'es disciplinado(a) y apegado(a) a normas y procedimientos', bajo:'tiene poco apego a normas y procedimientos'},
   Q4: {alto:'es tenso(a) y le cuesta manejar la presión', bajo:'es relajado(a) y tolera bien la presión'}
 };
-// Cleaver por sección, según la guía de rangos (Generales = forma habitual; Motivación = lo que le mueve; Presión = bajo estrés).
+// Cleaver por sección (Generales = forma habitual; Motivación = lo que le mueve; Presión = bajo estrés).
+// "alto"/"bajo" = valor alto/bajo en Aciertos. En Presión los aciertos cuentan respuestas "MENOS", así que
+// muchos aciertos = POCO del rasgo (PRE_C 3 → Total 90; 11 → Total 5). Ver nota de Jarvis cleaver-peoplecloud-escala-real.
 const FACTOR_SIGNIFICADO_CLEAVER = {
   GEN_D: {alto:'decide rápido, va directo a resultados y le gusta tener el control', bajo:'cede ante otros y prefiere que alguien más decida'},
   GEN_I: {alto:'se comunica con facilidad, convence y motiva a otros', bajo:'habla poco y prefiere tareas individuales a convivir'},
@@ -4539,10 +4544,10 @@ const FACTOR_SIGNIFICADO_CLEAVER = {
   MOT_I: {alto:'le mueven el reconocimiento y el trato con la gente', bajo:'le mueve el trabajo técnico o individual, no socializar'},
   MOT_S: {alto:'le mueven la estabilidad y un ritmo predecible', bajo:'le mueven la variedad y el cambio; la rutina le aburre'},
   MOT_C: {alto:'le mueve hacer las cosas bien, con reglas claras y orden', bajo:'le mueve la libertad de hacer las cosas a su manera'},
-  PRE_D: {alto:'bajo presión se impone, se impacienta y choca con la autoridad', bajo:'bajo presión cede y evita confrontar o decidir'},
-  PRE_I: {alto:'bajo presión habla de más y descuida la tarea', bajo:'bajo presión se retrae y deja de comunicar'},
-  PRE_S: {alto:'bajo presión conserva la calma, pero le cuestan los cambios súbitos', bajo:'bajo presión se impacienta y pierde constancia'},
-  PRE_C: {alto:'bajo presión se aferra al procedimiento y no improvisa', bajo:'bajo presión puede saltarse procedimientos, incluso de seguridad'}
+  PRE_D: {bajo:'bajo presión se impone, se impacienta y choca con la autoridad', alto:'bajo presión cede y evita confrontar o decidir'},
+  PRE_I: {bajo:'bajo presión habla de más y descuida la tarea', alto:'bajo presión se retrae y deja de comunicar'},
+  PRE_S: {bajo:'bajo presión conserva la calma, pero le cuestan los cambios súbitos', alto:'bajo presión se impacienta y pierde constancia'},
+  PRE_C: {bajo:'bajo presión se aferra al procedimiento y no improvisa', alto:'bajo presión puede saltarse procedimientos, incluso de seguridad'}
 };
 /** Diccionarios curados por prueba. Las pruebas que no tengan entradas aquí usan una frase genérica automática — se pueden enriquecer más adelante conforme se definan criterios para factores específicos. */
 const FACTOR_SIGNIFICADO_POR_PRUEBA = {
@@ -4557,14 +4562,15 @@ function significadoFactor(pid, code, alto){
   return alto ? `tiene un nivel más alto de lo habitual en "${nombre}"` : `tiene un nivel más bajo de lo habitual en "${nombre}"`;
 }
 
-// 16PF: PeopleCloud escribe la interpretación con 4 o menos y con 7 o más (5–6 = "Normal"). Cleaver: guía de rangos (Medio = -6 a 5).
-const CORTES_ALTO_BAJO = { '16pf': { bajo: 4, alto: 7 }, 'cleaver': { bajo: -7, alto: 6 } };
+// 16PF: PeopleCloud escribe la interpretación con 4 o menos y con 7 o más (5–6 = "Normal").
+// Cleaver en Aciertos: Generales = MOT − PRE (aprox. -10 a +10); Motivación y Presión son conteos de 0 a 13 (mediana ~5).
+const CORTES_ALTO_BAJO = { '16pf': { bajo: 4, alto: 7 }, 'cleaver_GEN': { bajo: -4, alto: 4 }, 'cleaver_MOT': { bajo: 2, alto: 9 }, 'cleaver_PRE': { bajo: 2, alto: 9 } };
 /** Describe en lenguaje llano lo que significa el valor de un factor, sin importar si pasa o no la regla. */
 function descripcionValorFactor(pid, factor, valor){
   const info = PRUEBAS_INFO[pid];
   const def = info.factores.find(f=>f.code===factor);
   if(!def) return `un nivel de ${valor} en ${factor}`;
-  const corte = CORTES_ALTO_BAJO[pid];
+  const corte = CORTES_ALTO_BAJO[pid === 'cleaver' ? 'cleaver_' + factor.slice(0, 3) : pid];
   if(corte){
     if(valor >= corte.alto) return significadoFactor(pid, factor, true);
     if(valor <= corte.bajo) return significadoFactor(pid, factor, false);
