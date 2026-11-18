@@ -428,6 +428,41 @@
   .imp-resumen-item.observaciones .imp-resumen-punto{background:#9A7414;}
   .imp-resumen-item.no-apto .imp-resumen-punto{background:var(--crit);}
   .imp-resumen-item.pendiente .imp-resumen-punto{background:var(--text-dim);}
+
+  /* v103: habilidades del perfil de puesto (criterio, expediente y ficha de dictamen impresa) */
+  .hab-row{border:1px solid #E3E6E9;border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#fff;}
+  .hab-row-top{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+  .hab-row-top .hab-nombre{flex:1;}
+  .hab-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;}
+  .hab-chip{display:inline-flex;align-items:center;gap:4px;background:#EEF3F8;border-radius:12px;padding:2px 4px 2px 10px;font-size:11.5px;color:var(--navy);}
+  .hab-chip button{border:none;background:none;cursor:pointer;color:var(--text-dim);font-size:11px;padding:0 4px;}
+  .hab-agregar{max-width:340px;}
+  .hab-cand{padding:8px 0;border-top:1px solid #EDEEEF;}
+  .hab-cand-top{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px;font-weight:600;color:var(--navy);}
+  .hab-cand .desc{margin:3px 0 4px;}
+  .hab-cand input{width:100%;}
+  .fd-pagina{font-size:12px;color:#1d2733;}
+  .fd-pagina + .fd-pagina{break-before:page;page-break-before:always;}
+  .fd-banda{background:var(--navy);color:#fff;padding:10px 14px;border-radius:6px;margin-bottom:12px;}
+  .fd-titulo{font-size:16px;font-weight:800;letter-spacing:.4px;}
+  .fd-sub{font-size:11.5px;opacity:.9;margin-top:2px;}
+  .fd-datos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 16px;margin-bottom:10px;}
+  .fd-datos .imp-label{font-size:10.5px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.3px;}
+  .fd-datos b{color:var(--navy);font-size:13px;}
+  .fd-alcance{background:#F3F5F7;border-radius:6px;padding:7px 10px;font-size:11px;color:#3d4a59;margin-bottom:12px;line-height:1.5;}
+  .fd-veredicto{display:flex;gap:16px;align-items:center;border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.5;}
+  .fd-veredicto b{font-size:24px;font-weight:800;white-space:nowrap;}
+  .fd-veredicto.apto{background:#E6F3EB;} .fd-veredicto.apto b{color:var(--ok);}
+  .fd-veredicto.observaciones{background:#FBF1DC;} .fd-veredicto.observaciones b{color:#9A7414;}
+  .fd-veredicto.no-apto{background:#FAE7E5;} .fd-veredicto.no-apto b{color:var(--crit);}
+  .fd-veredicto.pendiente{background:#EEF0F2;} .fd-veredicto.pendiente b{color:var(--text-dim);}
+  .fd-h2{font-size:13.5px;color:var(--navy);margin:0 0 6px;}
+  .fd-tabla{width:100%;border-collapse:collapse;font-size:11.5px;}
+  .fd-tabla th{background:var(--navy);color:#fff;text-align:left;padding:6px 8px;}
+  .fd-tabla td{padding:7px 8px;border-bottom:1px solid #E3E6E9;vertical-align:top;line-height:1.45;}
+  .fd-com{font-style:italic;color:#5b6675;margin-top:3px;}
+  .fd-leyenda{display:flex;gap:10px;margin-top:8px;}
+  .fd-pie{margin-top:18px;border-top:1px solid #E3E6E9;padding-top:6px;font-size:10px;color:var(--text-dim);}
   .imp-veredicto-grande.pendiente{background:#EEF0F2;}
   .imp-veredicto-grande.pendiente .imp-veredicto-texto{color:var(--text-dim);}
   .imp-alerta-no-apto{margin-top:12px;padding:12px 14px;background:#FAE7E5;border-left:4px solid var(--crit);border-radius:6px;font-size:13px;line-height:1.6;color:var(--text);}
@@ -1064,9 +1099,12 @@
               </div>
             </div>
 
+            <div id="habilidadesCandidato" style="display:none;margin-top:16px;"></div>
+
             <div class="form-actions" style="justify-content:flex-start;margin-top:20px;padding-top:16px;border-top:1px solid #EDEEEF;">
               <button class="btn" id="btnCalcularVeredicto">Calcular veredicto</button>
               <button class="btn secondary" id="btnImprimirVeredicto" style="display:none;">🖨️ Imprimir Veredicto de Psicometrías</button>
+              <button class="btn secondary" id="btnImprimirFicha" style="display:none;">🖨️ Imprimir ficha de dictamen</button>
             </div>
           </div>
         </div>
@@ -1136,6 +1174,17 @@
       </div>
 
       <div id="pruebasCriterioContainer"></div>
+
+      <div class="prueba-criterio-section" id="habilidadesCriterioSection" style="padding:12px 14px;">
+        <h3 style="margin:0 0 4px;">Ficha de dictamen: habilidades del perfil de puesto <span style="font-weight:400;color:var(--text-dim);">(opcional)</span></h3>
+        <div class="desc" style="margin-bottom:10px;">Cada habilidad se mide con uno o varios factores de las pruebas. Su semáforo sale de las reglas de arriba: regla dura incumplida = No favorable, regla blanda fuera de rango = Vigilar, todo en rango = Favorable.</div>
+        <div class="form-grid" style="grid-template-columns:1fr 2fr;">
+          <div class="form-field"><label>Clave del perfil de puesto</label><input type="text" id="critPerfilClave" placeholder="Ej. F62-01"></div>
+          <div class="form-field"><label>Alcance (sale en la ficha)</label><input type="text" id="critAlcance" placeholder="Ej. Evalúa solo Habilidades; no evalúa Educación, Formación ni Experiencia."></div>
+        </div>
+        <div id="habilidadesWrap"></div>
+        <button type="button" class="btn ghost" onclick="agregarHabilidad()">+ Agregar habilidad</button>
+      </div>
 
       <div class="form-actions">
         <button class="btn ghost" id="btnCancelarCriterio">Cancelar</button>
@@ -1640,6 +1689,8 @@ function hoyISO(){
  *  ponytail: saneo en la entrada en vez de escapar cada plantilla innerHTML; si algún día se necesita
  *  conservar esos caracteres exactos, hay que escapar en cada plantilla. */
 const SANEO = {'<':'‹','>':'›','"':'”',"'":'’'};
+// El saneo convierte el operador de las reglas duras ("<", ">=") en "‹", "›=": sin esto ninguna regla dura descalificaba.
+const opRegla = (op) => String(op == null ? '' : op).replace('‹', '<').replace('›', '>');
 function sanear(x){
   if(typeof x === 'string') return x.replace(/[<>"']/g, ch => SANEO[ch]);
   if(Array.isArray(x)) return x.map(sanear);
@@ -3685,6 +3736,7 @@ function renderCriterios(){
       <div class="criterio-card-body">
         <div class="sub" style="margin:6px 0 4px;">${asignadas.length} psicometría${asignadas.length!==1?'s':''} asignada${asignadas.length!==1?'s':''} · ${duras} regla${duras!==1?'s':''} dura${duras!==1?'s':''} · ${blandas} regla${blandas!==1?'s':''} blanda${blandas!==1?'s':''}</div>
         ${bloquesPrueba || '<div class="regla-lista">Sin psicometrías asignadas todavía.</div>'}
+        ${resumenHabilidadesCriterio(cr)}
         <div class="row-actions" style="margin-top:10px;">
           <button onclick="event.stopPropagation();editarCriterio('${cr.id}')">Editar</button>
           <button onclick="event.stopPropagation();eliminarCriterio('${cr.id}')">Eliminar</button>
@@ -3697,7 +3749,7 @@ function renderCriterios(){
 
 function filaReglaDura(pid, regla){
   const factores = PRUEBAS_INFO[pid].factores;
-  const r = regla || {factor: factores[0].code, operador:'<', valor: factores[0].min};
+  const r = regla ? Object.assign({}, regla, { operador: opRegla(regla.operador) }) : {factor: factores[0].code, operador:'<', valor: factores[0].min};
   return `<div class="regla-row" data-prueba="${pid}">
     <select class="rd-factor">${factores.map(f=>`<option value="${f.code}" ${f.code===r.factor?'selected':''}>${f.nombre}</option>`).join('')}</select>
     <select class="rd-operador">
@@ -3784,6 +3836,7 @@ function prepararFormNuevoCriterio(){
   document.getElementById('critPuesto').value = '';
   document.getElementById('critPlanta').value = '';
   construirSeccionesPruebasCriterio(null);
+  construirHabilidadesCriterio(null);
 }
 
 function editarCriterio(id){
@@ -3794,6 +3847,7 @@ function editarCriterio(id){
   document.getElementById('critPuesto').value = cr.puesto;
   document.getElementById('critPlanta').value = cr.planta;
   construirSeccionesPruebasCriterio(cr);
+  construirHabilidadesCriterio(cr);
 
   document.querySelectorAll('#view-psicometrias .subtabs button').forEach(b=>b.classList.remove('active'));
   document.querySelector('#view-psicometrias .subtabs button[data-sub2="nuevoCriterio"]').classList.add('active');
@@ -3852,11 +3906,14 @@ document.getElementById('btnGuardarCriterio').addEventListener('click', ()=>{
     }
   });
   if(reglasInvalidas.length){ alert('Corrige antes de guardar:\n' + reglasInvalidas.join('\n')); return; }
+  const ficha = leerHabilidadesCriterio();
+  if(ficha.error){ alert(ficha.error); return; }
 
   STATE.criteriosPsicometria = STATE.criteriosPsicometria || [];
   if(criterioEnEdicionId){
     const cr = STATE.criteriosPsicometria.find(c=>c.id===criterioEnEdicionId);
     cr.puesto = puesto; cr.planta = planta; cr.pruebas = pruebasObj; cr.pruebasAsignadas = pruebasAsignadas;
+    Object.assign(cr, ficha);
   } else {
     // evita duplicar puesto+planta
     const yaExiste = STATE.criteriosPsicometria.some(c => c.puesto.toLowerCase()===puesto.toLowerCase() && c.planta===planta);
@@ -3866,7 +3923,7 @@ document.getElementById('btnGuardarCriterio').addEventListener('click', ()=>{
     }
     STATE.criteriosPsicometria.push({
       id: 'crit_' + Date.now(),
-      puesto, planta, pruebas: pruebasObj, pruebasAsignadas
+      puesto, planta, pruebas: pruebasObj, pruebasAsignadas, ...ficha
     });
   }
   saveLocal(STATE);
@@ -4251,10 +4308,11 @@ function evaluarReglasPrueba(valores, reglas){
   const reglaDuraFallida = (reglas.reglasDuras||[]).find(r=>{
     const v = valores[r.factor];
     if(v === undefined || v === null || isNaN(v)) return false;
-    if(r.operador === '<') return v < r.valor;
-    if(r.operador === '<=') return v <= r.valor;
-    if(r.operador === '>') return v > r.valor;
-    if(r.operador === '>=') return v >= r.valor;
+    const op = opRegla(r.operador);
+    if(op === '<') return v < r.valor;
+    if(op === '<=') return v <= r.valor;
+    if(op === '>') return v > r.valor;
+    if(op === '>=') return v >= r.valor;
     return false;
   });
   const reglasBlandasFueraDeRango = (reglas.reglasBlandas||[]).filter(r=>{
@@ -4346,10 +4404,11 @@ function renderVeredictoBadge(resultado){
 /** Traduce cada regla a un rango visual [min,max] que representa la zona ACEPTABLE, para graficarlo. */
 function rangoAceptableParaGrafica(regla, esDura){
   if(esDura){
-    if(regla.operador === '<')  return [regla.valor, regla.valor + 1000];
-    if(regla.operador === '<=') return [regla.valor + 0.5, regla.valor + 1000];
-    if(regla.operador === '>')  return [regla.valor - 1000, regla.valor];
-    if(regla.operador === '>=') return [regla.valor - 1000, regla.valor - 0.5];
+    const op = opRegla(regla.operador);
+    if(op === '<')  return [regla.valor, regla.valor + 1000];
+    if(op === '<=') return [regla.valor + 0.5, regla.valor + 1000];
+    if(op === '>')  return [regla.valor - 1000, regla.valor];
+    if(op === '>=') return [regla.valor - 1000, regla.valor - 0.5];
     return [0, 10];
   }
   return [regla.min, regla.max];
@@ -4476,7 +4535,7 @@ function descripcionValorFactor(pid, factor, valor){
 function fraseFactor(pid, factor, valor, esDura, regla){
   let porArriba;
   if(esDura){
-    porArriba = (regla.operador === '>' || regla.operador === '>=');
+    porArriba = (opRegla(regla.operador) === '>' || opRegla(regla.operador) === '>=');
   } else {
     porArriba = valor > regla.max;
   }
@@ -4675,6 +4734,7 @@ document.getElementById('btnCalcularVeredicto').addEventListener('click', ()=>{
   }
 
   document.getElementById('btnImprimirVeredicto').style.display = 'inline-block';
+  renderHabilidadesCandidato(c, criterio);
 });
 
 function marcarGridPorResultado(gridId, idPrefix, reglas, resultado){
@@ -4735,6 +4795,211 @@ function generarResumenPsicometrias(agregado, pruebasAnalizadas){
     </div>
   `;
 }
+
+/* =========================================================
+   FICHA DE DICTAMEN (v103) — habilidades del perfil de puesto
+   Cada criterio puede tener habilidades; cada una se mide con factores de las pruebas ("16pf:Q3", "cleaver:GEN_C").
+   El semáforo de cada habilidad sale de las reglas duras/blandas que ya tiene el criterio para esos factores.
+   ========================================================= */
+const escFD = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+function etiquetaFactorRef(ref){
+  const [pid, code] = String(ref).split(':');
+  return PRUEBAS_INFO[pid] ? `${PRUEBAS_INFO[pid].nombre} · ${nombreFactor(pid, code)}` : ref;
+}
+function chipFactorHabilidad(ref){
+  return `<span class="hab-chip" data-ref="${escFD(ref)}">${escFD(etiquetaFactorRef(ref))}<button type="button" title="Quitar factor" onclick="this.parentNode.remove()">✕</button></span>`;
+}
+function filaHabilidad(h){
+  h = h || { nombre: '', factores: [] };
+  const opciones = PRUEBAS_TODAS.map(pid => `<optgroup label="${PRUEBAS_INFO[pid].nombre}">${PRUEBAS_INFO[pid].factores
+    .map(f => `<option value="${pid}:${f.code}">${escFD(f.nombre)} (${f.code})</option>`).join('')}</optgroup>`).join('');
+  return `<div class="hab-row">
+    <div class="hab-row-top">
+      <input type="text" class="hab-nombre" placeholder="Habilidad requerida (ej. Apego a normas de seguridad)" value="${escFD(h.nombre)}">
+      <button type="button" class="quitar-regla" onclick="this.closest('.hab-row').remove()">Quitar</button>
+    </div>
+    <div class="hab-chips">${(h.factores || []).map(chipFactorHabilidad).join('')}</div>
+    <select class="hab-agregar" onchange="agregarFactorHabilidad(this)"><option value="">+ Agregar factor que la mide…</option>${opciones}</select>
+  </div>`;
+}
+function agregarFactorHabilidad(sel){
+  const ref = sel.value;
+  sel.value = '';
+  if(!ref) return;
+  const chips = sel.closest('.hab-row').querySelector('.hab-chips');
+  if([...chips.querySelectorAll('.hab-chip')].some(ch => ch.dataset.ref === ref)) return;
+  chips.insertAdjacentHTML('beforeend', chipFactorHabilidad(ref));
+}
+function agregarHabilidad(){ document.getElementById('habilidadesWrap').insertAdjacentHTML('beforeend', filaHabilidad()); }
+function construirHabilidadesCriterio(cr){
+  document.getElementById('critPerfilClave').value = (cr && cr.perfilClave) || '';
+  document.getElementById('critAlcance').value = (cr && cr.alcance) || '';
+  document.getElementById('habilidadesWrap').innerHTML = ((cr && cr.habilidades) || []).map(filaHabilidad).join('');
+}
+/** Lee la sección "Ficha de dictamen" del formulario; {error} si una habilidad está incompleta o repetida. */
+function leerHabilidadesCriterio(){
+  const habilidades = [];
+  for(const row of document.querySelectorAll('#habilidadesWrap .hab-row')){
+    const nombre = row.querySelector('.hab-nombre').value.trim();
+    const factores = [...row.querySelectorAll('.hab-chip')].map(ch => ch.dataset.ref);
+    if(!nombre && !factores.length) continue;
+    if(!nombre) return { error: 'Hay una habilidad con factores pero sin nombre.' };
+    if(!factores.length) return { error: `La habilidad "${nombre}" no tiene factores: agrégale al menos uno.` };
+    if(habilidades.some(h => h.nombre.toLowerCase() === nombre.toLowerCase())) return { error: `La habilidad "${nombre}" está repetida.` };
+    habilidades.push({ nombre, factores });
+  }
+  return { perfilClave: document.getElementById('critPerfilClave').value.trim(), alcance: document.getElementById('critAlcance').value.trim(), habilidades };
+}
+function resumenHabilidadesCriterio(cr){
+  const hs = cr.habilidades || [];
+  if(!hs.length) return '';
+  return `<div class="prueba-subgrupo"><div class="prueba-subgrupo-titulo">Ficha de dictamen${cr.perfilClave ? ' · ' + escFD(cr.perfilClave) : ''}</div>
+    ${hs.map(h => `<div class="regla-lista"><strong>${escFD(h.nombre)}</strong>: ${h.factores.map(f => escFD(etiquetaFactorRef(f))).join(', ')}</div>`).join('')}</div>`;
+}
+
+const NIVELES_HAB = {
+  favorable:   { texto: 'Favorable',    clase: 'apto' },
+  vigilar:     { texto: 'Vigilar',      clase: 'observaciones' },
+  noFavorable: { texto: 'No favorable', clase: 'no-apto' },
+  incompleto:  { texto: 'Sin datos',    clase: 'pendiente' },
+  sinRegla:    { texto: 'Sin regla',    clase: 'pendiente' }
+};
+/** Semáforo de cada habilidad: rojo si un factor incumple su regla dura, amarillo si sale del rango de su regla blanda,
+ *  "Sin datos" si a un factor con regla le falta valor, verde si todo lo que tiene regla está en rango. */
+function evaluarHabilidades(c, criterio){
+  const datos = datosCandidatoPorPrueba(c);
+  return ((criterio && criterio.habilidades) || []).map(h => {
+    const factores = h.factores.map(ref => {
+      const [pid, code] = ref.split(':');
+      const v = ((datos[pid] || {}).valores || {})[code];
+      const tieneValor = !(v === undefined || v === null || v === '' || isNaN(v));
+      const reglas = (criterio.pruebas || {})[pid] || {};
+      const rd = (reglas.reglasDuras || []).filter(r => r.factor === code);
+      const rb = (reglas.reglasBlandas || []).filter(r => r.factor === code);
+      let estado, regla = null;
+      if(!tieneValor) estado = (rd.length || rb.length) ? 'falta' : 'sinDato';
+      else if(!rd.length && !rb.length) estado = 'sinRegla';
+      else {
+        const r = evaluarReglasPrueba({ [code]: Number(v) }, { reglasDuras: rd, reglasBlandas: rb });
+        if(r.reglaDuraFallida){ estado = 'rojo'; regla = r.reglaDuraFallida; }
+        else if(r.reglasBlandasFueraDeRango.length){ estado = 'amarillo'; regla = r.reglasBlandasFueraDeRango[0]; }
+        else estado = 'verde';
+      }
+      return { ref, valor: tieneValor ? Number(v) : null, estado, regla };
+    });
+    const hay = e => factores.some(f => f.estado === e);
+    const nivel = hay('rojo') ? 'noFavorable' : hay('amarillo') ? 'vigilar' : hay('falta') ? 'incompleto'
+      : hay('verde') ? 'favorable' : hay('sinRegla') ? 'sinRegla' : 'incompleto';
+    return { nombre: h.nombre, factores, nivel };
+  });
+}
+function evidenciaHabilidad(hab){
+  return hab.factores.map(f => {
+    const nom = escFD(etiquetaFactorRef(f.ref));
+    if(f.valor === null) return `${nom}: sin dato`;
+    if(f.estado === 'rojo') return `${nom} = ${f.valor} ✗ (regla dura: ${escFD(opRegla(f.regla.operador))} ${f.regla.valor})`;
+    if(f.estado === 'amarillo') return `${nom} = ${f.valor} ⚠ (esperado ${f.regla.min}–${f.regla.max})`;
+    return `${nom} = ${f.valor}${f.estado === 'verde' ? ' ✓' : ''}`;
+  }).join(' · ');
+}
+/** Expediente: semáforo por habilidad y comentario opcional (se guarda en el candidato y sale en la ficha). */
+function renderHabilidadesCandidato(c, criterio){
+  const wrap = document.getElementById('habilidadesCandidato');
+  const hs = c && criterio && c.veredictoPsicometria ? evaluarHabilidades(c, criterio) : [];
+  document.getElementById('btnImprimirFicha').style.display = c && criterio && c.veredictoPsicometria ? 'inline-block' : 'none';
+  if(!hs.length){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const com = c.comentariosHabilidades || {};
+  wrap.style.display = 'block';
+  wrap.innerHTML = `<h3 style="font-size:13px;color:var(--navy);margin:0 0 4px;">Semáforo por habilidad (ficha de dictamen)</h3>` +
+    hs.map(h => `<div class="hab-cand">
+      <div class="hab-cand-top"><span>${escFD(h.nombre)}</span><span class="veredicto-badge ${NIVELES_HAB[h.nivel].clase}">${NIVELES_HAB[h.nivel].texto}</span></div>
+      <div class="desc">${evidenciaHabilidad(h)}</div>
+      <input type="text" class="hab-comentario" data-hab="${escFD(h.nombre)}" placeholder="Comentario para la ficha (opcional)" value="${escFD(com[h.nombre] || '')}">
+    </div>`).join('');
+  wrap.querySelectorAll('.hab-comentario').forEach(inp => inp.addEventListener('change', () => {
+    c.comentariosHabilidades = Object.assign({}, c.comentariosHabilidades, { [inp.dataset.hab]: inp.value.trim() });
+    saveLocal(STATE);
+  }));
+}
+
+/** Ficha de dictamen psicométrico en 2 hojas: datos, veredicto, semáforo por habilidad; luego análisis por instrumento. */
+function abrirFichaDictamen(){
+  const c = STATE.candidatos.find(c=>c.id===candidatoSeleccionadoId);
+  if(!c || !c.veredictoPsicometria){ alert('Primero calcula el veredicto de este candidato.'); return; }
+  const vac = STATE.vacantes.find(v=>v.id===c.vacanteId);
+  const criterio = buscarCriterioParaVacante(vac);
+  if(!criterio) return;
+  const habs = evaluarHabilidades(c, criterio);
+  if(!habs.length){ alert('Este puesto no tiene habilidades configuradas. Agrégalas en Psicometrías → Editar criterio → "Ficha de dictamen".'); return; }
+  const agregado = evaluarCriterioCompleto(c, criterio);
+  const datos = datosCandidatoPorPrueba(c);
+  const conDatos = PRUEBAS_TODAS.filter(pid => datos[pid] || (pid === 'cleaver' && c.cleaverInfo));
+  const nombrePrueba = pid => pid === 'cleaver' ? 'Cleaver (DISC)' : PRUEBAS_INFO[pid].nombre;
+  const noAplicadas = (criterio.pruebasAsignadas || []).filter(pid => !conDatos.includes(pid)).map(nombrePrueba);
+  const fechas = [...conDatos.map(pid => (datos[pid] || {}).fechaPresentacion), c.cleaverInfo && c.cleaverInfo.fechaPresentacion].filter(Boolean).sort();
+  const fecha = formatoFechaLegible(fechas.length ? fechas[fechas.length - 1] : hoyISO());
+  const alcanceCorto = criterio.perfilClave ? `Habilidades (${escFD(criterio.perfilClave)})` : 'Habilidades del perfil de puesto';
+  const lista = hs => hs.map(h => escFD(h.nombre)).join(', ');
+  const de = n => habs.filter(h => h.nivel === n);
+  const fav = de('favorable'), vig = de('vigilar'), noFav = de('noFavorable'), sinD = [...de('incompleto'), ...de('sinRegla')];
+  const resumen = [
+    `Cumple de forma favorable ${fav.length} de ${habs.length} habilidad${habs.length !== 1 ? 'es' : ''} requerida${habs.length !== 1 ? 's' : ''}.`,
+    noFav.length ? `No favorable: ${lista(noFav)}.` : 'No presenta indicadores en rojo.',
+    vig.length ? `A vigilar: ${lista(vig)}.` : '',
+    sinD.length ? `Sin datos o sin regla para evaluar: ${lista(sinD)}.` : ''
+  ].filter(Boolean).join(' ');
+  const com = c.comentariosHabilidades || {};
+  const banda = `<div class="fd-banda"><div class="fd-titulo">FICHA DE DICTAMEN PSICOMÉTRICO</div>
+    <div class="fd-sub">${escFD(c.nombre)} &nbsp;|&nbsp; Puesto evaluado: ${escFD(vac.puesto)} &nbsp;|&nbsp; Fecha: ${fecha}</div></div>`;
+  const pie = n => `<div class="fd-pie">Documento confidencial de uso exclusivo de Recursos Humanos Metelmex. Herramienta complementaria: no constituye criterio único de contratación. · Página ${n}</div>`;
+  const badge = n => `<span class="veredicto-badge ${NIVELES_HAB[n].clase}">${NIVELES_HAB[n].texto}</span>`;
+
+  const analisis = [];
+  conDatos.forEach(pid => {
+    const d = datos[pid];
+    if(!d) return;
+    const sintesis = generarSintesisPrueba(d.valores || {}, (criterio.pruebas || {})[pid], pid, `${vac.puesto} (${vac.planta})`);
+    analisis.push(`<div class="imp-prueba-bloque"><h2 class="imp-prueba-titulo">${nombrePrueba(pid)}</h2>
+      <p>${sintesis.parrafo}</p>${sintesis.detalles.length ? `<div class="imp-factores">${sintesis.detalles.map(x => `<div class="imp-factor-item">• ${x}</div>`).join('')}</div>` : ''}</div>`);
+  });
+  if(c.cleaverInfo){
+    analisis.push(`<div class="imp-prueba-bloque"><h2 class="imp-prueba-titulo">Cleaver (DISC) — patrón detectado</h2><p>${generarSintesisCleaver(c.cleaverInfo)}</p></div>`);
+  }
+
+  const el = document.getElementById('impresionVeredicto');
+  el.innerHTML = `
+    <div class="fd-pagina">
+      ${banda}
+      <div class="fd-datos">
+        <div><div class="imp-label">Candidato</div><b>${escFD(c.nombre)}</b></div>
+        <div><div class="imp-label">Puesto evaluado</div><b>${escFD(vac.puesto)} — ${escFD(vac.planta)}</b></div>
+        <div><div class="imp-label">Fecha de evaluación</div><b>${fecha}</b></div>
+        <div><div class="imp-label">Instrumentos</div><b>${instrumentosTexto(conDatos.map(nombrePrueba))}</b></div>
+        <div><div class="imp-label">Alcance</div><b>${alcanceCorto}</b></div>
+      </div>
+      ${criterio.alcance || noAplicadas.length ? `<div class="fd-alcance">${criterio.alcance ? '<strong>Alcance:</strong> ' + escFD(criterio.alcance) + ' ' : ''}${noAplicadas.length ? 'Pruebas asignadas al puesto que no se aplicaron: ' + escFD(noAplicadas.join(', ')) + '.' : ''}</div>` : ''}
+      <div class="fd-veredicto ${agregado.clase}"><b>${escFD((agregado.veredicto || 'Sin evaluar').toUpperCase())}</b><div>${resumen}</div></div>
+      <h2 class="fd-h2">Semáforo por habilidad requerida</h2>
+      <table class="fd-tabla">
+        <colgroup><col style="width:26%"><col style="width:56%"><col style="width:18%"></colgroup>
+        <thead><tr><th>Habilidad requerida</th><th>Evidencia psicométrica</th><th>Nivel</th></tr></thead>
+        <tbody>${habs.map(h => `<tr><td><strong>${escFD(h.nombre)}</strong></td>
+          <td>${evidenciaHabilidad(h)}${com[h.nombre] ? `<div class="fd-com">${escFD(com[h.nombre])}</div>` : ''}</td>
+          <td>${badge(h.nivel)}</td></tr>`).join('')}</tbody>
+      </table>
+      <div class="fd-leyenda">${badge('favorable')} ${badge('vigilar')}<span class="veredicto-badge no-apto">No favorable</span></div>
+      ${pie(1)}
+    </div>
+    <div class="fd-pagina">
+      ${banda}
+      <h2 class="fd-h2">Análisis por instrumento</h2>
+      ${analisis.join('') || '<p>No hay pruebas capturadas.</p>'}
+      ${pie(2)}
+    </div>`;
+  el.style.cssText = ''; // 2 hojas: sin el ajuste a una sola hoja del veredicto
+  window.print();
+}
+const instrumentosTexto = (nombres) => nombres.length ? escFD(nombres.join(', ')) : 'Ninguno capturado';
 
 /* =========================================================
    IMPRESIÓN DEL VEREDICTO
@@ -4856,6 +5121,7 @@ if(!window.__impresionVeredictoAfterPrintListo){
   });
 }
 document.getElementById('btnImprimirVeredicto').addEventListener('click', abrirImpresionVeredicto);
+document.getElementById('btnImprimirFicha').addEventListener('click', abrirFichaDictamen);
 
 /* =========================================================
    CARGA DE LA SECCIÓN DE PSICOMETRÍA AL ABRIR UN CANDIDATO
@@ -4871,6 +5137,7 @@ function cargarSeccionPsicometriaCandidato(c){
   document.getElementById('valoresCleaverWrap').style.display = 'none';
   document.getElementById('detFechaPresentacionWrap').style.display = 'none';
   document.getElementById('btnImprimirVeredicto').style.display = 'none';
+  renderHabilidadesCandidato(c, null);
   document.getElementById('bloque16PF').style.display = 'none';
   document.getElementById('bloqueCleaver').style.display = 'none';
   document.getElementById('bloqueOtrasPruebas').style.display = 'none';
@@ -4938,6 +5205,7 @@ function cargarSeccionPsicometriaCandidato(c){
     const agregado = evaluarCriterioCompleto(c, criterio);
     renderVeredictoBadge(agregado);
     document.getElementById('btnImprimirVeredicto').style.display = 'inline-block';
+    renderHabilidadesCandidato(c, criterio);
   } else {
     renderVeredictoBadge(null);
   }
