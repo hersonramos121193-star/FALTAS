@@ -491,6 +491,7 @@
   <button class="tab-btn" data-view="empleados"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M16 4.5a3.5 3.5 0 010 7M21.5 20c0-2.8-1.6-4.9-4-5.7"/></svg><span>Empleados y horas</span></button>
   <button class="tab-btn" data-view="sirce"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 00-2 2v14a2 2 0 002 2h5M14 3l5 5M14 3v5h5M19 8v3"/><circle cx="17" cy="16" r="3"/><path d="M15.5 18.6L15 22l2-1 2 1-.5-3.4"/></svg><span>SIRCE (STPS)</span></button>
   <button class="tab-btn" data-view="cumplimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Cumplimiento</span></button>
+  <button class="tab-btn" data-view="escolaridad"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.7 2.7 3 6 3s6-1.3 6-3v-5M22 9v6"/></svg><span>Escolaridad</span></button>
   <button class="tab-btn" data-view="catalogos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span>Catálogos</span></button>
   <button class="tab-btn" data-view="historial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 4v4h4M12 8v4l3 2"/></svg><span>Historial</span></button>
 </nav>
@@ -1039,6 +1040,38 @@
         <thead><tr><th>Empleado</th><th>Puesto</th><th>Planta</th><th>Cumplimiento</th><th>Le falta</th><th></th></tr></thead>
         <tbody id="tblCumplEmpleados"></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ESCOLARIDAD -->
+  <section id="view-escolaridad" class="view">
+    <h2>Promedio de estudio del personal <span id="escAnio"></span></h2>
+    <p class="section-sub">Empleados en ALTA. Nivel máximo de estudio y evidencia que declaró cada persona (catálogo de empleados). El nivel promedio convierte cada nivel en un número (Ninguno 1 … Doctorado 9), los promedia y redondea al nivel más cercano. El tipo de colaborador viene del catálogo de ausentismo.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="num" id="kpiEscNivel">—</div><div class="label">Nivel promedio</div></div>
+      <div class="kpi"><div class="num" id="kpiEscPersonas">0</div><div class="label">Personas</div></div>
+      <div class="kpi"><div class="num" id="kpiEscSinDato">0</div><div class="label">Sin nivel capturado</div></div>
+    </div>
+    <div class="filter-bar">
+      <div><label>Planta / Área</label><select id="filtroEscPlanta"><option value="">Todas</option></select></div>
+      <div><label>Tipo de colaborador</label><select id="filtroEscTipo"><option value="">Todos</option></select></div>
+      <div><label>Buscar</label><input type="text" id="filtroEscBuscar" placeholder="Número o nombre"></div>
+      <div class="filter-actions">
+        <button class="btn btn-ghost btn-sm" id="btnLimpiarFiltrosEsc">Limpiar filtros</button>
+        <button class="btn btn-primary btn-sm" id="btnExportEsc">📊 Exportar a Excel</button>
+      </div>
+    </div>
+    <h2 style="font-size:16px">Por planta / área</h2>
+    <div class="table-wrap" style="margin-bottom:24px">
+      <table><thead><tr><th>Planta / Área</th><th>Personas</th><th>Sin nivel</th><th>Nivel promedio</th></tr></thead><tbody id="tblEscPlantas"></tbody></table>
+    </div>
+    <h2 style="font-size:16px">Por tipo de colaborador</h2>
+    <div class="table-wrap" style="margin-bottom:24px">
+      <table><thead><tr><th>Tipo de colaborador</th><th>Personas</th><th>Sin nivel</th><th>Nivel promedio</th></tr></thead><tbody id="tblEscTipos"></tbody></table>
+    </div>
+    <h2 style="font-size:16px">Por empleado</h2>
+    <div class="table-wrap">
+      <table><thead><tr><th>N°</th><th>Empleado</th><th>Tipo de colaborador</th><th>Planta / Área</th><th>Nivel máximo de estudio</th><th>Evidencia</th></tr></thead><tbody id="tblEscEmpleados"></tbody></table>
     </div>
   </section>
 
@@ -1634,6 +1667,7 @@ function render(){
   renderHistorial();
   renderCatalogos();
   renderCumplimiento();
+  renderEscolaridad();
 }
 
 // ---------- historial de cambios ----------
@@ -2887,6 +2921,81 @@ document.getElementById('btnExportCumpl').addEventListener('click', ()=>{
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Pendientes');
   XLSX.writeFile(wb, nombreArchivoFecha('Cumplimiento_obligatorios'));
+});
+
+// ---------- escolaridad del personal en ALTA ----------
+const NIVELES_ESC = ['', 'Ninguno', 'Primaria', 'Secundaria', 'Bachillerato', 'Carrera técnica', 'Licenciatura', 'Especialidad', 'Maestría', 'Doctorado'];
+// Clave SIRCE 1–9; si falta, se deduce del texto de escolaridad (igual que al cargar el catálogo)
+const nivelEsc = (e) => Number(e.NivEstudiosClave || mapCatalogoAClave('escolaridad', e.Escolaridad)) || 0;
+const EVIDENCIA_ESC = { TITULO: 'Título', CERTIFICADO: 'Certificado', CEDULA: 'Cédula', DIPLOMA: 'Diploma', OTRO: 'Otro' };
+const evidenciaEsc = (e) => { const t = String(e.DocEscolaridad || '').trim(); return t ? (EVIDENCIA_ESC[normTxt(t)] || t) : 'Sin dato'; };
+/** Nivel promedio de una lista: promedio de las claves 1–9 redondeado al nivel más cercano; '—' si nadie tiene nivel. */
+function nivelPromedioEsc(lista){
+  const n = lista.map(nivelEsc).filter(Boolean);
+  return n.length ? NIVELES_ESC[Math.round(n.reduce((a, b) => a + b, 0) / n.length)] : '—';
+}
+// El tipo de colaborador vive en el catálogo de ausentismo (dashboard padre), no en las hojas Cap_
+function tiposColaborador(){
+  const m = new Map();
+  try{ (dashboard() && typeof dashboard().catalogoParaRevisionNomina === 'function' ? dashboard().catalogoParaRevisionNomina() : [])
+    .forEach(x => m.set(idKey(x.codigo), x.tipoEmpleado || '')); }catch(e){}
+  return m;
+}
+function datosEscolaridad(){
+  const tipos = tiposColaborador();
+  return STATE.empleados.filter(esAlta).map(e => ({ e, tipo: tipos.get(idKey(e.ID)) || 'Sin dato', planta: e.Departamento || 'Sin dato',
+    nivel: nivelEsc(e), evidencia: evidenciaEsc(e) }));
+}
+function getEscolaridadFiltrada(){
+  const planta = document.getElementById('filtroEscPlanta').value, tipo = document.getElementById('filtroEscTipo').value;
+  const q = normTxt(document.getElementById('filtroEscBuscar').value);
+  return datosEscolaridad().filter(r => (!planta || r.planta === planta) && (!tipo || r.tipo === tipo)
+    && (!q || normTxt(r.e.ID).includes(q) || normTxt(r.e.Nombre).includes(q)));
+}
+function renderEscolaridad(){
+  const todos = datosEscolaridad();
+  document.getElementById('escAnio').textContent = new Date().getFullYear();
+  poblarSelect(document.getElementById('filtroEscPlanta'), [...new Set(todos.map(r => r.planta))].sort());
+  poblarSelect(document.getElementById('filtroEscTipo'), [...new Set(todos.map(r => r.tipo))].sort());
+  const lista = getEscolaridadFiltrada();
+  document.getElementById('kpiEscNivel').textContent = nivelPromedioEsc(lista.map(r => r.e));
+  document.getElementById('kpiEscPersonas').textContent = lista.length;
+  document.getElementById('kpiEscSinDato').textContent = lista.filter(r => !r.nivel).length;
+  const resumen = (campo, tbodyId) => {
+    const g = new Map();
+    lista.forEach(r => { const k = r[campo]; g.set(k, (g.get(k) || []).concat(r)); });
+    document.getElementById(tbodyId).innerHTML = [...g.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, rs]) =>
+      `<tr><td>${escapeHtml(k)}</td><td>${rs.length}</td><td>${rs.filter(r => !r.nivel).length}</td><td><b>${escapeHtml(nivelPromedioEsc(rs.map(r => r.e)))}</b></td></tr>`).join('')
+      || '<tr><td colspan="4" class="empty-state">Nadie coincide con los filtros</td></tr>';
+  };
+  resumen('planta', 'tblEscPlantas');
+  resumen('tipo', 'tblEscTipos');
+  document.getElementById('tblEscEmpleados').innerHTML = lista.slice().sort((a, b) => String(a.e.Nombre).localeCompare(String(b.e.Nombre)))
+    .map(r => `<tr><td>${escapeHtml(r.e.ID)}</td><td>${celdaNombre(r.e.Nombre)}</td><td>${escapeHtml(r.tipo)}</td><td>${escapeHtml(r.planta)}</td>
+      <td>${r.nivel ? escapeHtml(NIVELES_ESC[r.nivel]) : '<span class="muted">Sin dato</span>'}</td><td>${escapeHtml(r.evidencia)}</td></tr>`).join('')
+    || '<tr><td colspan="6" class="empty-state">Nadie coincide con los filtros</td></tr>';
+}
+['filtroEscPlanta', 'filtroEscTipo'].forEach(id => document.getElementById(id).addEventListener('change', renderEscolaridad));
+document.getElementById('filtroEscBuscar').addEventListener('input', renderEscolaridad);
+document.getElementById('btnLimpiarFiltrosEsc').addEventListener('click', ()=>{
+  ['filtroEscPlanta', 'filtroEscTipo', 'filtroEscBuscar'].forEach(id => document.getElementById(id).value = '');
+  renderEscolaridad();
+});
+document.getElementById('btnExportEsc').addEventListener('click', ()=>{
+  const lista = getEscolaridadFiltrada();
+  if(!lista.length) return toast('Nadie coincide con los filtros');
+  const filas = lista.map(r => ({ 'N° Empleado': r.e.ID, 'Nombre': r.e.Nombre, 'Tipo de colaborador': r.tipo, 'Planta / Área': r.planta,
+    'Nivel máximo de estudio': r.nivel ? NIVELES_ESC[r.nivel] : 'Sin dato', 'Evidencia': r.evidencia }));
+  const resumen = (campo, titulo) => [...new Set(lista.map(r => r[campo]))].sort().map(k => {
+    const rs = lista.filter(r => r[campo] === k);
+    return { [titulo]: k, 'Personas': rs.length, 'Sin nivel': rs.filter(r => !r.nivel).length, 'Nivel promedio': nivelPromedioEsc(rs.map(r => r.e)) };
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(filas); ws['!cols'] = [{wch:12},{wch:34},{wch:18},{wch:16},{wch:22},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Por empleado');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen('planta', 'Planta / Área')), 'Por planta');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen('tipo', 'Tipo de colaborador')), 'Por tipo');
+  XLSX.writeFile(wb, nombreArchivoFecha('Escolaridad_personal'));
 });
 
 // ---------- expediente por empleado ----------
