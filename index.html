@@ -1138,6 +1138,10 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg>
             Subir plantilla
           </button>
+          <button class="btn btn-ghost solo-edicion" id="btn-respaldos-catalogo" title="Crear un respaldo del catálogo o regresar a uno anterior (como en el SUA)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7h18v13a1 1 0 01-1 1H4a1 1 0 01-1-1V7zm0 0l2-4h14l2 4M9 11h6"/></svg>
+            Respaldos
+          </button>
           <button class="btn btn-primary solo-edicion" id="btn-abrir-nuevo-empleado">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
             Añadir empleado
@@ -1592,6 +1596,22 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 </dialog>
 
 <!-- Modal resultado carga masiva -->
+<dialog class="modal-bg" id="modal-respaldos-bg" style="width:min(760px, calc(100% - 40px));">
+  <div class="modal" style="max-width:760px;">
+    <div class="modal-head">
+      <h3>Respaldos del catálogo de empleados</h3>
+      <button class="modal-close" onclick="document.getElementById('modal-respaldos-bg').close()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="small-muted" style="margin-bottom:12px;">Como en el SUA: crea un respaldo antes de hacer movimientos y, si no te gustan, regresa a él. Solo toca el catálogo de empleados (no faltas, cursos, incapacidades ni vacantes). Antes de cada carga de CSV o plantilla se hace uno automático. Se guardan los últimos 10.</div>
+      <div id="respaldos-lista" style="max-height:50vh;overflow:auto;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-respaldos-bg').close()">Cerrar</button>
+      <button class="btn btn-primary" id="btn-crear-respaldo">Crear respaldo ahora</button>
+    </div>
+  </div>
+</dialog>
 <dialog class="modal-bg" id="modal-cambios-csv-bg" style="width:min(900px, calc(100% - 40px));">
   <div class="modal" style="max-width:900px;">
     <div class="modal-head">
@@ -1630,7 +1650,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.11.24-v111";
+const APP_VERSION = "2026.11.24-v112";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -3540,12 +3560,58 @@ document.getElementById('btn-imprimir-cambios-csv').addEventListener('click', ()
 
 document.getElementById('btn-guardar-cambios-csv').addEventListener('click', async ()=>{
   if(!cambiosCsv || MODO_LECTURA) return;
-  const { registros, errores } = cambiosCsv;
+  const { registros, errores, archivo } = cambiosCsv;
   cambiosCsv = null;
   document.getElementById('modal-cambios-csv-bg').close();
-  try{ await guardarLoteCatalogo(registros, errores); }
+  try{ await guardarLoteCatalogo(registros, errores, `Antes de cargar CSV de nómina: ${archivo}`); }
   catch(err){ mostrarToast('No se pudo guardar en Google Sheets. Revisa tu conexión y vuelve a subir el CSV.', true); }
   finally{ restaurarBotonCatalogo(); }
+});
+
+/* ---------- Respaldos del catálogo (como en el SUA) ---------- */
+const fechaRespaldo = f=> { const [d, h] = String(f).split(' '); return d.split('-').reverse().join('/') + (h ? ' ' + h : ''); };
+async function abrirRespaldos(){
+  if(MODO_LECTURA){ mostrarToast('Estás en modo de solo lectura', true); return; }
+  if(!veCurp()){ mostrarToast('Los respaldos del catálogo requieren el módulo de Capacitación.', true); return; }
+  if(!getScriptUrl()){ mostrarToast('Primero conecta la app con Google Sheets en "Conexión"', true); goTo('conexion'); return; }
+  const dlg = document.getElementById('modal-respaldos-bg'), cont = document.getElementById('respaldos-lista');
+  cont.innerHTML = '<div class="small-muted">Cargando respaldos…</div>';
+  if(!dlg.open) dlg.showModal();
+  try{
+    const { respaldos } = await apiPost({action:'respaldosCatalogo'});
+    cont.innerHTML = respaldos.length ? `<table class="tabla-cambios"><thead><tr><th>Fecha</th><th>Quién</th><th>Motivo</th><th>Empleados</th><th></th></tr></thead><tbody>${
+      respaldos.map(r=> `<tr><td>${escH(fechaRespaldo(r.fecha))}</td><td>${escH(r.usuario)}</td><td>${escH(r.motivo)}</td><td>${r.empleados}</td>
+        <td><button class="icon-btn" style="font-size:11px;color:var(--navy-700);font-weight:600;" data-restaurar="${escH(r.id)}" data-fecha="${escH(fechaRespaldo(r.fecha))}">Restaurar</button></td></tr>`).join('')
+    }</tbody></table>` : '<div class="small-muted">Todavía no hay respaldos. Crea el primero con "Crear respaldo ahora".</div>';
+  }catch(err){
+    cont.innerHTML = `<div class="small-muted">No se pudieron leer los respaldos: ${escH(err.message)}</div>`;
+  }
+}
+document.getElementById('btn-respaldos-catalogo').addEventListener('click', abrirRespaldos);
+document.getElementById('btn-crear-respaldo').addEventListener('click', async function(){
+  this.disabled = true;
+  try{
+    const r = await apiPost({action:'crearRespaldoCatalogo'});
+    mostrarToast(`Respaldo creado con ${r.empleados} empleados.`);
+    await abrirRespaldos();
+  }catch(err){ mostrarToast('No se pudo crear el respaldo: ' + escH(err.message), true); }
+  finally{ this.disabled = false; }
+});
+document.getElementById('respaldos-lista').addEventListener('click', async e=>{
+  const b = e.target.closest('[data-restaurar]');
+  if(!b) return;
+  const cuando = b.dataset.fecha;
+  if(!confirm(`¿Regresar el catálogo de empleados al respaldo del ${cuando}?\n\nSe pierden los cambios hechos al catálogo después de esa fecha, también los de otros módulos (altas desde Reclutamiento, datos capturados en Capacitación). Faltas, cursos, incapacidades y vacantes no se tocan.\n\nAntes se hace un respaldo de cómo está ahora, por si quieres deshacerlo.`)) return;
+  if(!confirm(`Confirma otra vez: ¿restaurar el respaldo del ${cuando}?`)) return;
+  b.disabled = true; b.textContent = 'Restaurando…';
+  try{
+    await apiPost({action:'restaurarRespaldoCatalogo', id: b.dataset.restaurar});
+    mostrarToast('Catálogo restaurado. Recargando…');
+    setTimeout(()=> location.reload(), 1200); // recarga todo, también los módulos que leen el catálogo
+  }catch(err){
+    mostrarToast('No se restauró: ' + escH(err.message), true);
+    b.disabled = false; b.textContent = 'Restaurar';
+  }
 });
 
 document.getElementById('btn-actualizar-catalogo').addEventListener('click', ()=>{
@@ -3672,7 +3738,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       abrirCambiosCsv(registros, errores, omitidos, file.name, csv.total);
       return;
     }
-    await guardarLoteCatalogo(registros, errores);
+    await guardarLoteCatalogo(registros, errores, `Antes de subir plantilla: ${file.name}`);
   }catch(err){
     mostrarToast(err.formatoCsv ? err.message : 'No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
   }finally{
@@ -3686,14 +3752,14 @@ function restaurarBotonCatalogo(){
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir plantilla';
 }
 
-async function guardarLoteCatalogo(registros, errores){
+async function guardarLoteCatalogo(registros, errores, respaldoAntes){
     const btn = document.getElementById('btn-actualizar-catalogo');
     const nuevos = registros.filter(r=>r._esNuevo);
     const actualizaciones = registros.filter(r=>!r._esNuevo);
 
     btn.disabled = true;
     btn.textContent = `Guardando ${registros.length} registros en Google Sheets...`;
-    const resultado = await apiPost({action:'sincronizarCatalogoLote', nuevos, actualizaciones});
+    const resultado = await apiPost({action:'sincronizarCatalogoLote', nuevos, actualizaciones, respaldoAntes}); // el servidor respalda el catálogo antes de guardar
 
     // Reflejar los cambios localmente sin necesidad de recargar la página
     nuevos.forEach(r=>{
@@ -3724,6 +3790,7 @@ async function guardarLoteCatalogo(registros, errores){
     const sub = document.getElementById('emp-pagesub');
     if(sub) sub.textContent = `Búsqueda por nombre o número de empleado — ${EMPLEADOS.length} registros`;
     mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores);
+    if(resultado.respaldo) mostrarToast('Antes de guardar se hizo un respaldo del catálogo. Si algo no te gusta, regrésalo en "Respaldos".');
 }
 
 function mostrarResultadoCatalogo(agregados, actualizados, listaErrores){
