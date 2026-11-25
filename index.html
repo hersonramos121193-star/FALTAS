@@ -1639,6 +1639,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
       <div id="resultado-plantilla-detalle" style="max-height:340px;overflow:auto;"></div>
     </div>
     <div class="modal-foot">
+      <button class="btn btn-ghost" id="btn-imprimir-resultado" hidden>Imprimir / PDF</button>
       <button class="btn btn-primary" onclick="cerrarModalResultadoPlantilla()">Entendido</button>
     </div>
   </div>
@@ -1650,7 +1651,7 @@ table.ks-calor td:not(:first-child),table.ks-calor th:not(:first-child){text-ali
 /* ============================================================
    DATOS BASE — matriz de empleados
    ============================================================ */
-const APP_VERSION = "2026.11.24-v113";
+const APP_VERSION = "2026.11.24-v114";
 
 // Catálogo oficial de periodos de nómina (semanal), cargado desde PERIODOS_2026.xlsx
 const PERIODOS_NOMINA = [{"numero": 1, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-22", "fin": "2025-12-28"}, {"numero": 2, "mes": "ENERO", "anio": 2026, "inicio": "2025-12-29", "fin": "2026-01-04"}, {"numero": 3, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-05", "fin": "2026-01-11"}, {"numero": 4, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-12", "fin": "2026-01-18"}, {"numero": 5, "mes": "ENERO", "anio": 2026, "inicio": "2026-01-19", "fin": "2026-01-25"}, {"numero": 6, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-01-26", "fin": "2026-02-01"}, {"numero": 7, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-02", "fin": "2026-02-08"}, {"numero": 8, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-09", "fin": "2026-02-15"}, {"numero": 9, "mes": "FEBRERO", "anio": 2026, "inicio": "2026-02-16", "fin": "2026-02-22"}, {"numero": 10, "mes": "MARZO", "anio": 2026, "inicio": "2026-02-23", "fin": "2026-03-01"}, {"numero": 11, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-02", "fin": "2026-03-08"}, {"numero": 12, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-09", "fin": "2026-03-15"}, {"numero": 13, "mes": "MARZO", "anio": 2026, "inicio": "2026-03-16", "fin": "2026-03-22"}, {"numero": 14, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-23", "fin": "2026-03-29"}, {"numero": 15, "mes": "ABRIL", "anio": 2026, "inicio": "2026-03-30", "fin": "2026-04-05"}, {"numero": 16, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-06", "fin": "2026-04-12"}, {"numero": 17, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-13", "fin": "2026-04-19"}, {"numero": 18, "mes": "ABRIL", "anio": 2026, "inicio": "2026-04-20", "fin": "2026-04-26"}, {"numero": 19, "mes": "MAYO", "anio": 2026, "inicio": "2026-04-27", "fin": "2026-05-03"}, {"numero": 20, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-04", "fin": "2026-05-10"}, {"numero": 21, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-11", "fin": "2026-05-17"}, {"numero": 22, "mes": "MAYO", "anio": 2026, "inicio": "2026-05-18", "fin": "2026-05-24"}, {"numero": 23, "mes": "JUNIO", "anio": 2026, "inicio": "2026-05-25", "fin": "2026-05-31"}, {"numero": 24, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-01", "fin": "2026-06-07"}, {"numero": 25, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-08", "fin": "2026-06-14"}, {"numero": 26, "mes": "JUNIO", "anio": 2026, "inicio": "2026-06-15", "fin": "2026-06-21"}, {"numero": 27, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-22", "fin": "2026-06-28"}, {"numero": 28, "mes": "JULIO", "anio": 2026, "inicio": "2026-06-29", "fin": "2026-07-05"}, {"numero": 29, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-06", "fin": "2026-07-12"}, {"numero": 30, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-13", "fin": "2026-07-19"}, {"numero": 31, "mes": "JULIO", "anio": 2026, "inicio": "2026-07-20", "fin": "2026-07-26"}, {"numero": 32, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-07-27", "fin": "2026-08-02"}, {"numero": 33, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-03", "fin": "2026-08-09"}, {"numero": 34, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-10", "fin": "2026-08-16"}, {"numero": 35, "mes": "AGOSTO", "anio": 2026, "inicio": "2026-08-17", "fin": "2026-08-23"}, {"numero": 36, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-24", "fin": "2026-08-30"}, {"numero": 37, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-08-31", "fin": "2026-09-06"}, {"numero": 38, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-07", "fin": "2026-09-13"}, {"numero": 39, "mes": "SEPTIEMBRE", "anio": 2026, "inicio": "2026-09-14", "fin": "2026-09-20"}, {"numero": 40, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-21", "fin": "2026-09-27"}, {"numero": 41, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-09-28", "fin": "2026-10-04"}, {"numero": 42, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-05", "fin": "2026-10-11"}, {"numero": 43, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-12", "fin": "2026-10-18"}, {"numero": 44, "mes": "OCTUBRE", "anio": 2026, "inicio": "2026-10-19", "fin": "2026-10-25"}, {"numero": 45, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-10-26", "fin": "2026-11-01"}, {"numero": 46, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-02", "fin": "2026-11-08"}, {"numero": 47, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-09", "fin": "2026-11-15"}, {"numero": 48, "mes": "NOVIEMBRE", "anio": 2026, "inicio": "2026-11-16", "fin": "2026-11-22"}, {"numero": 49, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-23", "fin": "2026-11-29"}, {"numero": 50, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-11-30", "fin": "2026-12-06"}, {"numero": 51, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-07", "fin": "2026-12-13"}, {"numero": 52, "mes": "DICIEMBRE", "anio": 2026, "inicio": "2026-12-14", "fin": "2026-12-20"}, {"numero": 1, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-21", "fin": "2026-12-27"}, {"numero": 2, "mes": "ENERO", "anio": 2027, "inicio": "2026-12-28", "fin": "2027-01-03"}]
@@ -2467,6 +2468,7 @@ document.getElementById('inp-plantilla-file').addEventListener('change', async f
 });
 
 function mostrarResultadoPlantilla(exitosas, conError, listaErrores){
+  document.getElementById('btn-imprimir-resultado').hidden = true; // la misma ventana sirve al catálogo, que sí imprime
   const resumen = document.getElementById('resultado-plantilla-resumen');
   resumen.innerHTML = `
     <div class="kpi good" style="flex:1;min-width:160px;">
@@ -3537,12 +3539,11 @@ function abrirCambiosCsv(registros, errores, omitidos, archivo, totalCsv){
   document.getElementById('modal-cambios-csv-bg').showModal();
 }
 
-document.getElementById('btn-imprimir-cambios-csv').addEventListener('click', ()=>{
-  if(!cambiosCsv) return;
+// Resumen imprimible (revisión previa del CSV y resultado de una carga): página aparte, se guarda como PDF
+function imprimirResumenCatalogo(titulo, meta, cuerpo){
   const w = window.open('', '_blank');
   if(!w){ mostrarToast('El navegador bloqueó la ventana para imprimir. Permite ventanas emergentes en este sitio.', true); return; }
-  const quien = SESION ? escH(SESION.nombre || SESION.usuario || '') : '';
-  w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Cambios catálogo de empleados ${hoyISO()}</title><style>
+  w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${titulo} ${hoyISO()}</title><style>
     body{font-family:Arial,sans-serif;color:#1d2a3a;margin:24px;font-size:12px;} h1{font-size:18px;margin:0 0 4px;color:#14305c;}
     .meta{color:#555;margin-bottom:14px;} .cc-kpis{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
     .kpi{border:1px solid #ccd3dd;border-radius:6px;padding:8px 10px;} .kpi-label{font-size:10px;color:#555;text-transform:uppercase;}
@@ -3550,21 +3551,28 @@ document.getElementById('btn-imprimir-cambios-csv').addEventListener('click', ()
     .cc-titulo{font-size:11px;font-weight:700;text-transform:uppercase;color:#444;margin:14px 0 6px;}
     .tabla-cambios{width:100%;border-collapse:collapse;} .tabla-cambios th,.tabla-cambios td{border-bottom:1px solid #ccd3dd;padding:4px 6px;text-align:left;vertical-align:top;}
     .tabla-cambios tr{break-inside:avoid;} .alert-item{padding:3px 0;border-bottom:1px solid #eee;}
-  </style></head><body><h1>Cambios del CSV de nómina al catálogo de empleados</h1>
-  <div class="meta">Archivo: ${escH(cambiosCsv.archivo)} · Revisado el ${new Date().toLocaleString('es-MX')}${quien ? ' por ' + quien : ''} · Revisión previa: estos cambios todavía no se guardan.</div>
-  ${cambiosCsv.html}</body></html>`);
+  </style></head><body><h1>${titulo}</h1><div class="meta">${meta}</div>${cuerpo}</body></html>`);
   w.document.close();
   w.focus();
   mostrarToast('En la ventana de impresión elige "Guardar como PDF".');
   w.print();
+}
+const quienImprime = ()=> SESION ? escH(SESION.nombre || SESION.usuario || '') : '';
+
+document.getElementById('btn-imprimir-cambios-csv').addEventListener('click', ()=>{
+  if(!cambiosCsv) return;
+  const quien = quienImprime();
+  imprimirResumenCatalogo('Cambios del CSV de nómina al catálogo de empleados',
+    `Archivo: ${escH(cambiosCsv.archivo)} · Revisado el ${new Date().toLocaleString('es-MX')}${quien ? ' por ' + quien : ''} · Revisión previa: estos cambios todavía no se guardan.`,
+    cambiosCsv.html);
 });
 
 document.getElementById('btn-guardar-cambios-csv').addEventListener('click', async ()=>{
   if(!cambiosCsv || MODO_LECTURA) return;
-  const { registros, errores, archivo } = cambiosCsv;
+  const { registros, errores, archivo, html } = cambiosCsv;
   cambiosCsv = null;
   document.getElementById('modal-cambios-csv-bg').close();
-  try{ await guardarLoteCatalogo(registros, errores, `Antes de cargar CSV de nómina: ${archivo}`); }
+  try{ await guardarLoteCatalogo(registros, errores, { tipo: 'csv', archivo, detalle: html }); }
   catch(err){ mostrarToast('No se pudo guardar en Google Sheets. Revisa tu conexión y vuelve a subir el CSV.', true); }
   finally{ restaurarBotonCatalogo(); }
 });
@@ -3739,7 +3747,7 @@ document.getElementById('inp-catalogo-file').addEventListener('change', async fu
       abrirCambiosCsv(registros, errores, omitidos, file.name, csv.total);
       return;
     }
-    await guardarLoteCatalogo(registros, errores, `Antes de subir plantilla: ${file.name}`);
+    await guardarLoteCatalogo(registros, errores, { tipo: 'plantilla', archivo: file.name });
   }catch(err){
     mostrarToast(err.formatoCsv ? err.message : 'No se pudo leer o guardar el archivo. Verifica el formato y tu conexión.', true);
   }finally{
@@ -3753,8 +3761,10 @@ function restaurarBotonCatalogo(){
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 21V9m0 0l-4 4m4-4l4 4M4 7V4a1 1 0 011-1h14a1 1 0 011 1v3"/></svg> Subir plantilla';
 }
 
-async function guardarLoteCatalogo(registros, errores, respaldoAntes){
+// carga = { tipo: 'csv' | 'plantilla', archivo, detalle (HTML de la revisión previa, solo CSV) }
+async function guardarLoteCatalogo(registros, errores, carga){
     const btn = document.getElementById('btn-actualizar-catalogo');
+    const respaldoAntes = `${carga.tipo === 'csv' ? 'Antes de cargar CSV de nómina' : 'Antes de subir plantilla'}: ${carga.archivo}`;
     const nuevos = registros.filter(r=>r._esNuevo);
     const actualizaciones = registros.filter(r=>!r._esNuevo);
 
@@ -3790,11 +3800,30 @@ async function guardarLoteCatalogo(registros, errores, respaldoAntes){
     renderDashboard();
     const sub = document.getElementById('emp-pagesub');
     if(sub) sub.textContent = `Búsqueda por nombre o número de empleado — ${EMPLEADOS.length} registros`;
-    mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores);
+    mostrarResultadoCatalogo(resultado.agregados||0, resultado.actualizados||0, errores,
+      { ...carga, respaldo: resultado.respaldo ? respaldoAntes : '', cuando: new Date() });
     if(resultado.respaldo) mostrarToast('Antes de guardar se hizo un respaldo del catálogo. Si algo no te gusta, regrésalo en "Respaldos".');
 }
 
-function mostrarResultadoCatalogo(agregados, actualizados, listaErrores){
+// Lo que se acaba de guardar, para el botón Imprimir / PDF de la ventana de resultado
+let resultadoCatalogo = null;
+document.getElementById('btn-imprimir-resultado').addEventListener('click', ()=>{
+  const r = resultadoCatalogo;
+  if(!r) return;
+  const quien = quienImprime();
+  const kpi = (t, n)=> `<div class="kpi"><div class="kpi-label">${t}</div><div class="kpi-value">${n}</div></div>`;
+  const guardado = `<div class="cc-titulo">Lo que se guardó</div><div class="cc-kpis">${kpi('Agregados', r.agregados)}${kpi('Actualizados', r.actualizados)}${kpi('Avisos / omitidas', r.errores.length)}</div>`;
+  const avisos = r.errores.length
+    ? `<div class="cc-titulo">Avisos y filas omitidas (${r.errores.length})</div>` + r.errores.map(e=> `<div class="alert-item">${escH(String(e).replace(/<\/?b>/g, ''))}</div>`).join('')
+    : '<div class="small-muted">Todo se guardó sin ningún aviso.</div>';
+  imprimirResumenCatalogo(r.tipo === 'csv' ? 'Carga del CSV de nómina al catálogo de empleados' : 'Carga de plantilla al catálogo de empleados',
+    `Archivo: ${escH(r.archivo)} · Guardado el ${r.cuando.toLocaleString('es-MX')}${quien ? ' por ' + quien : ''}${r.respaldo ? ` · Respaldo previo en Empleados → Respaldos: «${escH(r.respaldo)}»` : ''}`,
+    guardado + (r.detalle ? '<div class="cc-titulo">Detalle de la revisión</div>' + r.detalle : avisos));
+});
+
+function mostrarResultadoCatalogo(agregados, actualizados, listaErrores, carga){
+  resultadoCatalogo = carga ? { ...carga, agregados, actualizados, errores: listaErrores } : null;
+  document.getElementById('btn-imprimir-resultado').hidden = !carga;
   const resumen = document.getElementById('resultado-plantilla-resumen');
   resumen.innerHTML = `
     <div class="kpi ok" style="flex:1;min-width:150px;">
